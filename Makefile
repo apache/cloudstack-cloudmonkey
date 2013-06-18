@@ -24,6 +24,9 @@ build:
 	python setup.py build
 	python setup.py sdist
 
+buildcache:
+	python cloudmonkey/cachemaker.py
+
 install: clean
 	python setup.py sdist
 	pip install dist/cloudmonkey-*.tar.gz
