@@ -2,6 +2,24 @@
 
 `cloudmonkey` is a command line interface for [Apache CloudStack](http://cloudstack.apache.org).
 
+Build:
+
+    make build
+
+Build Precache:
+
+    make buildcache
+
+Clean:
+
+    make clean
+
+Install:
+
+    make install
+
+### For users
+
 Install:
 
     pip install cloudmonkey
