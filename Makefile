@@ -24,6 +24,9 @@ build:
 	python setup.py build
 	python setup.py sdist
 
+check:
+	pep8 cloudmonkey/*.py
+
 buildcache:
 	python cloudmonkey/cachemaker.py
 

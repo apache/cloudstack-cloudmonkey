@@ -1,32 +1,39 @@
 ## CloudMonkey
 
 `cloudmonkey` is a command line interface for [Apache CloudStack](http://cloudstack.apache.org).
+CloudMonkey can be use both as an interactive shell and as a command line tool
+which simplifies Apache CloudStack configuration and management. It can be used
+with Apache CloudStack 4.0-incubating and above.
 
 Build:
 
-    make build
+    $ make build
 
 Build Precache:
 
-    make buildcache
+    $ make buildcache
+
+Check changes, code styles:
+
+    $ make check
 
 Clean:
 
-    make clean
+    $ make clean
 
 Install:
 
-    make install
+    $ make install
 
 ### For users
 
 Install:
 
-    pip install cloudmonkey
+    $ pip install cloudmonkey
 
 Upgrade:
 
-    pip install --upgrade cloudmonkey
+    $ pip install --upgrade cloudmonkey
 
 Please see the [CloudMonkey Wiki](https://cwiki.apache.org/confluence/display/CLOUDSTACK/CloudStack+cloudmonkey+CLI) for usage.
 
@@ -41,6 +48,14 @@ Please see the [CloudMonkey Wiki](https://cwiki.apache.org/confluence/display/CL
 [Issues Mailing List](mailto:issues-subscribe@cloudstack.apache.org)
 
 [Marketing Mailing List](mailto:marketing-subscribe@cloudstack.apache.org)
+
+### Contributing
+
+Send your patches on Apache [Review Board](https://reviews.apache.org/groups/cloudstack/)
+for CloudStack CloudMonkey.
+
+Discuss features development on the `Dev` mailing lists.
+Report issues on the `User` mailing list and open issue on [JIRA](http://issues.apache.org/jira/browse/CLOUDSTACK).
 
 ### License
 
