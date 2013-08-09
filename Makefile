@@ -20,7 +20,7 @@ all: build
 runtests:
 	nosetests -v --verbosity=3
 
-build:
+build: buildcache
 	python setup.py build
 	python setup.py sdist
 
@@ -29,6 +29,7 @@ check:
 
 buildcache:
 	python cloudmonkey/cachemaker.py
+	mv -f precache.py cloudmonkey/
 
 install: clean
 	python setup.py sdist
