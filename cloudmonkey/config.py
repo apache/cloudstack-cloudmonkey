@@ -16,12 +16,10 @@
 # specific language governing permissions and limitations
 # under the License.
 
-# Use following rules for versioning:
-# <cloudstack version>-<cli increment, starts from 0>
-__version__ = "4.2.0-0"
+__version__ = "5.0.0"
 __description__ = "Command Line Interface for Apache CloudStack"
-__maintainer__ = "Rohit Yadav"
-__maintaineremail__ = "bhaisaab@apache.org"
+__maintainer__ = "The Apache CloudStack Team"
+__maintaineremail__ = "dev@cloudstack.apache.org"
 __project__ = "The Apache CloudStack Team"
 __projectemail__ = "dev@cloudstack.apache.org"
 __projecturl__ = "http://cloudstack.apache.org"
