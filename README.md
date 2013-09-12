@@ -5,6 +5,11 @@ CloudMonkey can be use both as an interactive shell and as a command line tool
 which simplifies Apache CloudStack configuration and management. It can be used
 with Apache CloudStack 4.0-incubating and above.
 
+All:
+
+    Cleans and then builds with precache
+    $ make all
+
 Build:
 
     $ make build
@@ -12,6 +17,10 @@ Build:
 Build Precache:
 
     $ make buildcache
+
+Build with Precache:
+
+    $ make buildwithcache
 
 Check changes, code styles:
 
