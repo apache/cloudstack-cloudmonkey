@@ -1,0 +1,9 @@
+Apache CloudStack CloudMonkey Changelog
+---------------------------------------
+
+Version 5.0.0
+=============
+This is the first release of CloudMonkey independent from the Apache CloudStack core orchestration engine. The release
+includes a precache of Apache CloudStack 4.2.0 API calls, and should be backward compatible with prior 3.x and 4.x
+CloudStack installations (with the obvious caveat that previous versions will have a subset of the latest API commands /
+parameters).
