@@ -23,7 +23,6 @@ dist/
 *.egg-info/
 .DS_Store
 *.swp
-cloudmonkey/precache.py
 build/
 .*
 !.gitignore
