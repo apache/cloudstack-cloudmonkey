@@ -15,12 +15,14 @@
 # specific language governing permissions and limitations
 # under the License.
 
-all: build
+all: clean buildwithcache
 
 runtests:
 	nosetests -v --verbosity=3
 
-build: buildcache
+buildwithcache: buildcache build
+
+build:
 	python setup.py build
 	python setup.py sdist
 
