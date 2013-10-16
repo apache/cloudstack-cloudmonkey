@@ -47,6 +47,7 @@ setup(
     install_requires = [
         'Pygments>=1.5',
         'prettytable>=0.6',
+        'requests'
     ],
     include_package_data = True,
     zip_safe = False,
