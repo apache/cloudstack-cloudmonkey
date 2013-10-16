@@ -36,6 +36,8 @@ try:
     from prettytable import PrettyTable
     from printer import monkeyprint
     from requester import monkeyrequest
+    from requester import login
+    from requester import logout
 except ImportError, e:
     print("Import error in %s : %s" % (__name__, e))
     import sys
@@ -73,6 +75,8 @@ class CloudMonkeyShell(cmd.Cmd, object):
         self.config_file = cfile
         self.config_options = read_config(self.get_attr, self.set_attr,
                                           self.config_file)
+        self.credentials = {'apikey':self.apikey, 'secretkey': self.secretkey, 
+                            'username': self.username, 'password': self.password}
         self.loadcache()
         self.prompt = self.prompt.strip() + " "  # Cosmetic fix for prompt
 
@@ -89,6 +93,7 @@ class CloudMonkeyShell(cmd.Cmd, object):
         except IOError, e:
             logger.debug("Error: Unable to read history. " + str(e))
         atexit.register(readline.write_history_file, self.history_file)
+
 
     def get_attr(self, field):
         return getattr(self, field)
@@ -253,7 +258,7 @@ class CloudMonkeyShell(cmd.Cmd, object):
         response, error = monkeyrequest(command, args, isasync,
                                         self.asyncblock, logger,
                                         self.host, self.port,
-                                        self.apikey, self.secretkey,
+                                        self.credentials,
                                         self.timeout, self.protocol, self.path)
         if error is not None:
             self.monkeyprint(error)
@@ -414,6 +419,25 @@ class CloudMonkeyShell(cmd.Cmd, object):
         return [s[offs:] for s in self.config_options
                 if s.startswith(mline)]
 
+    def do_login(self, args):
+        """
+        Login using stored credentials. Starts a session to be reused for subsequent api calls
+        """
+        url = "%s://%s:%s%s" % (self.protocol, self.host, self.port, self.path)
+        session, sessionkey = login(url, self.username, self.password)
+        self.credentials['session'] = session
+        self.credentials['sessionkey'] = sessionkey
+
+    def do_logout(self, args):
+        """
+        Logout of session started with login with username and password
+        """
+        url = "%s://%s:%s%s" % (self.protocol, self.host, self.port, self.path)
+        logout(url, self.credentials['session'])
+        self.credentials['session'] = None
+        self.credentials['sessionkey'] = None
+
+
     def pipe_runner(self, args):
         if args.find(' |') > -1:
             pname = self.program_name
@@ -529,7 +553,9 @@ def main():
         print __description__, "(%s)" % __projecturl__
         sys.exit(0)
 
+
     shell = CloudMonkeyShell(sys.argv[0], options.cfile)
+
     if len(args) > 0:
         shell.onecmd(' '.join(args))
     else:
