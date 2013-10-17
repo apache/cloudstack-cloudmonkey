@@ -75,8 +75,9 @@ class CloudMonkeyShell(cmd.Cmd, object):
         self.config_file = cfile
         self.config_options = read_config(self.get_attr, self.set_attr,
                                           self.config_file)
-        self.credentials = {'apikey':self.apikey, 'secretkey': self.secretkey, 
-                            'username': self.username, 'password': self.password}
+        self.credentials = {'apikey': self.apikey, 'secretkey': self.secretkey,
+                            'username': self.username,
+                            'password': self.password}
         self.loadcache()
         self.prompt = self.prompt.strip() + " "  # Cosmetic fix for prompt
 
@@ -93,7 +94,6 @@ class CloudMonkeyShell(cmd.Cmd, object):
         except IOError, e:
             logger.debug("Error: Unable to read history. " + str(e))
         atexit.register(readline.write_history_file, self.history_file)
-
 
     def get_attr(self, field):
         return getattr(self, field)
@@ -421,7 +421,8 @@ class CloudMonkeyShell(cmd.Cmd, object):
 
     def do_login(self, args):
         """
-        Login using stored credentials. Starts a session to be reused for subsequent api calls
+        Login using stored credentials. Starts a session to be reused for
+        subsequent api calls
         """
         url = "%s://%s:%s%s" % (self.protocol, self.host, self.port, self.path)
         session, sessionkey = login(url, self.username, self.password)
@@ -436,7 +437,6 @@ class CloudMonkeyShell(cmd.Cmd, object):
         logout(url, self.credentials.get('session'))
         self.credentials['session'] = None
         self.credentials['sessionkey'] = None
-
 
     def pipe_runner(self, args):
         if args.find(' |') > -1:
@@ -553,7 +553,6 @@ def main():
         print "cloudmonkey", __version__
         print __description__, "(%s)" % __projecturl__
         sys.exit(0)
-
 
     shell = CloudMonkeyShell(sys.argv[0], options.cfile)
 

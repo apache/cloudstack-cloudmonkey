@@ -65,14 +65,13 @@ def login(url, username, password):
     resp = session.post(url, params=args)
     if resp.status_code == 200:
         sessionkey = resp.json()['loginresponse']['sessionkey']
-        userid = resp.json()['loginresponse']['userid']
     elif resp.status_code == 531:
-        print "Error authenticating at %s, with username: %s, and password: %s" % (url, username, password)
+        print "Error authenticating at %s, with username: %s" \
+              ", and password: %s" % (url, username, password)
         session = None
         sessionkey = None
     else:
         resp.raise_for_status()
-
 
     return session, sessionkey
 
@@ -81,6 +80,7 @@ def logout(url, session):
     if session is None:
         return
     session.get(url, params={'command': 'logout'})
+
 
 def make_request_with_password(command, args, logger, url, credentials):
 
@@ -100,7 +100,7 @@ def make_request_with_password(command, args, logger, url, credentials):
         sessionkey = credentials.get('sessionkey')
         session = credentials.get('session')
         tries += 1
-    
+
         #obtain a valid session if not supplied
         if not (session and sessionkey):
             session, sessionkey = login(url, username, password)
@@ -110,25 +110,25 @@ def make_request_with_password(command, args, logger, url, credentials):
             credentials['sessionkey'] = sessionkey
 
         args['sessionkey'] = sessionkey
-    
+
         #make the api call
         resp = session.get(url, params=args)
         result = resp.text
         logger_debug(logger, "Response received: %s" % resp.text)
 
-        if resp.status_code == 200: #success
+        if resp.status_code == 200:  # success
             retry = False
             break
-        if resp.status_code == 401: #sessionkey is wrong
+        if resp.status_code == 401:  # sessionkey is wrong
             credentials['session'] = None
             credentials['sessionkey'] = None
             continue
 
         if resp.status_code != 200 and resp.status_code != 401:
-            error = "%s: %s" % (str(resp.status_code), resp.headers.get('X-Description'))
+            error = "%s: %s" %\
+                    (str(resp.status_code), resp.headers.get('X-Description'))
             result = None
             retry = False
-            
 
     return result, error
 
@@ -152,7 +152,8 @@ def make_request(command, args, logger, host, port,
     #if not present, use the username/password method
     if not credentials['apikey']:
         url = "%s://%s:%s%s" % (protocol, host, port, path)
-        return make_request_with_password(command, args, logger, url, credentials)
+        return make_request_with_password(command, args,
+                                          logger, url, credentials)
 
     args['apikey'] = credentials['apikey']
     secretkey = credentials['secretkey']
@@ -193,7 +194,8 @@ def monkeyrequest(command, args, isasync, asyncblock, logger, host, port,
     error = None
     logger_debug(logger, "======== START Request ========")
     logger_debug(logger, "Requesting command=%s, args=%s" % (command, args))
-    response, error = make_request(command, args, logger, host, port, credentials, protocol, path)
+    response, error = make_request(command, args, logger, host,
+                                   port, credentials, protocol, path)
 
     logger_debug(logger, "======== END Request ========\n")
 
