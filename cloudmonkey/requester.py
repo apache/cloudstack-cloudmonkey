@@ -21,19 +21,13 @@ try:
     import base64
     import hashlib
     import hmac
-    import httplib
     import json
-    import os
-    import pdb
-    import re
     import requests
-    import shlex
     import sys
     import time
-    import types
     import urllib
     import urllib2
-    from urllib2 import urlopen, HTTPError, URLError
+    from urllib2 import HTTPError, URLError
 
 except ImportError, e:
     print "Import error in %s : %s" % (__name__, e)
@@ -206,7 +200,6 @@ def monkeyrequest(command, args, isasync, asyncblock, logger, host, port,
         try:
             response = json.loads(str(response))
         except ValueError, e:
-            error = "Error processing json response, %s" % e
             logger_debug(logger, "Error processing json: %s" % e)
 
         return response

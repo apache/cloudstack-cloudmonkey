@@ -23,7 +23,6 @@ try:
     import json
     import logging
     import os
-    import pdb
     import shlex
     import sys
     import types
@@ -174,13 +173,12 @@ class CloudMonkeyShell(cmd.Cmd, object):
             if result_filter is not None:
                 for res in result_filter:
                     tfilter[res] = 1
-                myresults = {}
                 for okey, oval in result.iteritems():
                     if isinstance(oval, dict):
-                        for tkey in x:
+                        for tkey in oval:
                             if tkey not in tfilter:
                                 try:
-                                    del(tresult[okey][x][tkey])
+                                    del(tresult[okey][oval][tkey])
                                 except:
                                     pass
                     elif isinstance(oval, list):
