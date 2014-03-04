@@ -5,6 +5,8 @@ CloudMonkey can be use both as an interactive shell and as a command line tool
 which simplifies Apache CloudStack configuration and management. It can be used
 with Apache CloudStack 4.0-incubating and above.
 
+![version badge](https://pypip.in/v/cloudmonkey/badge.png) ![download badge](https://pypip.in/d/cloudmonkey/badge.png)
+
 All:
 
     Cleans and then builds with precache
