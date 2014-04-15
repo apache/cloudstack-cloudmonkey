@@ -32,6 +32,7 @@ try:
     import types
     import urllib
     import urllib2
+    from datetime import datetime, timedelta
     from urllib2 import urlopen, HTTPError, URLError
 
 except ImportError, e:
@@ -44,9 +45,8 @@ def logger_debug(logger, message):
     if logger is not None:
         logger.debug(message)
 
-
 def make_request(command, args, logger, host, port,
-                 apikey, secretkey, protocol, path):
+                 apikey, secretkey, protocol, path, expires):
     response = None
     error = None
 
@@ -60,6 +60,9 @@ def make_request(command, args, logger, host, port,
     args["command"] = command
     args["apiKey"] = apikey
     args["response"] = "json"
+    args["signatureversion"] = "3"
+    expirationtime = datetime.utcnow() + timedelta(seconds=int(expires))
+    args["expires"] = expirationtime.strftime('%Y-%m-%dT%H:%M:%S+0000')
     request = zip(args.keys(), args.values())
     request.sort(key=lambda x: x[0].lower())
 
@@ -92,13 +95,13 @@ def make_request(command, args, logger, host, port,
 
 
 def monkeyrequest(command, args, isasync, asyncblock, logger, host, port,
-                  apikey, secretkey, timeout, protocol, path):
+                  apikey, secretkey, timeout, protocol, path, expires):
     response = None
     error = None
     logger_debug(logger, "======== START Request ========")
     logger_debug(logger, "Requesting command=%s, args=%s" % (command, args))
     response, error = make_request(command, args, logger, host, port,
-                                   apikey, secretkey, protocol, path)
+                                   apikey, secretkey, protocol, path, expires)
     logger_debug(logger, "======== END Request ========\n")
 
     if error is not None:

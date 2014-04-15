@@ -254,7 +254,8 @@ class CloudMonkeyShell(cmd.Cmd, object):
                                         self.asyncblock, logger,
                                         self.host, self.port,
                                         self.apikey, self.secretkey,
-                                        self.timeout, self.protocol, self.path)
+                                        self.timeout, self.protocol,
+                                        self.path, self.expires)
         if error is not None:
             self.monkeyprint(error)
         return response
