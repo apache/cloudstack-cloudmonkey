@@ -231,7 +231,7 @@ def monkeyrequest(command, args, isasync, asyncblock, logger, host, port,
             logger_debug(logger, "Job %s to timeout in %ds" % (jobid, timeout))
             response, error = make_request(command, request, logger,
                                            host, port, credentials,
-                                           protocol, path)
+                                           protocol, path, expires)
             if error is not None:
                 return response, error
 
