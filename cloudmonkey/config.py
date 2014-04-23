@@ -67,6 +67,8 @@ config_fields['server']['expires'] = '600'
 # user
 config_fields['user']['apikey'] = ''
 config_fields['user']['secretkey'] = ''
+config_fields['user']['username'] = ''
+config_fields['user']['password'] = ''
 
 
 def write_config(get_attr, config_file, first_time=False):

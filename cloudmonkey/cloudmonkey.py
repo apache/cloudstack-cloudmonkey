@@ -23,7 +23,6 @@ try:
     import json
     import logging
     import os
-    import pdb
     import shlex
     import sys
     import types
@@ -36,6 +35,8 @@ try:
     from prettytable import PrettyTable
     from printer import monkeyprint
     from requester import monkeyrequest
+    from requester import login
+    from requester import logout
 except ImportError, e:
     print("Import error in %s : %s" % (__name__, e))
     import sys
@@ -73,6 +74,9 @@ class CloudMonkeyShell(cmd.Cmd, object):
         self.config_file = cfile
         self.config_options = read_config(self.get_attr, self.set_attr,
                                           self.config_file)
+        self.credentials = {'apikey': self.apikey, 'secretkey': self.secretkey,
+                            'username': self.username,
+                            'password': self.password}
         self.loadcache()
         self.prompt = self.prompt.strip() + " "  # Cosmetic fix for prompt
 
@@ -169,13 +173,12 @@ class CloudMonkeyShell(cmd.Cmd, object):
             if result_filter is not None:
                 for res in result_filter:
                     tfilter[res] = 1
-                myresults = {}
                 for okey, oval in result.iteritems():
                     if isinstance(oval, dict):
-                        for tkey in x:
+                        for tkey in oval:
                             if tkey not in tfilter:
                                 try:
-                                    del(tresult[okey][x][tkey])
+                                    del(tresult[okey][oval][tkey])
                                 except:
                                     pass
                     elif isinstance(oval, list):
@@ -253,9 +256,8 @@ class CloudMonkeyShell(cmd.Cmd, object):
         response, error = monkeyrequest(command, args, isasync,
                                         self.asyncblock, logger,
                                         self.host, self.port,
-                                        self.apikey, self.secretkey,
-                                        self.timeout, self.protocol,
-                                        self.path, self.expires)
+                                        self.credentials,
+                                        self.timeout, self.protocol, self.path, self.expires)
         if error is not None:
             self.monkeyprint(error)
         return response
@@ -415,6 +417,25 @@ class CloudMonkeyShell(cmd.Cmd, object):
         return [s[offs:] for s in self.config_options
                 if s.startswith(mline)]
 
+    def do_login(self, args):
+        """
+        Login using stored credentials. Starts a session to be reused for
+        subsequent api calls
+        """
+        url = "%s://%s:%s%s" % (self.protocol, self.host, self.port, self.path)
+        session, sessionkey = login(url, self.username, self.password)
+        self.credentials['session'] = session
+        self.credentials['sessionkey'] = sessionkey
+
+    def do_logout(self, args):
+        """
+        Logout of session started with login with username and password
+        """
+        url = "%s://%s:%s%s" % (self.protocol, self.host, self.port, self.path)
+        logout(url, self.credentials.get('session'))
+        self.credentials['session'] = None
+        self.credentials['sessionkey'] = None
+
     def pipe_runner(self, args):
         if args.find(' |') > -1:
             pname = self.program_name
@@ -485,6 +506,7 @@ class CloudMonkeyShell(cmd.Cmd, object):
         """
         Quit on Ctrl+d or EOF
         """
+        self.do_logout(None)
         sys.exit()
 
     def do_exit(self, args):
@@ -531,6 +553,7 @@ def main():
         sys.exit(0)
 
     shell = CloudMonkeyShell(sys.argv[0], options.cfile)
+
     if len(args) > 0:
         shell.onecmd(' '.join(args))
     else:

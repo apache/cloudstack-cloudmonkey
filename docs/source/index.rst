@@ -19,6 +19,7 @@ can be use both as an interactive shell and as a command line tool which simplif
 #. Tabular or JSON output with filtering of table columns
 #. Colored output
 #. Api parameter value completion (based on predication, fuzzy results may fail sometimes)
+#. Use apikey and secretkey or username/password
 
 Instructions for working with CloudMonkey can be found here:
 

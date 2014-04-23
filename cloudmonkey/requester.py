@@ -21,19 +21,14 @@ try:
     import base64
     import hashlib
     import hmac
-    import httplib
     import json
-    import os
-    import pdb
-    import re
-    import shlex
+    import requests
     import sys
     import time
-    import types
     import urllib
     import urllib2
     from datetime import datetime, timedelta
-    from urllib2 import urlopen, HTTPError, URLError
+    from urllib2 import HTTPError, URLError
 
 except ImportError, e:
     print "Import error in %s : %s" % (__name__, e)
@@ -45,8 +40,96 @@ def logger_debug(logger, message):
     if logger is not None:
         logger.debug(message)
 
+
+def login(url, username, password):
+    """
+    Login and obtain a session to be used for subsequent API calls
+    Wrong username/password leads to HTTP error code 531
+    """
+    args = {}
+
+    args["command"] = 'login'
+    args["username"] = username
+    args["password"] = password
+    args["domain"] = "/"
+    args["response"] = "json"
+
+    sessionkey = ''
+    session = requests.Session()
+
+    resp = session.post(url, params=args)
+    if resp.status_code == 200:
+        sessionkey = resp.json()['loginresponse']['sessionkey']
+    elif resp.status_code == 531:
+        print "Error authenticating at %s, with username: %s" \
+              ", and password: %s" % (url, username, password)
+        session = None
+        sessionkey = None
+    else:
+        resp.raise_for_status()
+
+    return session, sessionkey
+
+
+def logout(url, session):
+    if session is None:
+        return
+    session.get(url, params={'command': 'logout'})
+
+
+def make_request_with_password(command, args, logger, url, credentials):
+
+    error = None
+    username = credentials['username']
+    password = credentials['password']
+
+    if not (username and password):
+        error = "Username and password cannot be empty"
+        result = None
+        return result, error
+
+    tries = 0
+    retry = True
+
+    while tries < 2 and retry:
+        sessionkey = credentials.get('sessionkey')
+        session = credentials.get('session')
+        tries += 1
+
+        #obtain a valid session if not supplied
+        if not (session and sessionkey):
+            session, sessionkey = login(url, username, password)
+            if not (session and sessionkey):
+                return None, 'Error authenticating'
+            credentials['session'] = session
+            credentials['sessionkey'] = sessionkey
+
+        args['sessionkey'] = sessionkey
+
+        #make the api call
+        resp = session.get(url, params=args)
+        result = resp.text
+        logger_debug(logger, "Response received: %s" % resp.text)
+
+        if resp.status_code == 200:  # success
+            retry = False
+            break
+        if resp.status_code == 401:  # sessionkey is wrong
+            credentials['session'] = None
+            credentials['sessionkey'] = None
+            continue
+
+        if resp.status_code != 200 and resp.status_code != 401:
+            error = "%s: %s" %\
+                    (str(resp.status_code), resp.headers.get('X-Description'))
+            result = None
+            retry = False
+
+    return result, error
+
+
 def make_request(command, args, logger, host, port,
-                 apikey, secretkey, protocol, path, expires):
+                 credentials, protocol, path):
     response = None
     error = None
 
@@ -58,11 +141,20 @@ def make_request(command, args, logger, host, port,
         args = {}
 
     args["command"] = command
-    args["apiKey"] = apikey
     args["response"] = "json"
     args["signatureversion"] = "3"
     expirationtime = datetime.utcnow() + timedelta(seconds=int(expires))
     args["expires"] = expirationtime.strftime('%Y-%m-%dT%H:%M:%S+0000')
+
+    #try to use the apikey/secretkey method by default
+    #if not present, use the username/password method
+    if not credentials['apikey']:
+        url = "%s://%s:%s%s" % (protocol, host, port, path)
+        return make_request_with_password(command, args,
+                                          logger, url, credentials)
+
+    args['apikey'] = credentials['apikey']
+    secretkey = credentials['secretkey']
     request = zip(args.keys(), args.values())
     request.sort(key=lambda x: x[0].lower())
 
@@ -95,13 +187,14 @@ def make_request(command, args, logger, host, port,
 
 
 def monkeyrequest(command, args, isasync, asyncblock, logger, host, port,
-                  apikey, secretkey, timeout, protocol, path, expires):
+                  credentials, timeout, protocol, path):
     response = None
     error = None
     logger_debug(logger, "======== START Request ========")
     logger_debug(logger, "Requesting command=%s, args=%s" % (command, args))
-    response, error = make_request(command, args, logger, host, port,
-                                   apikey, secretkey, protocol, path, expires)
+    response, error = make_request(command, args, logger, host,
+                                   port, credentials, protocol, path)
+
     logger_debug(logger, "======== END Request ========\n")
 
     if error is not None:
@@ -111,7 +204,6 @@ def monkeyrequest(command, args, isasync, asyncblock, logger, host, port,
         try:
             response = json.loads(str(response))
         except ValueError, e:
-            error = "Error processing json response, %s" % e
             logger_debug(logger, "Error processing json: %s" % e)
 
         return response
@@ -138,7 +230,7 @@ def monkeyrequest(command, args, isasync, asyncblock, logger, host, port,
             progress += 1
             logger_debug(logger, "Job %s to timeout in %ds" % (jobid, timeout))
             response, error = make_request(command, request, logger,
-                                           host, port, apikey, secretkey,
+                                           host, port, credentials,
                                            protocol, path)
             if error is not None:
                 return response, error
