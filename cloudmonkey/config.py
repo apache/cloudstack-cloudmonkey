@@ -28,7 +28,7 @@ try:
     import os
     import sys
 
-    from ConfigParser import ConfigParser, SafeConfigParser
+    from ConfigParser import ConfigParser
     from os.path import expanduser
 except ImportError, e:
     print "ImportError", e

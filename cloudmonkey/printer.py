@@ -20,8 +20,7 @@ try:
     from pygments import highlight
     from pygments.console import ansiformat
     from pygments.formatter import Formatter
-    from pygments.formatters import Terminal256Formatter
-    from pygments.lexer import bygroups, include, RegexLexer
+    from pygments.lexer import bygroups, RegexLexer
     from pygments.token import *
 
     import sys
