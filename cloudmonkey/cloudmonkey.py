@@ -257,7 +257,8 @@ class CloudMonkeyShell(cmd.Cmd, object):
                                         self.asyncblock, logger,
                                         self.host, self.port,
                                         self.credentials,
-                                        self.timeout, self.protocol, self.path, self.expires)
+                                        self.timeout, self.protocol,
+                                        self.path, self.expires)
         if error is not None:
             self.monkeyprint(error)
         return response
@@ -484,8 +485,9 @@ class CloudMonkeyShell(cmd.Cmd, object):
                     helpdoc += "\nRequired params are %s" % ' '.join(required)
                 helpdoc += "\nParameters\n" + "=" * 10
                 for param in api['params']:
-                    helpdoc += "\n%s = (%s) %s" % (param['name'],
-                               param['type'], param['description'])
+                    helpdoc += "\n%s = (%s) %s" % (
+                               param['name'], param['type'],
+                               param['description'])
                 self.monkeyprint(helpdoc)
             else:
                 self.monkeyprint("Error: no such api (%s) on %s" %

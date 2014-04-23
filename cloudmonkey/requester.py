@@ -96,7 +96,7 @@ def make_request_with_password(command, args, logger, url, credentials):
         session = credentials.get('session')
         tries += 1
 
-        #obtain a valid session if not supplied
+        # obtain a valid session if not supplied
         if not (session and sessionkey):
             session, sessionkey = login(url, username, password)
             if not (session and sessionkey):
@@ -106,7 +106,7 @@ def make_request_with_password(command, args, logger, url, credentials):
 
         args['sessionkey'] = sessionkey
 
-        #make the api call
+        # make the api call
         resp = session.get(url, params=args)
         result = resp.text
         logger_debug(logger, "Response received: %s" % resp.text)
@@ -146,8 +146,8 @@ def make_request(command, args, logger, host, port,
     expirationtime = datetime.utcnow() + timedelta(seconds=int(expires))
     args["expires"] = expirationtime.strftime('%Y-%m-%dT%H:%M:%S+0000')
 
-    #try to use the apikey/secretkey method by default
-    #if not present, use the username/password method
+    # try to use the apikey/secretkey method by default
+    # if not present, use the username/password method
     if not credentials['apikey']:
         url = "%s://%s:%s%s" % (protocol, host, port, path)
         return make_request_with_password(command, args,
@@ -245,8 +245,8 @@ def monkeyrequest(command, args, isasync, asyncblock, logger, host, port,
             jobstatus = result['jobstatus']
             if jobstatus == 2:
                 jobresult = result["jobresult"]
-                error = "\rAsync job %s failed\nError %s, %s" % (jobid,
-                        jobresult["errorcode"], jobresult["errortext"])
+                error = "\rAsync job %s failed\nError %s, %s" % (
+                        jobid, jobresult["errorcode"], jobresult["errortext"])
                 return response, error
             elif jobstatus == 1:
                 print "\r" + " " * progress,
