@@ -129,7 +129,7 @@ def make_request_with_password(command, args, logger, url, credentials):
 
 
 def make_request(command, args, logger, host, port,
-                 credentials, protocol, path):
+                 credentials, protocol, path, expires):
     response = None
     error = None
 
@@ -187,13 +187,13 @@ def make_request(command, args, logger, host, port,
 
 
 def monkeyrequest(command, args, isasync, asyncblock, logger, host, port,
-                  credentials, timeout, protocol, path):
+                  credentials, timeout, protocol, path, expires):
     response = None
     error = None
     logger_debug(logger, "======== START Request ========")
     logger_debug(logger, "Requesting command=%s, args=%s" % (command, args))
     response, error = make_request(command, args, logger, host,
-                                   port, credentials, protocol, path)
+                                   port, credentials, protocol, path, expires)
 
     logger_debug(logger, "======== END Request ========\n")
 
