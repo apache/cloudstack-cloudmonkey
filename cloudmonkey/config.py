@@ -16,7 +16,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
-__version__ = "5.0.0"
+__version__ = "5.1.0"
 __description__ = "Command Line Interface for Apache CloudStack"
 __maintainer__ = "The Apache CloudStack Team"
 __maintaineremail__ = "dev@cloudstack.apache.org"
