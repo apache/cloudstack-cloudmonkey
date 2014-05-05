@@ -1,6 +1,19 @@
 Apache CloudStack CloudMonkey Changelog
 ---------------------------------------
 
+Version 5.1.0
+=============
+This release includes
+ - support for using username and password instead of / in addition to api key and secret key
+ - Usage of signature version 3 for the api signing process. This reduces the chance of API replay attacks
+ - cleanup based on reporting from PEP8 and Flake8
+If you upgrade from 5.0, then cloudmonkey will ask you to update your config file (~/.cloudmonkey/config)
+Under the [user], you can add
+username =
+password =
+Under the [server], you can add
+expires = 600
+
 Version 5.0.0
 =============
 This is the first release of CloudMonkey independent from the Apache CloudStack core orchestration engine. The release
