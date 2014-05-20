@@ -153,7 +153,7 @@ def make_request(command, args, logger, host, port,
         return make_request_with_password(command, args,
                                           logger, url, credentials)
 
-    args['apikey'] = credentials['apikey']
+    args['apiKey'] = credentials['apikey']
     secretkey = credentials['secretkey']
     request = zip(args.keys(), args.values())
     request.sort(key=lambda x: x[0].lower())
