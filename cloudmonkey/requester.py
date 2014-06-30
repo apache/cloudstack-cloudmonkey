@@ -57,7 +57,12 @@ def login(url, username, password):
     sessionkey = ''
     session = requests.Session()
 
-    resp = session.post(url, params=args)
+    try:
+        resp = session.post(url, params=args)
+    except requests.exceptions.ConnectionError, e:
+        print "Connection refused by server"
+        return None, None
+
     if resp.status_code == 200:
         sessionkey = resp.json()['loginresponse']['sessionkey']
     elif resp.status_code == 531:
