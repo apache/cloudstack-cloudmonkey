@@ -65,6 +65,10 @@ def login(url, username, password):
 
     if resp.status_code == 200:
         sessionkey = resp.json()['loginresponse']['sessionkey']
+    elif resp.status_code == 405:
+        print "Method not allowed, unauthorized access on URL: %s" % url
+        session = None
+        sessionkey = None
     elif resp.status_code == 531:
         print "Error authenticating at %s, with username: %s" \
               ", and password: %s" % (url, username, password)
