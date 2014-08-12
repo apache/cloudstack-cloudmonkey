@@ -152,8 +152,9 @@ def make_request(command, args, logger, host, port,
     args["expires"] = expirationtime.strftime('%Y-%m-%dT%H:%M:%S+0000')
 
     # try to use the apikey/secretkey method by default
-    # if not present, use the username/password method
-    if not credentials['apikey']:
+    # followed by trying to check if we're using integration port
+    # finally use the username/password method
+    if not credentials['apikey'] and (long(port) != 8096):
         url = "%s://%s:%s%s" % (protocol, host, port, path)
         return make_request_with_password(command, args,
                                           logger, url, credentials)
