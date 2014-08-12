@@ -123,6 +123,8 @@ class CloudMonkeyShell(cmd.Cmd, object):
         for verb in self.verbs:
             def add_grammar(verb):
                 def grammar_closure(self, args):
+                    if args is None:
+                        return
                     if self.pipe_runner("%s %s" % (verb, args)):
                         return
                     if ' --help' in args or ' -h' in args:
@@ -432,10 +434,13 @@ class CloudMonkeyShell(cmd.Cmd, object):
         """
         Logout of session started with login with username and password
         """
-        url = "%s://%s:%s%s" % (self.protocol, self.host, self.port, self.path)
-        logout(url, self.credentials.get('session'))
-        self.credentials['session'] = None
-        self.credentials['sessionkey'] = None
+        try:
+            url = "%s://%s:%s%s" % (self.protocol, self.host, self.port, self.path)
+            logout(url, self.credentials.get('session'))
+            self.credentials['session'] = None
+            self.credentials['sessionkey'] = None
+        except TypeError:
+            pass
 
     def pipe_runner(self, args):
         if args.find(' |') > -1:
