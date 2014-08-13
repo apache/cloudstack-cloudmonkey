@@ -8,4 +8,4 @@ The default value is 'Europe'. Note that the master version of Cloudmonkey can a
 
 See the original repo here: [cloudstack-cloudmonkey](https://github.com/apache/cloudstack-cloudmonkey)
 
-*** CODE UNDER DEVELOPMENT - CLICK WATCH TO FOLLOW ***
+**** CODE UNDER DEVELOPMENT - CLICK WATCH TO FOLLOW ****
