@@ -137,7 +137,7 @@ def make_request_with_password(command, args, logger, url, credentials):
     return result, error
 
 
-def make_request(command, args, logger, host, port,
+def make_request(command, args, logger, host, port, region,
                  credentials, protocol, path, expires):
     response = None
     error = None
@@ -150,6 +150,7 @@ def make_request(command, args, logger, host, port,
         args = {}
 
     args["command"] = command
+    args["region"] = region
     args["response"] = "json"
     args["signatureversion"] = "3"
     expirationtime = datetime.utcnow() + timedelta(seconds=int(expires))
@@ -178,6 +179,7 @@ def make_request(command, args, logger, host, port,
                             hashlib.sha1).digest()).strip())
     request_url += "&signature=%s" % sig
     request_url = "%s://%s:%s%s?%s" % (protocol, host, port, path, request_url)
+    print("Request sent: %s" % request_url)
 
     try:
         logger_debug(logger, "Request sent: %s" % request_url)
@@ -196,14 +198,14 @@ def make_request(command, args, logger, host, port,
     return response, error
 
 
-def monkeyrequest(command, args, isasync, asyncblock, logger, host, port,
+def monkeyrequest(command, args, isasync, asyncblock, logger, host, port, region,
                   credentials, timeout, protocol, path, expires):
     response = None
     error = None
     logger_debug(logger, "======== START Request ========")
     logger_debug(logger, "Requesting command=%s, args=%s" % (command, args))
     response, error = make_request(command, args, logger, host,
-                                   port, credentials, protocol, path, expires)
+                                   port, region, credentials, protocol, path, expires)
 
     logger_debug(logger, "======== END Request ========\n")
 
@@ -240,7 +242,7 @@ def monkeyrequest(command, args, isasync, asyncblock, logger, host, port,
             progress += 1
             logger_debug(logger, "Job %s to timeout in %ds" % (jobid, timeout))
             response, error = make_request(command, request, logger,
-                                           host, port, credentials,
+                                           host, port, region, credentials,
                                            protocol, path, expires)
             if error is not None:
                 return response, error
