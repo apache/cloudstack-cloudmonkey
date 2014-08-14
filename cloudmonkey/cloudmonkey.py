@@ -435,7 +435,8 @@ class CloudMonkeyShell(cmd.Cmd, object):
         Logout of session started with login with username and password
         """
         try:
-            url = "%s://%s:%s%s" % (self.protocol, self.host, self.port, self.path)
+            url = "%s://%s:%s%s" % (self.protocol, self.host,
+                                    self.port, self.path)
             logout(url, self.credentials.get('session'))
             self.credentials['session'] = None
             self.credentials['sessionkey'] = None
