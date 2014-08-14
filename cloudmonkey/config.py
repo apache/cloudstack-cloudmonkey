@@ -61,6 +61,7 @@ config_fields['server']['host'] = 'localhost'
 config_fields['server']['path'] = '/client/api'
 config_fields['server']['port'] = '8080'
 config_fields['server']['protocol'] = 'http'
+config_fields['server']['region'] = 'europe'
 config_fields['server']['timeout'] = '3600'
 config_fields['server']['expires'] = '600'
 
