@@ -1,12 +1,25 @@
 Apache CloudStack CloudMonkey Changelog
 ---------------------------------------
 
+Version 5.2.0
+=============
+This release includes
+ - Network requests and shell related bugfixes
+ - Based on platform, it will install either pyreadline (Windows) or readline (OSX and Linux)
+ - Config param removal of `protocol`, `host`, `port`, `path`; uses `url` for the mgmt server URL
+ - Introduces server profiles so users can use cloudmonkey with different hosts and management server configs
+
+Make sure you backup your config before you upgrade cloudmonkey from previous releases.
+With this release `cloudmonkey` will automatically fix your config file, add missing
+configuration parameters and save it as the upgraded versions starts for the first time.
+
 Version 5.1.0
 =============
 This release includes
  - support for using username and password instead of / in addition to api key and secret key
  - Usage of signature version 3 for the api signing process. This reduces the chance of API replay attacks
  - cleanup based on reporting from PEP8 and Flake8
+
 If you upgrade from 5.0, then cloudmonkey will ask you to update your config file (~/.cloudmonkey/config)
 Under the [user], you can add
 username =
