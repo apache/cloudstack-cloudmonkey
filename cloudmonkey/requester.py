@@ -137,12 +137,12 @@ def make_request_with_password(command, args, logger, url, credentials):
     return result, error
 
 
-def make_request(command, args, logger, host, port,
-                 credentials, protocol, path, expires):
+def make_request(command, args, logger, url,
+                 credentials, expires):
     response = None
     error = None
 
-    if protocol != 'http' and protocol != 'https':
+    if not url.startswith('http'):
         error = "Protocol must be 'http' or 'https'"
         return None, error
 
@@ -158,8 +158,7 @@ def make_request(command, args, logger, host, port,
     # try to use the apikey/secretkey method by default
     # followed by trying to check if we're using integration port
     # finally use the username/password method
-    if not credentials['apikey'] and (long(port) != 8096):
-        url = "%s://%s:%s%s" % (protocol, host, port, path)
+    if not credentials['apikey'] and not ("8096" in url):
         return make_request_with_password(command, args,
                                           logger, url, credentials)
 
@@ -177,7 +176,7 @@ def make_request(command, args, logger, host, port,
     sig = urllib.quote_plus(base64.encodestring(hmac.new(secretkey, hashStr,
                             hashlib.sha1).digest()).strip())
     request_url += "&signature=%s" % sig
-    request_url = "%s://%s:%s%s?%s" % (protocol, host, port, path, request_url)
+    request_url = "%s?%s" % (url, request_url)
 
     try:
         logger_debug(logger, "Request sent: %s" % request_url)
@@ -196,14 +195,14 @@ def make_request(command, args, logger, host, port,
     return response, error
 
 
-def monkeyrequest(command, args, isasync, asyncblock, logger, host, port,
-                  credentials, timeout, protocol, path, expires):
+def monkeyrequest(command, args, isasync, asyncblock, logger, url,
+                  credentials, timeout, expires):
     response = None
     error = None
     logger_debug(logger, "======== START Request ========")
     logger_debug(logger, "Requesting command=%s, args=%s" % (command, args))
-    response, error = make_request(command, args, logger, host,
-                                   port, credentials, protocol, path, expires)
+    response, error = make_request(command, args, logger, url,
+                                   credentials, expires)
 
     logger_debug(logger, "======== END Request ========\n")
 
@@ -239,9 +238,9 @@ def monkeyrequest(command, args, isasync, asyncblock, logger, host, port,
             timeout = timeout - pollperiod
             progress += 1
             logger_debug(logger, "Job %s to timeout in %ds" % (jobid, timeout))
-            response, error = make_request(command, request, logger,
-                                           host, port, credentials,
-                                           protocol, path, expires)
+
+            response, error = make_request(command, request, logger, url,
+                                           credentials, expires)
             if error is not None:
                 return response, error
 

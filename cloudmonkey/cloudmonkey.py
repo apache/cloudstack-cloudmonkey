@@ -257,10 +257,8 @@ class CloudMonkeyShell(cmd.Cmd, object):
     def make_request(self, command, args={}, isasync=False):
         response, error = monkeyrequest(command, args, isasync,
                                         self.asyncblock, logger,
-                                        self.host, self.port,
-                                        self.credentials,
-                                        self.timeout, self.protocol,
-                                        self.path, self.expires)
+                                        self.url, self.credentials,
+                                        self.timeout, self.expires)
         if error is not None:
             self.monkeyprint(error)
         return response
@@ -400,11 +398,11 @@ class CloudMonkeyShell(cmd.Cmd, object):
     def do_set(self, args):
         """
         Set config for cloudmonkey. For example, options can be:
-        host, port, apikey, secretkey, log_file, history_file
+        url, auth, log_file, history_file
         You may also edit your ~/.cloudmonkey_config instead of using set.
 
         Example:
-        set host 192.168.56.2
+        set url http://localhost:8080/client/api
         set prompt 🐵 cloudmonkey>
         set log_file /var/log/cloudmonkey.log
         """
@@ -425,8 +423,7 @@ class CloudMonkeyShell(cmd.Cmd, object):
         Login using stored credentials. Starts a session to be reused for
         subsequent api calls
         """
-        url = "%s://%s:%s%s" % (self.protocol, self.host, self.port, self.path)
-        session, sessionkey = login(url, self.username, self.password)
+        session, sessionkey = login(self.url, self.username, self.password)
         self.credentials['session'] = session
         self.credentials['sessionkey'] = sessionkey
 
@@ -435,9 +432,7 @@ class CloudMonkeyShell(cmd.Cmd, object):
         Logout of session started with login with username and password
         """
         try:
-            url = "%s://%s:%s%s" % (self.protocol, self.host,
-                                    self.port, self.path)
-            logout(url, self.credentials.get('session'))
+            logout(self.url, self.credentials.get('session'))
             self.credentials['session'] = None
             self.credentials['sessionkey'] = None
         except TypeError:

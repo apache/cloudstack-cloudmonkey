@@ -56,20 +56,14 @@ config_fields['ui']['color'] = 'true'
 config_fields['ui']['prompt'] = '> '
 config_fields['ui']['display'] = 'default'
 
-# server
-config_fields['server']['host'] = 'localhost'
-config_fields['server']['path'] = '/client/api'
-config_fields['server']['port'] = '8080'
-config_fields['server']['protocol'] = 'http'
+# server: default profile
+config_fields['server']['url'] = 'http://localhost:8080/client/api'
 config_fields['server']['timeout'] = '3600'
 config_fields['server']['expires'] = '600'
-
-# user
-config_fields['user']['apikey'] = ''
-config_fields['user']['secretkey'] = ''
-config_fields['user']['username'] = ''
-config_fields['user']['password'] = ''
-
+config_fields['server']['username'] = 'admin'
+config_fields['server']['password'] = 'password'
+config_fields['server']['apikey'] = ''
+config_fields['server']['secretkey'] = ''
 
 def write_config(get_attr, config_file, first_time=False):
     global config_fields
@@ -114,10 +108,12 @@ def read_config(get_attr, set_attr, config_file):
             try:
                 set_attr(key, config.get(section, key))
             except Exception:
+                set_attr(key, config_fields[section][key])
                 missing_keys.append(key)
 
     if len(missing_keys) > 0:
-        print "Please fix `%s` in %s" % (', '.join(missing_keys), config_file)
-        sys.exit()
+        print "Found missing config keys and replace with default value:"
+        print "`%s` in %s" % (', '.join(missing_keys), config_file)
+        write_config(get_attr, config_file, False)
 
     return config_options
