@@ -69,6 +69,13 @@ config_fields['server']['secretkey'] = ''
 def write_config(get_attr, config_file, first_time=False):
     global config_fields
     config = ConfigParser()
+    if os.path.exists(config_file) and not first_time:
+        config = ConfigParser()
+        try:
+            with open(config_file, 'r') as cfg:
+                config.readfp(cfg)
+        except IOError, e:
+            print "Error: config_file not found", e
     for section in config_fields.keys():
         config.add_section(section)
         for key in config_fields[section].keys():
