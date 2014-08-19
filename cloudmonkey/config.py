@@ -42,7 +42,9 @@ config_dir = expanduser('~/.cloudmonkey')
 config_file = expanduser(config_dir + '/config')
 
 # cloudmonkey config fields
-config_fields = {'core': {}, 'ui': {}, 'server': {}}
+mandatory_sections = ['core', 'ui']
+default_profile_name = 'local'
+config_fields = {'core': {}, 'ui': {}}
 
 # core
 config_fields['core']['asyncblock'] = 'true'
@@ -50,21 +52,22 @@ config_fields['core']['paramcompletion'] = 'false'
 config_fields['core']['cache_file'] = expanduser(config_dir + '/cache')
 config_fields['core']['history_file'] = expanduser(config_dir + '/history')
 config_fields['core']['log_file'] = expanduser(config_dir + '/log')
-config_fields['core']['profile'] = 'server' # default server profile
+config_fields['core']['profile'] = default_profile_name
 
 # ui
 config_fields['ui']['color'] = 'true'
 config_fields['ui']['prompt'] = '> '
 config_fields['ui']['display'] = 'default'
 
-# server: default profile
-config_fields['server']['url'] = 'http://localhost:8080/client/api'
-config_fields['server']['timeout'] = '3600'
-config_fields['server']['expires'] = '600'
-config_fields['server']['username'] = 'admin'
-config_fields['server']['password'] = 'password'
-config_fields['server']['apikey'] = ''
-config_fields['server']['secretkey'] = ''
+# default profile
+default_profile = {}
+default_profile['url'] = 'http://localhost:8080/client/api'
+default_profile['timeout'] = '3600'
+default_profile['expires'] = '600'
+default_profile['username'] = 'admin'
+default_profile['password'] = 'password'
+default_profile['apikey'] = ''
+default_profile['secretkey'] = ''
 
 def write_config(get_attr, config_file, first_time=False):
     global config_fields
