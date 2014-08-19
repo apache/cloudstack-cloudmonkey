@@ -159,8 +159,11 @@ def make_request(command, args, logger, url,
     # followed by trying to check if we're using integration port
     # finally use the username/password method
     if not credentials['apikey'] and not ("8096" in url):
-        return make_request_with_password(command, args,
-                                          logger, url, credentials)
+        try:
+            return make_request_with_password(command, args,
+                                              logger, url, credentials)
+        except (requests.exceptions.ConnectionError, Exception), e:
+            return None, e
 
     args['apiKey'] = credentials['apikey']
     secretkey = credentials['secretkey']
