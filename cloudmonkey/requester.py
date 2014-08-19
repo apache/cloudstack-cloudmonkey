@@ -217,7 +217,9 @@ def monkeyrequest(command, args, isasync, asyncblock, logger, url,
             response = json.loads(str(response))
         except ValueError, e:
             logger_debug(logger, "Error processing json: %s" % e)
-
+            print "Error processing json:", str(e)
+            response = None
+            error = e
         return response
 
     response = process_json(response)
