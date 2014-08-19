@@ -70,7 +70,7 @@ default_profile['apikey'] = ''
 default_profile['secretkey'] = ''
 
 def write_config(get_attr, config_file, first_time=False):
-    global config_fields
+    global config_fields, mandatory_sections, default_profile, default_profile_name
     config = ConfigParser()
     if os.path.exists(config_file) and not first_time:
         config = ConfigParser()
@@ -79,10 +79,31 @@ def write_config(get_attr, config_file, first_time=False):
                 config.readfp(cfg)
         except IOError, e:
             print "Error: config_file not found", e
-    for section in config_fields.keys():
-        config.add_section(section)
-        for key in config_fields[section].keys():
-            if first_time:
+    profile = None
+    try:
+        profile = get_attr('profile')
+    except AttributeError, e:
+        pass
+    if profile is None or profile == '':
+        profile = default_profile_name
+    config_fields['core']['profile'] = profile
+    if profile in mandatory_sections:
+        print "Server profile name cannot be", profile
+        sys.exit(1)
+    new_profile = False
+    for section in (mandatory_sections + [profile]):
+        if not config.has_section(section):
+            try:
+                config.add_section(section)
+            except ValueError, e:
+                print "Server profile name cannot be", profile
+                sys.exit(1)
+        if section == profile and section not in config_fields:
+            config_fields[section] = default_profile.copy()
+            new_profile = True
+        section_keys = config_fields[section].keys()
+        for key in section_keys:
+            if first_time or new_profile:
                 config.set(section, key, config_fields[section][key])
             else:
                 config.set(section, key, get_attr(key))
@@ -92,12 +113,13 @@ def write_config(get_attr, config_file, first_time=False):
 
 
 def read_config(get_attr, set_attr, config_file):
-    global config_fields, config_dir
+    global config_fields, config_dir, mandatory_sections, default_profile, default_profile_name
     if not os.path.exists(config_dir):
         os.makedirs(config_dir)
 
     config_options = reduce(lambda x, y: x + y, map(lambda x:
                             config_fields[x].keys(), config_fields.keys()))
+    config_options += default_profile.keys()
 
     if os.path.exists(config_file):
         config = ConfigParser()
@@ -114,16 +136,32 @@ def read_config(get_attr, set_attr, config_file):
         print "After setting up, run the `sync` command to sync apis\n"
 
     missing_keys = []
-    for section in config_fields.keys():
-        for key in config_fields[section].keys():
+    profile = config.get('core', 'profile')
+    if profile is None or profile == '':
+        print "Invalid profile name found, setting it to default:", default_profile_name
+        profile = default_profile_name
+        config.set('core', 'profile', profile)
+    if profile in mandatory_sections:
+        print "Server profile cannot be", profile
+        sys.exit(1)
+    if not config.has_section(profile):
+        print "Selected profile (%s) does not exit, will use the defaults" % profile
+    for section in (mandatory_sections + [profile]):
+        if section is profile and section not in config_fields:
+            config_fields[section] = default_profile.copy()
+        section_keys = config_fields[section].keys()
+        for key in section_keys:
             try:
                 set_attr(key, config.get(section, key))
             except Exception:
                 set_attr(key, config_fields[section][key])
                 missing_keys.append(key)
+            # Cosmetic fix for prompt
+            if key == 'prompt':
+                set_attr(key, get_attr('prompt').strip() + " ")
 
     if len(missing_keys) > 0:
-        print "Found missing config keys and replace with default value:"
+        print "Missing configuration was set using default values for keys:"
         print "`%s` in %s" % (', '.join(missing_keys), config_file)
         write_config(get_attr, config_file, False)
 
