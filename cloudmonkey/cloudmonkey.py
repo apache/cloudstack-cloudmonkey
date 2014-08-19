@@ -78,7 +78,6 @@ class CloudMonkeyShell(cmd.Cmd, object):
                             'username': self.username,
                             'password': self.password}
         self.loadcache()
-        self.prompt = self.prompt.strip() + " "  # Cosmetic fix for prompt
 
         logging.basicConfig(filename=self.log_file,
                             level=logging.DEBUG, format=log_fmt)
@@ -105,6 +104,7 @@ class CloudMonkeyShell(cmd.Cmd, object):
 
     def cmdloop(self, intro=None):
         print(self.intro)
+        print "Using management server profile:", self.profile
         while True:
             try:
                 super(CloudMonkeyShell, self).cmdloop(intro="")
@@ -409,8 +409,8 @@ class CloudMonkeyShell(cmd.Cmd, object):
         args = args.strip().partition(" ")
         key, value = (args[0], args[2])
         setattr(self, key, value)  # keys and attributes should have same names
-        self.prompt = self.prompt.strip() + " "  # prompt fix
         write_config(self.get_attr, self.config_file)
+        read_config(self.get_attr, self.set_attr, self.config_file)
 
     def complete_set(self, text, line, begidx, endidx):
         mline = line.partition(" ")[2]
