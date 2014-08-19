@@ -408,6 +408,9 @@ class CloudMonkeyShell(cmd.Cmd, object):
         """
         args = args.strip().partition(" ")
         key, value = (args[0], args[2])
+        if key in ['host', 'port', 'path', 'protocol']:
+            print "This parameter has been deprecated, please set 'url' instead"
+            return
         setattr(self, key, value)  # keys and attributes should have same names
         write_config(self.get_attr, self.config_file)
         read_config(self.get_attr, self.set_attr, self.config_file)
