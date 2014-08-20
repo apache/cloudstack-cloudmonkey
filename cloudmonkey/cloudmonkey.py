@@ -30,7 +30,7 @@ try:
 
     from cachemaker import loadcache, savecache, monkeycache, splitverbsubject
     from config import __version__, __description__, __projecturl__
-    from config import read_config, write_config, config_file
+    from config import read_config, write_config, config_file, default_profile
     from optparse import OptionParser
     from prettytable import PrettyTable
     from printer import monkeyprint
@@ -68,17 +68,15 @@ class CloudMonkeyShell(cmd.Cmd, object):
     ruler = "="
     config_options = []
     verbs = []
+    prompt = "🐵 > "
 
     def __init__(self, pname, cfile):
         self.program_name = pname
         self.config_file = cfile
         self.config_options = read_config(self.get_attr, self.set_attr,
                                           self.config_file)
-        self.credentials = {'apikey': self.apikey, 'secretkey': self.secretkey,
-                            'username': self.username,
-                            'password': self.password}
         self.loadcache()
-
+        self.init_credential_store()
         logging.basicConfig(filename=self.log_file,
                             level=logging.DEBUG, format=log_fmt)
         logger.debug("Loaded config fields:\n%s" % map(lambda x: "%s=%s" %
@@ -93,6 +91,11 @@ class CloudMonkeyShell(cmd.Cmd, object):
             logger.debug("Error: Unable to read history. " + str(e))
         atexit.register(readline.write_history_file, self.history_file)
 
+    def init_credential_store(self):
+        self.credentials = {'apikey': self.apikey, 'secretkey': self.secretkey,
+                            'username': self.username,
+                            'password': self.password}
+
     def get_attr(self, field):
         return getattr(self, field)
 
@@ -104,7 +107,7 @@ class CloudMonkeyShell(cmd.Cmd, object):
 
     def cmdloop(self, intro=None):
         print(self.intro)
-        print "Using management server profile:", self.profile
+        print "Using management server profile:", self.profile, "\n"
         while True:
             try:
                 super(CloudMonkeyShell, self).cmdloop(intro="")
@@ -411,9 +414,15 @@ class CloudMonkeyShell(cmd.Cmd, object):
         if key in ['host', 'port', 'path', 'protocol']:
             print "This parameter has been deprecated, please set 'url' instead"
             return
-        setattr(self, key, value)  # keys and attributes should have same names
+        setattr(self, key, value)
         write_config(self.get_attr, self.config_file)
-        read_config(self.get_attr, self.set_attr, self.config_file)
+        if key.strip() == 'profile':
+            read_config(self.get_attr, self.set_attr, self.config_file)
+            self.init_credential_store()
+            print "\nLoaded server profile '%s' with options:" % key
+            for option in default_profile.keys():
+                print "    %s = %s" % (option, self.get_attr(option))
+            print
 
     def complete_set(self, text, line, begidx, endidx):
         mline = line.partition(" ")[2]
@@ -426,9 +435,12 @@ class CloudMonkeyShell(cmd.Cmd, object):
         Login using stored credentials. Starts a session to be reused for
         subsequent api calls
         """
-        session, sessionkey = login(self.url, self.username, self.password)
-        self.credentials['session'] = session
-        self.credentials['sessionkey'] = sessionkey
+        try:
+            session, sessionkey = login(self.url, self.username, self.password)
+            self.credentials['session'] = session
+            self.credentials['sessionkey'] = sessionkey
+        except Exception, e:
+            print "Error while trying to log in to the server: ", str(e)
 
     def do_logout(self, args):
         """
@@ -436,10 +448,10 @@ class CloudMonkeyShell(cmd.Cmd, object):
         """
         try:
             logout(self.url, self.credentials.get('session'))
-            self.credentials['session'] = None
-            self.credentials['sessionkey'] = None
-        except TypeError:
+        except Exception, e:
             pass
+        self.credentials['session'] = None
+        self.credentials['sessionkey'] = None
 
     def pipe_runner(self, args):
         if args.find(' |') > -1:
