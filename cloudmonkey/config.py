@@ -56,7 +56,7 @@ config_fields['core']['profile'] = default_profile_name
 
 # ui
 config_fields['ui']['color'] = 'true'
-config_fields['ui']['prompt'] = '> '
+config_fields['ui']['prompt'] = '🐵 > '
 config_fields['ui']['display'] = 'default'
 
 # default profile
@@ -69,16 +69,16 @@ default_profile['password'] = 'password'
 default_profile['apikey'] = ''
 default_profile['secretkey'] = ''
 
-def write_config(get_attr, config_file, first_time=False):
+def write_config(get_attr, config_file):
     global config_fields, mandatory_sections, default_profile, default_profile_name
     config = ConfigParser()
-    if os.path.exists(config_file) and not first_time:
-        config = ConfigParser()
+    if os.path.exists(config_file):
         try:
             with open(config_file, 'r') as cfg:
                 config.readfp(cfg)
         except IOError, e:
             print "Error: config_file not found", e
+
     profile = None
     try:
         profile = get_attr('profile')
@@ -86,27 +86,42 @@ def write_config(get_attr, config_file, first_time=False):
         pass
     if profile is None or profile == '':
         profile = default_profile_name
-    config_fields['core']['profile'] = profile
     if profile in mandatory_sections:
         print "Server profile name cannot be", profile
         sys.exit(1)
-    new_profile = False
+
+    has_profile_changed = False
+    profile_in_use = default_profile_name
+    try:
+        profile_in_use = config.get('core', 'profile')
+    except Exception:
+        pass
+    if profile_in_use != profile:
+        has_profile_changed = True
+
     for section in (mandatory_sections + [profile]):
         if not config.has_section(section):
             try:
                 config.add_section(section)
+                if section not in mandatory_sections:
+                    for key in default_profile.keys():
+                        config.set(section, key, default_profile[key])
+                else:
+                    for key in config_fields[section].keys():
+                        config.set(section, key, config_fields[section][key])
             except ValueError, e:
                 print "Server profile name cannot be", profile
                 sys.exit(1)
-        if section == profile and section not in config_fields:
-            config_fields[section] = default_profile.copy()
-            new_profile = True
-        section_keys = config_fields[section].keys()
+        if section in mandatory_sections:
+            section_keys = config_fields[section].keys()
+        else:
+            section_keys = default_profile.keys()
         for key in section_keys:
-            if first_time or new_profile:
-                config.set(section, key, config_fields[section][key])
-            else:
-                config.set(section, key, get_attr(key))
+            try:
+                if not (has_profile_changed and section == profile):
+                    config.set(section, key, get_attr(key))
+            except Exception:
+                pass
     with open(config_file, 'w') as cfg:
         config.write(cfg)
     return config
@@ -121,40 +136,48 @@ def read_config(get_attr, set_attr, config_file):
                             config_fields[x].keys(), config_fields.keys()))
     config_options += default_profile.keys()
 
+    config = ConfigParser()
     if os.path.exists(config_file):
-        config = ConfigParser()
         try:
             with open(config_file, 'r') as cfg:
                 config.readfp(cfg)
         except IOError, e:
             print "Error: config_file not found", e
     else:
-        config = write_config(get_attr, config_file, True)
-        print "Welcome! Using `set` configure the necessary settings:"
-        print " ".join(sorted(config_options))
+        config = write_config(get_attr, config_file)
+        print "Welcome! Use the `set` command to configure options"
         print "Config file:", config_file
         print "After setting up, run the `sync` command to sync apis\n"
 
     missing_keys = []
     profile = config.get('core', 'profile')
-    if profile is None or profile == '':
-        print "Invalid profile name found, setting it to default:", default_profile_name
-        profile = default_profile_name
-        config.set('core', 'profile', profile)
-    if profile in mandatory_sections:
+    if profile is None or profile == '' or profile in mandatory_sections:
         print "Server profile cannot be", profile
         sys.exit(1)
+
     if not config.has_section(profile):
         print "Selected profile (%s) does not exit, will use the defaults" % profile
+        try:
+            config.add_section(profile)
+        except ValueError, e:
+            print "Server profile name cannot be", profile
+            sys.exit(1)
+        for key in default_profile.keys():
+            config.set(profile, key, default_profile[key])
+
     for section in (mandatory_sections + [profile]):
-        if section is profile and section not in config_fields:
-            config_fields[section] = default_profile.copy()
-        section_keys = config_fields[section].keys()
+        if section in mandatory_sections:
+            section_keys = config_fields[section].keys()
+        else:
+            section_keys = default_profile.keys()
         for key in section_keys:
             try:
                 set_attr(key, config.get(section, key))
-            except Exception:
-                set_attr(key, config_fields[section][key])
+            except Exception, e:
+                if section in mandatory_sections:
+                    set_attr(key, config_fields[section][key])
+                else:
+                    set_attr(key, default_profile[key])
                 missing_keys.append(key)
             # Cosmetic fix for prompt
             if key == 'prompt':
@@ -163,6 +186,6 @@ def read_config(get_attr, set_attr, config_file):
     if len(missing_keys) > 0:
         print "Missing configuration was set using default values for keys:"
         print "`%s` in %s" % (', '.join(missing_keys), config_file)
-        write_config(get_attr, config_file, False)
+        write_config(get_attr, config_file)
 
     return config_options
