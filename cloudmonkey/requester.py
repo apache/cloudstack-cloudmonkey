@@ -143,7 +143,8 @@ def make_request(command, args, logger, url,
     error = None
 
     if not url.startswith('http'):
-        error = "Protocol must be 'http' or 'https'"
+        error = "Server URL should start with 'http' or 'https', " + \
+                "please check and fix the url"
         return None, error
 
     if args is None:
