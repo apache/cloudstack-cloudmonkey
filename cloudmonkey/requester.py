@@ -179,7 +179,7 @@ def make_request(command, args, logger, host, port, region,
                             hashlib.sha1).digest()).strip())
     request_url += "&signature=%s" % sig
     request_url = "%s://%s:%s%s?%s" % (protocol, host, port, path, request_url)
-    print("Request sent: %s" % request_url)
+    ##print("Request sent: %s" % request_url) #Debug/test output
 
     try:
         logger_debug(logger, "Request sent: %s" % request_url)
