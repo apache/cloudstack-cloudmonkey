@@ -8,7 +8,8 @@ This release includes
  - For missing keys, cloudmonkey will set default values
  - Network requests, json decoding and shell related bugfixes
  - Based on platform, it will install either pyreadline (Windows) or readline (OSX and Linux)
- - Config param removal of `protocol`, `host`, `port`, `path`; uses `url` for the mgmt server URL
+ - Config options `protocol`, `host`, `port`, `path` are deprecated now
+ - Backward compatibilty exists for above options but we use `url` for the mgmt server URL
  - Introduces server profiles so users can use cloudmonkey with different hosts and management server configs
  - A default profile under the section [local] is added with default values
  - Everytime `set` is called, cloudmonkey will write the config and reload config file
