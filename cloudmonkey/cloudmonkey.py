@@ -37,6 +37,7 @@ try:
     from requester import monkeyrequest
     from requester import login
     from requester import logout
+    from urlparse import urlparse
 except ImportError, e:
     print("Import error in %s : %s" % (__name__, e))
     import sys
@@ -69,6 +70,10 @@ class CloudMonkeyShell(cmd.Cmd, object):
     config_options = []
     verbs = []
     prompt = "🐵 > "
+    protocol = "http"
+    host = "localhost"
+    port = "8080"
+    path = "/client/api"
 
     def __init__(self, pname, cfile):
         self.program_name = pname
@@ -95,6 +100,11 @@ class CloudMonkeyShell(cmd.Cmd, object):
         self.credentials = {'apikey': self.apikey, 'secretkey': self.secretkey,
                             'username': self.username,
                             'password': self.password}
+        parsed_url = urlparse(self.url)
+        self.protocol = "http" if not parsed_url.scheme else parsed_url.scheme
+        self.host = parsed_url.netloc
+        self.port = "8080" if not parsed_url.port else parsed_url.port
+        self.path = parsed_url.path
 
     def get_attr(self, field):
         return getattr(self, field)
@@ -411,10 +421,12 @@ class CloudMonkeyShell(cmd.Cmd, object):
         """
         args = args.strip().partition(" ")
         key, value = (args[0], args[2])
-        if key in ['host', 'port', 'path', 'protocol']:
-            print "This parameter has been deprecated, please set 'url' instead"
-            return
         setattr(self, key, value)
+        if key in ['host', 'port', 'path', 'protocol']:
+            key = 'url'
+            self.url = "%s://%s:%s%s" % (self.protocol, self.host, self.port, self.path)
+            print "This option has been deprecated, please set 'url' instead"
+            print "This server url will be used:", self.url
         write_config(self.get_attr, self.config_file)
         if key.strip() == 'profile':
             read_config(self.get_attr, self.set_attr, self.config_file)
