@@ -1,6 +1,12 @@
 Apache CloudStack CloudMonkey Changelog
 ---------------------------------------
 
+(2014-08-22) INTEROUTE FORK OF VERSION 5.1.0
+============================================
+A modification is required for using Cloudmonkey with Interoute Virtual Data Centre. This is to handle access
+to the different VDC regions, by creating a new configuration variable 'region'.
+The files cloudmonkey.py, requester.py and config.py have been modified.
+
 Version 5.1.0
 =============
 This release includes
