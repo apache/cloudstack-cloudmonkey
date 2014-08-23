@@ -428,9 +428,9 @@ class CloudMonkeyShell(cmd.Cmd, object):
             print "This option has been deprecated, please set 'url' instead"
             print "This server url will be used:", self.url
         write_config(self.get_attr, self.config_file)
+        read_config(self.get_attr, self.set_attr, self.config_file)
+        self.init_credential_store()
         if key.strip() == 'profile':
-            read_config(self.get_attr, self.set_attr, self.config_file)
-            self.init_credential_store()
             print "\nLoaded server profile '%s' with options:" % key
             for option in default_profile.keys():
                 print "    %s = %s" % (option, self.get_attr(option))

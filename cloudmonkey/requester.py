@@ -187,7 +187,7 @@ def make_request(command, args, logger, url,
         connection = urllib2.urlopen(request_url)
         response = connection.read()
     except HTTPError, e:
-        error = "%s: %s" % (e.msg, e.info().getheader('X-Description'))
+        error = "Error:%s %s" % (e.msg, e.info().getheader('X-Description'))
     except URLError, e:
         error = e.reason
 
