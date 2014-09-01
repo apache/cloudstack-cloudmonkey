@@ -421,6 +421,12 @@ class CloudMonkeyShell(cmd.Cmd, object):
         """
         args = args.strip().partition(" ")
         key, value = (args[0], args[2])
+        if not key:
+            return
+        if not value:
+            print "Blank value of %s is not allowed" % key
+            return
+
         setattr(self, key, value)
         if key in ['host', 'port', 'path', 'protocol']:
             key = 'url'
