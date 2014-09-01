@@ -18,6 +18,8 @@
 # under the License.
 
 try:
+    import argcomplete
+    import argparse
     import atexit
     import cmd
     import json
@@ -559,39 +561,25 @@ class CloudMonkeyShell(cmd.Cmd, object):
         return self.do_EOF(args)
 
 
-class MonkeyParser(OptionParser):
-    def format_help(self, formatter=None):
-        if formatter is None:
-            formatter = self.formatter
-        result = []
-        if self.usage:
-            result.append("Usage: cloudmonkey [options] [cmds] [params]\n\n")
-        if self.description:
-            result.append(self.format_description(formatter) + "\n")
-        result.append(self.format_option_help(formatter))
-        result.append("\nTry cloudmonkey [help|?]\n")
-        return "".join(result)
-
-
 def main():
-    parser = MonkeyParser()
-    parser.add_option("-c", "--config-file",
-                      dest="cfile", default=config_file,
+    parser = argparse.ArgumentParser(usage="cloudmonkey [options] [commands]",
+                                     version="cloudmonkey " + __version__,
+                                     description=__description__,
+                                     epilog="Try cloudmonkey [help|?]")
+    parser.add_argument("-c", "--config-file",
+                      dest="configFile", default=config_file,
                       help="config file for cloudmonkey", metavar="FILE")
-    parser.add_option("-v", "--version",
-                      action="store_true", dest="version", default=False,
-                      help="prints cloudmonkey version information")
 
-    (options, args) = parser.parse_args()
-    if options.version:
-        print "cloudmonkey", __version__
-        print __description__, "(%s)" % __projecturl__
-        sys.exit(0)
+    parser.add_argument("commands", nargs=argparse.REMAINDER,
+                        help="api commands")
 
-    shell = CloudMonkeyShell(sys.argv[0], options.cfile)
+    argcomplete.autocomplete(parser)
+    args = parser.parse_args()
 
-    if len(args) > 0:
-        shell.onecmd(' '.join(args))
+    shell = CloudMonkeyShell(sys.argv[0], args.configFile)
+
+    if len(args.commands) > 0:
+        shell.onecmd(' '.join(args.commands))
     else:
         shell.cmdloop()
 
