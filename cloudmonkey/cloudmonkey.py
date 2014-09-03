@@ -432,7 +432,8 @@ class CloudMonkeyShell(cmd.Cmd, object):
         setattr(self, key, value)
         if key in ['host', 'port', 'path', 'protocol']:
             key = 'url'
-            self.url = "%s://%s:%s%s" % (self.protocol, self.host, self.port, self.path)
+            self.url = "%s://%s:%s%s" % (self.protocol, self.host,
+                                         self.port, self.path)
             print "This option has been deprecated, please set 'url' instead"
             print "This server url will be used:", self.url
         write_config(self.get_attr, self.config_file)
@@ -567,8 +568,8 @@ def main():
                                      description=__description__,
                                      epilog="Try cloudmonkey [help|?]")
     parser.add_argument("-c", "--config-file",
-                      dest="configFile", default=config_file,
-                      help="config file for cloudmonkey", metavar="FILE")
+                        dest="configFile", default=config_file,
+                        help="config file for cloudmonkey", metavar="FILE")
 
     parser.add_argument("commands", nargs=argparse.REMAINDER,
                         help="api commands")
