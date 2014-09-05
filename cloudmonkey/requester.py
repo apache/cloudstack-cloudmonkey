@@ -236,6 +236,8 @@ def monkeyrequest(command, args, isasync, asyncblock, logger, url,
         jobid = response[responsekey]['jobid']
         command = "queryAsyncJobResult"
         request = {'jobid': jobid}
+        if timeout == "" or timeout == None:
+            timeout = 3600
         timeout = int(timeout)
         pollperiod = 2
         progress = 1
