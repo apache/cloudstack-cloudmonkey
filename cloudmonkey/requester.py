@@ -153,6 +153,8 @@ def make_request(command, args, logger, url,
     args["command"] = command
     args["response"] = "json"
     args["signatureversion"] = "3"
+    if expires == "" or expires == None:
+        expires = 600
     expirationtime = datetime.utcnow() + timedelta(seconds=int(expires))
     args["expires"] = expirationtime.strftime('%Y-%m-%dT%H:%M:%S+0000')
 
