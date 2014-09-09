@@ -586,11 +586,13 @@ def main():
 
     shell = CloudMonkeyShell(sys.argv[0], args.configFile)
 
-    if args.displayType != None and args.displayType in displayTypes:
+    if args.displayType is not None and args.displayType in displayTypes:
         shell.set_attr("display", args.displayType)
 
     if len(args.commands) > 0:
-        shell.onecmd(' '.join(args.commands))
+        shell.onecmd(" ".join(map(lambda x: x.replace("\\ ", " ")
+                                             .replace(" ", "\\ "),
+                                  args.commands)))
     else:
         shell.cmdloop()
 
