@@ -563,13 +563,20 @@ class CloudMonkeyShell(cmd.Cmd, object):
 
 
 def main():
+    displayTypes = ["json", "table", "default"]
     parser = argparse.ArgumentParser(usage="cloudmonkey [options] [commands]",
                                      version="cloudmonkey " + __version__,
                                      description=__description__,
                                      epilog="Try cloudmonkey [help|?]")
+
     parser.add_argument("-c", "--config-file",
                         dest="configFile", default=config_file,
                         help="config file for cloudmonkey", metavar="FILE")
+
+    parser.add_argument("-d", "--display-type",
+                        dest="displayType", default=None,
+                        help="Output display type, json, table or default",
+                        choices=tuple(displayTypes))
 
     parser.add_argument("commands", nargs=argparse.REMAINDER,
                         help="api commands")
@@ -578,6 +585,9 @@ def main():
     args = parser.parse_args()
 
     shell = CloudMonkeyShell(sys.argv[0], args.configFile)
+
+    if args.displayType != None and args.displayType in displayTypes:
+        shell.set_attr("display", args.displayType)
 
     if len(args.commands) > 0:
         shell.onecmd(' '.join(args.commands))
