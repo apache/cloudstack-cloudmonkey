@@ -571,7 +571,7 @@ def main():
 
     parser.add_argument("-c", "--config-file",
                         dest="configFile", default=config_file,
-                        help="config file for cloudmonkey", metavar="FILE")
+                        help="Config file for cloudmonkey", metavar="FILE")
 
     parser.add_argument("-d", "--display-type",
                         dest="displayType", default=None,
@@ -579,7 +579,7 @@ def main():
                         choices=tuple(displayTypes))
 
     parser.add_argument("commands", nargs=argparse.REMAINDER,
-                        help="api commands")
+                        help="API commands")
 
     argcomplete.autocomplete(parser)
     args = parser.parse_args()
