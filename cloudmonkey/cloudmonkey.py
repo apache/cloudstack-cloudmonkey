@@ -123,7 +123,6 @@ class CloudMonkeyShell(cmd.Cmd, object):
         while True:
             try:
                 super(CloudMonkeyShell, self).cmdloop(intro="")
-                self.postloop()
             except KeyboardInterrupt:
                 print("^C")
 
