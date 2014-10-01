@@ -29,6 +29,7 @@ try:
     import sys
     import types
     import copy
+    import urllib
 
     from cachemaker import loadcache, savecache, monkeycache, splitverbsubject
     from config import __version__, __description__, __projecturl__
@@ -296,7 +297,7 @@ class CloudMonkeyShell(cmd.Cmd, object):
             args.append(next_val.replace('\x00', ''))
 
         args_dict = dict(map(lambda x: [x.partition("=")[0],
-                                        x.partition("=")[2]],
+                                        urllib.quote(x.partition("=")[2])],
                              args[1:])[x] for x in range(len(args) - 1))
         field_filter = None
         if 'filter' in args_dict:
