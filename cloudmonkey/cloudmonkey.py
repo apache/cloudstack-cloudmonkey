@@ -590,6 +590,7 @@ def main():
         shell.set_attr("display", args.displayType)
 
     if len(args.commands) > 0:
+        shell.set_attr("color", "false")
         shell.onecmd(" ".join(map(lambda x: x.replace("\\ ", " ")
                                              .replace(" ", "\\ "),
                                   args.commands)))
