@@ -16,7 +16,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
-__version__ = "5.2.0"
+__version__ = "5.3.0"
 __description__ = "Command Line Interface for Apache CloudStack"
 __maintainer__ = "The Apache CloudStack Team"
 __maintaineremail__ = "dev@cloudstack.apache.org"
@@ -69,8 +69,10 @@ default_profile['password'] = 'password'
 default_profile['apikey'] = ''
 default_profile['secretkey'] = ''
 
+
 def write_config(get_attr, config_file):
-    global config_fields, mandatory_sections, default_profile, default_profile_name
+    global config_fields, mandatory_sections
+    global default_profile, default_profile_name
     config = ConfigParser()
     if os.path.exists(config_file):
         try:
@@ -128,7 +130,8 @@ def write_config(get_attr, config_file):
 
 
 def read_config(get_attr, set_attr, config_file):
-    global config_fields, config_dir, mandatory_sections, default_profile, default_profile_name
+    global config_fields, config_dir, mandatory_sections
+    global default_profile, default_profile_name
     if not os.path.exists(config_dir):
         os.makedirs(config_dir)
 
@@ -155,8 +158,11 @@ def read_config(get_attr, set_attr, config_file):
         print "Server profile cannot be", profile
         sys.exit(1)
 
+    set_attr("profile_names", filter(lambda x: x != "core" and x != "ui",
+                                     config.sections()))
+
     if not config.has_section(profile):
-        print "Selected profile (%s) does not exit, will use the defaults" % profile
+        print "Selected profile (%s) does not exist, using defaults" % profile
         try:
             config.add_section(profile)
         except ValueError, e:

@@ -71,6 +71,7 @@ class CloudMonkeyShell(cmd.Cmd, object):
              ". Type help or ? to list commands.\n")
     ruler = "="
     config_options = []
+    profile_names = []
     verbs = []
     prompt = "🐵 > "
     protocol = "http"
@@ -446,10 +447,21 @@ class CloudMonkeyShell(cmd.Cmd, object):
             print
 
     def complete_set(self, text, line, begidx, endidx):
-        mline = line.partition(" ")[2]
-        offs = len(mline) - len(text)
-        return [s[offs:] for s in self.config_options
-                if s.startswith(mline)]
+        mline = line.partition(" ")[2].lstrip().partition(" ")
+        option = mline[0].strip()
+        separator = mline[1]
+        value = mline[2].lstrip()
+        if separator == "":
+            return [s for s in self.config_options if s.startswith(option)]
+        elif option == "profile":
+            return [s for s in self.profile_names if s.startswith(value)]
+        elif option == "display":
+            return [s for s in ["default", "table", "json"]
+                    if s.startswith(value)]
+        elif option == "asyncblock" or option == "color":
+            return [s for s in ["true", "false"] if s.startswith(value)]
+
+        return []
 
     def do_login(self, args):
         """
