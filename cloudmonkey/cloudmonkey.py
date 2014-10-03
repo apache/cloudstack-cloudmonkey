@@ -329,7 +329,7 @@ class CloudMonkeyShell(cmd.Cmd, object):
                 self.print_result(result[responsekey], field_filter)
             print
         except Exception as e:
-            self.monkeyprint("🙈  Error on parsing and printing", e)
+            self.monkeyprint("Error on parsing and printing", e)
 
     def completedefault(self, text, line, begidx, endidx):
         partitions = line.partition(" ")

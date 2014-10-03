@@ -116,4 +116,7 @@ def monkeyprint(text):
     lexer = MonkeyLexer()
     lexer.encoding = 'utf-8'
     fmter.encoding = 'utf-8'
-    highlight(text, lexer, fmter, sys.stdout)
+    if text.startswith("Error"):
+        highlight(text, lexer, fmter, sys.stderr)
+    else:
+        highlight(text, lexer, fmter, sys.stdout)
