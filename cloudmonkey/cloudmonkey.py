@@ -423,7 +423,7 @@ class CloudMonkeyShell(cmd.Cmd, object):
         set log_file /var/log/cloudmonkey.log
         """
         args = args.strip().partition(" ")
-        key, value = (args[0], args[2])
+        key, value = (args[0].strip(), args[2].strip())
         if not key:
             return
         if not value:
@@ -441,7 +441,7 @@ class CloudMonkeyShell(cmd.Cmd, object):
         read_config(self.get_attr, self.set_attr, self.config_file)
         self.init_credential_store()
         if key.strip() == 'profile':
-            print "\nLoaded server profile '%s' with options:" % key
+            print "\nLoaded server profile '%s' with options:" % value
             for option in default_profile.keys():
                 print "    %s = %s" % (option, self.get_attr(option))
             print
