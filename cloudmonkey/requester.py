@@ -41,6 +41,11 @@ def logger_debug(logger, message):
         logger.debug(message)
 
 
+def writeError(msg):
+    sys.stderr.write(msg)
+    print msg
+
+
 def login(url, username, password):
     """
     Login and obtain a session to be used for subsequent API calls
@@ -60,18 +65,18 @@ def login(url, username, password):
     try:
         resp = session.post(url, params=args)
     except requests.exceptions.ConnectionError, e:
-        print "Connection refused by server"
+        writeError("Connection refused by server: %s" % e)
         return None, None
 
     if resp.status_code == 200:
         sessionkey = resp.json()['loginresponse']['sessionkey']
     elif resp.status_code == 405:
-        print "Method not allowed, unauthorized access on URL: %s" % url
+        writeError("Method not allowed, unauthorized access on URL: %s" % url)
         session = None
         sessionkey = None
     elif resp.status_code == 531:
-        print "Error authenticating at %s, with username: %s" \
-              ", and password: %s" % (url, username, password)
+        writeError("Error authenticating at %s using username: %s" \
+              ", and password: %s" % (url, username, password))
         session = None
         sessionkey = None
     else:
@@ -220,7 +225,7 @@ def monkeyrequest(command, args, isasync, asyncblock, logger, url,
             response = json.loads(str(response))
         except ValueError, e:
             logger_debug(logger, "Error processing json: %s" % e)
-            print "Error processing json:", str(e)
+            writeError("Error processing json: %s" % e)
             response = None
             error = e
         return response
