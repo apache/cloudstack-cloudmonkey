@@ -247,8 +247,16 @@ class CloudMonkeyShell(cmd.Cmd, object):
                               x not in ['id', 'count', 'name'] and x):
                 if not (isinstance(result[key], list) or
                         isinstance(result[key], dict)):
-                    self.monkeyprint("%s = %s" % (key, result[key]))
+                    if result_filter != None and key not in result_filter:
+                        continue
+                    if result_filter != None and len(result_filter) == 1:
+                        self.monkeyprint(result[key])
+                    else:
+                        self.monkeyprint("%s = %s" % (key, result[key]))
                 else:
+                    if result_filter != None and key not in result_filter:
+                        self.print_result(result[key], result_filter)
+                        continue
                     self.monkeyprint(key + ":")
                     self.print_result(result[key], result_filter)
 
@@ -257,7 +265,7 @@ class CloudMonkeyShell(cmd.Cmd, object):
                 if isinstance(node, dict) and self.display == 'table':
                     print_result_tabular(result, result_filter)
                     break
-                self.print_result(node)
+                self.print_result(node, result_filter)
                 if len(result) > 1:
                     self.monkeyprint(self.ruler * 80)
 
@@ -298,7 +306,7 @@ class CloudMonkeyShell(cmd.Cmd, object):
             args.append(next_val.replace('\x00', ''))
 
         args_dict = dict(map(lambda x: [x.partition("=")[0],
-                                        urllib.quote(x.partition("=")[2])],
+                                        x.partition("=")[2]],
                              args[1:])[x] for x in range(len(args) - 1))
         field_filter = None
         if 'filter' in args_dict:
@@ -319,6 +327,9 @@ class CloudMonkeyShell(cmd.Cmd, object):
         isasync = False
         if 'asyncapis' in self.apicache:
             isasync = apiname in self.apicache['asyncapis']
+
+        for key in args_dict.keys():
+            args_dict[key] = urllib.quote(args_dict[key])
 
         result = self.make_request(apiname, args_dict, isasync)
 
@@ -377,8 +388,7 @@ class CloudMonkeyShell(cmd.Cmd, object):
                     autocompletions = uuids
                     search_string = value
 
-        if subject != "" and (self.display == "table" or
-                              self.display == "json"):
+        if subject != "":
             autocompletions.append("filter=")
         return [s for s in autocompletions if s.startswith(search_string)]
 
