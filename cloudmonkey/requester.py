@@ -114,7 +114,7 @@ def make_request_with_password(command, args, logger, url, credentials):
         if not (session and sessionkey):
             session, sessionkey = login(url, username, password)
             if not (session and sessionkey):
-                return None, 'Error authenticating'
+                return None, 'Authentication failed'
             credentials['session'] = session
             credentials['sessionkey'] = sessionkey
 

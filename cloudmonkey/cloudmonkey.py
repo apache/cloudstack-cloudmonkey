@@ -109,6 +109,13 @@ class CloudMonkeyShell(cmd.Cmd, object):
         self.host = parsed_url.netloc
         self.port = "8080" if not parsed_url.port else parsed_url.port
         self.path = parsed_url.path
+        self.set_prompt()
+
+    def get_prompt(self):
+        return self.prompt.split(") ")[-1]
+
+    def set_prompt(self):
+        self.prompt = "(%s) %s" % (self.profile, self.get_prompt())
 
     def get_attr(self, field):
         return getattr(self, field)
@@ -175,7 +182,7 @@ class CloudMonkeyShell(cmd.Cmd, object):
             monkeyprint(output)
         else:
             if output.startswith("Error"):
-                sys.stderr.write(output)
+                sys.stderr.write(output + "\n")
             else:
                 print output
 
@@ -443,6 +450,7 @@ class CloudMonkeyShell(cmd.Cmd, object):
             print "Blank value of %s is not allowed" % key
             return
 
+        self.prompt = self.get_prompt()
         setattr(self, key, value)
         if key in ['host', 'port', 'path', 'protocol']:
             key = 'url'
