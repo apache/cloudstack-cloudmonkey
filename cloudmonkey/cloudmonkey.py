@@ -174,7 +174,10 @@ class CloudMonkeyShell(cmd.Cmd, object):
         if self.color == 'true':
             monkeyprint(output)
         else:
-            print(output)
+            if output.startswith("Error"):
+                sys.stderr.write(output)
+            else:
+                print output
 
     def print_result(self, result, result_filter=None):
         if result is None or len(result) == 0:
@@ -284,7 +287,7 @@ class CloudMonkeyShell(cmd.Cmd, object):
                                         self.url, self.credentials,
                                         self.timeout, self.expires)
         if error is not None:
-            self.monkeyprint(error)
+            self.monkeyprint("Error " + error)
         return response
 
     def default(self, args):
@@ -483,7 +486,7 @@ class CloudMonkeyShell(cmd.Cmd, object):
             self.credentials['session'] = session
             self.credentials['sessionkey'] = sessionkey
         except Exception, e:
-            print "Error while trying to log in to the server: ", str(e)
+            self.monkeyprint("Error: Login failed to the server: ", str(e))
 
     def do_logout(self, args):
         """
