@@ -186,7 +186,7 @@ class CloudMonkeyShell(cmd.Cmd, object):
             else:
                 print output
 
-    def print_result(self, result, result_filter=None):
+    def print_result(self, result, result_filter=[]):
         if result is None or len(result) == 0:
             return
 
@@ -248,7 +248,7 @@ class CloudMonkeyShell(cmd.Cmd, object):
             if printer:
                 self.monkeyprint(printer)
 
-        def print_result_as_dict(result, result_filter=None):
+        def print_result_as_dict(result, result_filter=[]):
             if self.display == "json":
                 print_result_json(result, result_filter)
                 return
@@ -270,7 +270,7 @@ class CloudMonkeyShell(cmd.Cmd, object):
                     self.monkeyprint(key + ":")
                     self.print_result(result[key], result_filter)
 
-        def print_result_as_list(result, result_filter=None):
+        def print_result_as_list(result, filter=[]):
             for node in result:
                 if isinstance(node, dict) and self.display == 'table':
                     print_result_tabular(result, result_filter)
