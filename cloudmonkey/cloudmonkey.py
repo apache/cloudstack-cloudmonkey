@@ -276,7 +276,7 @@ class CloudMonkeyShell(cmd.Cmd, object):
                     print_result_tabular(result, result_filter)
                     break
                 self.print_result(node, result_filter)
-                if len(result) > 1:
+                if result and not result_filter:
                     self.monkeyprint(self.ruler * 80)
 
         if isinstance(result, dict):
