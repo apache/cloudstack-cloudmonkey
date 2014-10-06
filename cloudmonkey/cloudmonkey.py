@@ -273,10 +273,10 @@ class CloudMonkeyShell(cmd.Cmd, object):
         def print_result_as_list(result, filter=[]):
             for node in result:
                 if isinstance(node, dict) and self.display == 'table':
-                    print_result_tabular(result, result_filter)
+                    print_result_tabular(result, filter)
                     break
-                self.print_result(node, result_filter)
-                if result and not result_filter:
+                self.print_result(node, filter)
+                if result and (filter is None or len(filter) != 1):
                     self.monkeyprint(self.ruler * 80)
 
         if isinstance(result, dict):
