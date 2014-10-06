@@ -257,14 +257,14 @@ class CloudMonkeyShell(cmd.Cmd, object):
                               x not in ['id', 'count', 'name'] and x):
                 if not (isinstance(result[key], list) or
                         isinstance(result[key], dict)):
-                    if result_filter != None and key not in result_filter:
+                    if result_filter is not None and key not in result_filter:
                         continue
-                    if result_filter != None and len(result_filter) == 1:
+                    if result_filter is not None and len(result_filter) == 1:
                         self.monkeyprint(result[key])
                     else:
                         self.monkeyprint("%s = %s" % (key, result[key]))
                 else:
-                    if result_filter != None and key not in result_filter:
+                    if result_filter is not None and key not in result_filter:
                         self.print_result(result[key], result_filter)
                         continue
                     self.monkeyprint(key + ":")
