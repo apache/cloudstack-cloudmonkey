@@ -294,7 +294,7 @@ class CloudMonkeyShell(cmd.Cmd, object):
                                         self.url, self.credentials,
                                         self.timeout, self.expires)
         if error is not None:
-            self.monkeyprint("Error " + error)
+            self.monkeyprint("Error %s" % error)
         return response
 
     def default(self, args):
