@@ -598,17 +598,21 @@ class CloudMonkeyShell(cmd.Cmd, object):
 def main():
     displayTypes = ["json", "table", "default"]
     parser = argparse.ArgumentParser(usage="cloudmonkey [options] [commands]",
-                                     version="cloudmonkey " + __version__,
                                      description=__description__,
                                      epilog="Try cloudmonkey [help|?]")
 
+    parser.add_argument("-v", "--version", action="version",
+                        default=argparse.SUPPRESS,
+                        version="cloudmonkey %s" % __version__,
+                        help="show CloudMonkey's version and exit")
+
     parser.add_argument("-c", "--config-file",
                         dest="configFile", default=config_file,
-                        help="Config file for cloudmonkey", metavar="FILE")
+                        help="config file for cloudmonkey", metavar="FILE")
 
     parser.add_argument("-d", "--display-type",
                         dest="displayType", default=None,
-                        help="Output display type, json, table or default",
+                        help="output display type, json, table or default",
                         choices=tuple(displayTypes))
 
     parser.add_argument("commands", nargs=argparse.REMAINDER,
