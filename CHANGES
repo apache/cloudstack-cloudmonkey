@@ -1,11 +1,28 @@
 Apache CloudStack CloudMonkey Changelog
 ---------------------------------------
 
-(2014-08-22) INTEROUTE FORK OF VERSION 5.1.0
+(2014-10-14) INTEROUTE FORK OF VERSION 5.2.0
 ============================================
 A modification is required for using Cloudmonkey with Interoute Virtual Data Centre. This is to handle access
 to the different VDC regions, by creating a new configuration variable 'region'.
 The files cloudmonkey.py, requester.py and config.py have been modified.
+
+Version 5.2.0
+=============
+This release includes
+ - In the config [server] section is deprecated now
+ - For missing keys, cloudmonkey will set default values
+ - Network requests, json decoding and shell related bugfixes
+ - Based on platform, it will install either pyreadline (Windows) or readline (OSX and Linux)
+ - Config options `protocol`, `host`, `port`, `path` are deprecated now
+ - Backward compatibilty exists for above options but we use `url` for the mgmt server URL
+ - Introduces server profiles so users can use cloudmonkey with different hosts and management server configs
+ - A default profile under the section [local] is added with default values
+ - Everytime `set` is called, cloudmonkey will write the config and reload config file
+
+Make sure you backup your config before you upgrade cloudmonkey from previous releases.
+With this release `cloudmonkey` will automatically fix your config file, add missing
+configuration parameters and save it as the upgraded versions starts for the first time.
 
 Version 5.1.0
 =============
@@ -13,6 +30,7 @@ This release includes
  - support for using username and password instead of / in addition to api key and secret key
  - Usage of signature version 3 for the api signing process. This reduces the chance of API replay attacks
  - cleanup based on reporting from PEP8 and Flake8
+
 If you upgrade from 5.0, then cloudmonkey will ask you to update your config file (~/.cloudmonkey/config)
 Under the [user], you can add
 username =

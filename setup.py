@@ -22,14 +22,26 @@ except ImportError:
     use_setuptools()
     from setuptools import setup, find_packages
 
+import sys
+
 from cloudmonkey import __version__, __description__
 from cloudmonkey import __maintainer__, __maintaineremail__
 from cloudmonkey import __project__, __projecturl__, __projectemail__
 
+requires = [
+              'Pygments>=1.5',
+              'prettytable>=0.6',
+              'requests'
+            ]
+
 try:
     import readline
 except ImportError:
-    requires.append('readline')
+    platform = str(sys.platform).lower()
+    if 'win32' in platform or 'win64' in platform:
+        requires.append('pyreadline')
+    else:
+        requires.append('readline')
 
 setup(
     name = 'cloudmonkey',
@@ -44,11 +56,7 @@ setup(
     platforms = ("Any",),
     license = 'ASL 2.0',
     packages = find_packages(),
-    install_requires = [
-        'Pygments>=1.5',
-        'prettytable>=0.6',
-        'requests'
-    ],
+    install_requires = requires,
     include_package_data = True,
     zip_safe = False,
     classifiers = [

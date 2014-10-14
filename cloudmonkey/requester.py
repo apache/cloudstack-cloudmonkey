@@ -136,14 +136,15 @@ def make_request_with_password(command, args, logger, url, credentials):
 
     return result, error
 
+def make_request(command, args, logger, url, 
+                 credentials, expires, region):
 
-def make_request(command, args, logger, host, port, region,
-                 credentials, protocol, path, expires):
     response = None
     error = None
 
-    if protocol != 'http' and protocol != 'https':
-        error = "Protocol must be 'http' or 'https'"
+    if not url.startswith('http'):
+        error = "Server URL should start with 'http' or 'https', " + \
+                "please check and fix the url"
         return None, error
 
     if args is None:
@@ -159,10 +160,12 @@ def make_request(command, args, logger, host, port, region,
     # try to use the apikey/secretkey method by default
     # followed by trying to check if we're using integration port
     # finally use the username/password method
-    if not credentials['apikey'] and (long(port) != 8096):
-        url = "%s://%s:%s%s" % (protocol, host, port, path)
-        return make_request_with_password(command, args,
-                                          logger, url, credentials)
+    if not credentials['apikey'] and not ("8096" in url):
+        try:
+            return make_request_with_password(command, args,
+                                              logger, url, credentials)
+        except (requests.exceptions.ConnectionError, Exception), e:
+            return None, e
 
     args['apiKey'] = credentials['apikey']
     secretkey = credentials['secretkey']
@@ -178,7 +181,8 @@ def make_request(command, args, logger, host, port, region,
     sig = urllib.quote_plus(base64.encodestring(hmac.new(secretkey, hashStr,
                             hashlib.sha1).digest()).strip())
     request_url += "&signature=%s" % sig
-    request_url = "%s://%s:%s%s?%s" % (protocol, host, port, path, request_url)
+
+    request_url = "%s?%s" % (url, request_url)
     ##print("Request sent: %s" % request_url) #Debug/test output
 
     try:
@@ -197,15 +201,15 @@ def make_request(command, args, logger, host, port, region,
 
     return response, error
 
-
-def monkeyrequest(command, args, isasync, asyncblock, logger, host, port, region,
-                  credentials, timeout, protocol, path, expires):
+def monkeyrequest(command, args, isasync, asyncblock, logger, url,
+                  credentials, timeout, expires, region):
     response = None
     error = None
     logger_debug(logger, "======== START Request ========")
     logger_debug(logger, "Requesting command=%s, args=%s" % (command, args))
-    response, error = make_request(command, args, logger, host,
-                                   port, region, credentials, protocol, path, expires)
+
+    response, error = make_request(command, args, logger, url,
+                                   credentials, expires, region)
 
     logger_debug(logger, "======== END Request ========\n")
 
@@ -217,7 +221,9 @@ def monkeyrequest(command, args, isasync, asyncblock, logger, host, port, region
             response = json.loads(str(response))
         except ValueError, e:
             logger_debug(logger, "Error processing json: %s" % e)
-
+            print "Error processing json:", str(e)
+            response = None
+            error = e
         return response
 
     response = process_json(response)
@@ -241,9 +247,9 @@ def monkeyrequest(command, args, isasync, asyncblock, logger, host, port, region
             timeout = timeout - pollperiod
             progress += 1
             logger_debug(logger, "Job %s to timeout in %ds" % (jobid, timeout))
-            response, error = make_request(command, request, logger,
-                                           host, port, region, credentials,
-                                           protocol, path, expires)
+            response, error = make_request(command, request, logger, url,
+                                           credentials, expires, region)
+
             if error is not None:
                 return response, error
 
