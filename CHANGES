@@ -1,7 +1,7 @@
 Apache CloudStack CloudMonkey Changelog
 ---------------------------------------
 
-(2014-10-14) INTEROUTE FORK OF VERSION 5.2.0
+(2014-10-15) INTEROUTE FORK OF VERSION 5.2.0
 ============================================
 A modification is required for using Cloudmonkey with Interoute Virtual Data Centre. This is to handle access
 to the different VDC regions, by creating a new configuration variable 'region'.
