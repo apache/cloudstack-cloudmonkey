@@ -398,7 +398,7 @@ class CloudMonkeyShell(cmd.Cmd, object):
                     autocompletions = uuids
                     search_string = value
 
-        if subject != "":
+        if subject != "" and line.split(" ")[-1].find('=') == -1:
             autocompletions.append("filter=")
         return [s for s in autocompletions if s.startswith(search_string)]
 
