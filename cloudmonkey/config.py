@@ -48,7 +48,7 @@ config_fields = {'core': {}, 'ui': {}}
 
 # core
 config_fields['core']['asyncblock'] = 'true'
-config_fields['core']['paramcompletion'] = 'false'
+config_fields['core']['paramcompletion'] = 'true'
 config_fields['core']['cache_file'] = expanduser(config_dir + '/cache')
 config_fields['core']['history_file'] = expanduser(config_dir + '/history')
 config_fields['core']['log_file'] = expanduser(config_dir + '/log')
