@@ -153,7 +153,11 @@ def read_config(get_attr, set_attr, config_file):
         print "After setting up, run the `sync` command to sync apis\n"
 
     missing_keys = []
-    profile = config.get('core', 'profile')
+    if config.has_option('core', 'profile'):
+        profile = config.get('core', 'profile')
+    else:
+        global default_profile_name
+        profile = default_profile_name
     if profile is None or profile == '' or profile in mandatory_sections:
         print "Server profile cannot be", profile
         sys.exit(1)
