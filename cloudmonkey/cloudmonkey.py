@@ -299,6 +299,33 @@ class CloudMonkeyShell(cmd.Cmd, object):
             self.monkeyprint("Error %s" % error)
         return response
 
+    def update_param_cache(self, api, result={}):
+        if not api:
+            return
+        logger.debug("Updating param cache for %s API" % api)
+        responsekey = filter(lambda x: 'response' in x, result.keys())[0]
+        result = result[responsekey]
+        options = []
+        uuids = []
+        for key in result.keys():
+            if isinstance(result[key], list):
+                for element in result[key]:
+                    if 'id' in element.keys():
+                        uuid = str(element['id'])
+                        name = ""
+                        keyspace = ["name", "displayname",
+                                    "username", "description"]
+                        for name_key in keyspace:
+                            if name_key in element.keys():
+                                name = element[name_key]
+                                break
+                        options.append((uuid, name,))
+                        uuids.append(uuid)
+        self.param_cache[api] = {}
+        self.param_cache[api]["ts"] = int(time.time())
+        self.param_cache[api]["options"] = sorted(options)
+        return sorted(uuids)
+
     def default(self, args):
         if self.pipe_runner(args):
             return
@@ -345,13 +372,16 @@ class CloudMonkeyShell(cmd.Cmd, object):
 
         result = self.make_request(apiname, args_dict, isasync)
 
-        if result is None:
+        if not result:
             return
+
         try:
             responsekeys = filter(lambda x: 'response' in x, result.keys())
             for responsekey in responsekeys:
                 self.print_result(result[responsekey], field_filter)
             print
+            if apiname.startswith("list"):
+                self.update_param_cache(apiname, result)
         except Exception as e:
             self.monkeyprint("Error on parsing and printing", e)
 
@@ -428,28 +458,9 @@ class CloudMonkeyShell(cmd.Cmd, object):
                     else:
                         api_args = {'listall': 'true', 'templatefilter': 'all'}
                         response = self.make_request(api, args=api_args)
-                        responsekey = filter(lambda x: 'response' in x,
-                                             response.keys())[0]
-                        result = response[responsekey]
-                        options = []
-                        for key in result.keys():
-                            if isinstance(result[key], list):
-                                for element in result[key]:
-                                    if 'id' in element.keys():
-                                        uuid = str(element['id'])
-                                        name = ""
-                                        keyspace = ["name", "displayname",
-                                                    "username", "description"]
-                                        for name_key in keyspace:
-                                            if name_key in element.keys():
-                                                name = element[name_key]
-                                                break
-                                        options.append((uuid, name,))
-                                        uuids.append(uuid)
-                        self.param_cache[api] = {}
-                        self.param_cache[api]["ts"] = int(time.time())
-                        self.param_cache[api]["options"] = options
-
+                        if not response:
+                            return
+                        uuids = self.update_param_cache(api, response)
                     if len(uuids) > 1:
                         print
                         for option in self.param_cache[api]["options"]:
