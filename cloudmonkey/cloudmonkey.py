@@ -396,6 +396,8 @@ class CloudMonkeyShell(cmd.Cmd, object):
                             if verb.startswith(entity):
                                 api = self.apicache["list"][verb]['name']
                                 break
+                    if not api:
+                        return
                     uuids = []
                     if api in self.param_cache.keys() and self.param_cache[api]["ts"] > (int(time.time()) - 1000):
                         for option in self.param_cache[api]["options"]:
