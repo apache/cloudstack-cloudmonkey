@@ -386,7 +386,16 @@ class CloudMonkeyShell(cmd.Cmd, object):
                     params = self.apicache[verb][subject]['params']
                     related = filter(lambda x: x['name'] == param,
                                      params)[0]['related']
-                    api = filter(lambda x: 'list' in x, related)[0]
+                    api = ""
+                    apis = filter(lambda x: 'list' in x, related)
+                    if len(apis) > 0:
+                        api = apis[0]
+                    else:
+                        entity = param.replace("id", "")
+                        for verb in self.apicache["list"]:
+                            if verb.startswith(entity):
+                                api = self.apicache["list"][verb]['name']
+                                break
                     uuids = []
                     if api in self.param_cache.keys() and self.param_cache[api]["ts"] > (int(time.time()) - 1000):
                         for option in self.param_cache[api]["options"]:
@@ -416,7 +425,7 @@ class CloudMonkeyShell(cmd.Cmd, object):
                                         uuids.append(uuid)
 
                     if len(uuids) > 1:
-                        print "\n"
+                        print
                         for option in self.param_cache[api]["options"]:
                             uuid = option[0]
                             name = option[1]
