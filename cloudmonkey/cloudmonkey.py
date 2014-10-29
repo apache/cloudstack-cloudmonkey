@@ -415,15 +415,14 @@ class CloudMonkeyShell(cmd.Cmd, object):
                             api = apis[0]
                         else:
                             return
-                    logger.debug("Trying paramcompletion using API: %s" % api)
                     uuids = []
                     cache_burst_ts = int(time.time()) - 900
+                    logger.debug("Trying paramcompletion using API: %s" % api)
                     if api in self.param_cache.keys() and \
                         len(self.param_cache[api]["options"]) > 0 and \
                             self.param_cache[api]["ts"] > cache_burst_ts:
                         for option in self.param_cache[api]["options"]:
                             uuid = option[0]
-                            name = option[1]
                             if uuid.startswith(value):
                                 uuids.append(uuid)
                     else:
@@ -439,17 +438,19 @@ class CloudMonkeyShell(cmd.Cmd, object):
                                     if 'id' in element.keys():
                                         uuid = str(element['id'])
                                         name = ""
-                                        if 'name' in element.keys():
-                                            name = element['name']
-                                        elif 'username' in element.keys():
-                                            name = element['username']
+                                        keyspace = ["name", "displayname",
+                                                    "username", "description"]
+                                        for name_key in keyspace:
+                                            if name_key in element.keys():
+                                                name = element[name_key]
+                                                break
                                         options.append((uuid, name,))
                                         uuids.append(uuid)
                         self.param_cache[api] = {}
                         self.param_cache[api]["ts"] = int(time.time())
                         self.param_cache[api]["options"] = options
 
-                    if len(uuids) > 0:
+                    if len(uuids) > 1:
                         print
                         for option in self.param_cache[api]["options"]:
                             uuid = option[0]
