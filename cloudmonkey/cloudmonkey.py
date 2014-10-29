@@ -417,7 +417,7 @@ class CloudMonkeyShell(cmd.Cmd, object):
                             if isinstance(result[key], list):
                                 for element in result[key]:
                                     if 'id' in element.keys():
-                                        uuid = element['id']
+                                        uuid = str(element['id'])
                                         name = ""
                                         if 'name' in element.keys():
                                             name = element['name']
@@ -425,8 +425,7 @@ class CloudMonkeyShell(cmd.Cmd, object):
                                             name = element['username']
                                         self.param_cache[api]["options"].append((uuid, name,))
                                         uuids.append(uuid)
-
-                    if len(uuids) > 1:
+                    if len(uuids) > 0:
                         print
                         for option in self.param_cache[api]["options"]:
                             uuid = option[0]
