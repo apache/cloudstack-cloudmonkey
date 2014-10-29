@@ -18,6 +18,8 @@ This release includes
 - New command line arg: -d for display (json, table or default)
 
 Make sure you backup your config before you upgrade cloudmonkey from previous releases.
+With this release `cloudmonkey` will automatically fix your config file, add missing
+configuration parameters and save it as the upgraded versions starts for the first time.
 
 Version 5.2.0
 =============
