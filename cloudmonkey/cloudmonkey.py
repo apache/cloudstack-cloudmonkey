@@ -388,9 +388,10 @@ class CloudMonkeyShell(cmd.Cmd, object):
                                                                  param))
                     if "id" in param:
                         logger.debug("[Paramcompl] Using 'list' heuristics")
-                        entity = param.replace("id", "")
-                        if not entity:
+                        if param == "id" or param == "ids":
                             entity = subject
+                        else:
+                            entity = param.replace("id", "")
                         apis = []
                         for resource in self.apicache["list"]:
                             if resource.startswith(entity):
