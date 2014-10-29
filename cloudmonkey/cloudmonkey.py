@@ -386,7 +386,7 @@ class CloudMonkeyShell(cmd.Cmd, object):
                     params = self.apicache[verb][subject]['params']
                     related = filter(lambda x: x['name'] == param,
                                      params)[0]['related']
-                    api = min(filter(lambda x: 'list' in x, related), key=len)
+                    api = filter(lambda x: 'list' in x, related)[0]
                     uuids = []
                     if api in self.param_cache.keys() and self.param_cache[api]["ts"] > (int(time.time()) - 1000):
                         for option in self.param_cache[api]["options"]:
