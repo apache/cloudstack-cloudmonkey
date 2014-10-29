@@ -22,13 +22,14 @@ try:
     import argparse
     import atexit
     import cmd
+    import copy
     import json
     import logging
     import os
     import shlex
     import sys
+    import time
     import types
-    import copy
     import urllib
 
     from cachemaker import loadcache, savecache, monkeycache, splitverbsubject
@@ -73,6 +74,7 @@ class CloudMonkeyShell(cmd.Cmd, object):
     config_options = []
     profile_names = []
     verbs = []
+    param_cache = {}
     prompt = "🐵 > "
     protocol = "http"
     host = "localhost"
@@ -385,16 +387,41 @@ class CloudMonkeyShell(cmd.Cmd, object):
                     related = filter(lambda x: x['name'] == param,
                                      params)[0]['related']
                     api = min(filter(lambda x: 'list' in x, related), key=len)
-                    response = self.make_request(api, args={'listall': 'true'})
-                    responsekey = filter(lambda x: 'response' in x,
-                                         response.keys())[0]
-                    result = response[responsekey]
                     uuids = []
-                    for key in result.keys():
-                        if isinstance(result[key], list):
-                            for element in result[key]:
-                                if 'id' in element.keys():
-                                    uuids.append(element['id'])
+                    if api in self.param_cache.keys() and self.param_cache[api]["ts"] > (int(time.time()) - 1000):
+                        for option in self.param_cache[api]["options"]:
+                            uuid = option[0]
+                            name = option[1]
+                            if uuid.startswith(value):
+                                uuids.append(uuid)
+                    else:
+                        response = self.make_request(api, args={'listall': 'true', 'templatefilter': 'all'})
+                        responsekey = filter(lambda x: 'response' in x,
+                                            response.keys())[0]
+                        result = response[responsekey]
+                        self.param_cache[api] = {}
+                        self.param_cache[api]["ts"] = int(time.time())
+                        self.param_cache[api]["options"] = []
+                        for key in result.keys():
+                            if isinstance(result[key], list):
+                                for element in result[key]:
+                                    if 'id' in element.keys():
+                                        uuid = element['id']
+                                        name = ""
+                                        if 'name' in element.keys():
+                                            name = element['name']
+                                        elif 'username' in element.keys():
+                                            name = element['username']
+                                        self.param_cache[api]["options"].append((uuid, name,))
+                                        uuids.append(uuid)
+
+                    if len(uuids) > 1:
+                        print "\n"
+                        for option in self.param_cache[api]["options"]:
+                            uuid = option[0]
+                            name = option[1]
+                            if uuid.startswith(value):
+                                print uuid, name
                     autocompletions = uuids
                     search_string = value
 
