@@ -383,36 +383,55 @@ class CloudMonkeyShell(cmd.Cmd, object):
                 value = param[idx + 1:]
                 param = param[:idx]
                 if len(value) < 36 and idx != -1:
-                    params = self.apicache[verb][subject]['params']
-                    related = filter(lambda x: x['name'] == param,
-                                     params)[0]['related']
-                    api = ""
-                    apis = filter(lambda x: 'list' in x, related)
-                    if len(apis) > 0:
-                        api = apis[0]
-                    else:
+                    api = None
+                    logger.debug("[Paramcompl] For %s %s %s=" % (verb, subject,
+                                                                 param))
+                    if "id" in param:
+                        logger.debug("[Paramcompl] Using 'list' heuristics")
                         entity = param.replace("id", "")
-                        for verb in self.apicache["list"]:
-                            if verb.startswith(entity):
-                                api = self.apicache["list"][verb]['name']
-                                break
+                        if not entity:
+                            entity = subject
+                        apis = []
+                        for resource in self.apicache["list"]:
+                            if resource.startswith(entity):
+                                api = self.apicache["list"][resource]['name']
+                                if (entity + "s") == resource.lower():
+                                    break
+                                apis.append(api)
+                                api = None
+                        if len(apis) > 0 and not api:
+                            logger.debug("[Paramcompl] APIs: %s" % apis)
+                            api = min(apis, key=len)
+                        logger.debug("[Paramcompl] Possible API: %s" % api)
                     if not api:
-                        return
+                        logger.debug("[Paramcompl] Using relative approx")
+                        params = self.apicache[verb][subject]['params']
+                        related = filter(lambda x: x['name'] == param,
+                                         params)[0]['related']
+                        apis = filter(lambda x: 'list' in x, related)
+                        logger.debug("[Paramcompl] Related APIs: %s" % apis)
+                        if len(apis) > 0:
+                            api = apis[0]
+                        else:
+                            return
+                    logger.debug("Trying paramcompletion using API: %s" % api)
                     uuids = []
-                    if api in self.param_cache.keys() and self.param_cache[api]["ts"] > (int(time.time()) - 1000):
+                    cache_burst_ts = int(time.time()) - 900
+                    if api in self.param_cache.keys() and \
+                        len(self.param_cache[api]["options"]) > 0 and \
+                            self.param_cache[api]["ts"] > cache_burst_ts:
                         for option in self.param_cache[api]["options"]:
                             uuid = option[0]
                             name = option[1]
                             if uuid.startswith(value):
                                 uuids.append(uuid)
                     else:
-                        response = self.make_request(api, args={'listall': 'true', 'templatefilter': 'all'})
+                        api_args = {'listall': 'true', 'templatefilter': 'all'}
+                        response = self.make_request(api, args=api_args)
                         responsekey = filter(lambda x: 'response' in x,
-                                            response.keys())[0]
+                                             response.keys())[0]
                         result = response[responsekey]
-                        self.param_cache[api] = {}
-                        self.param_cache[api]["ts"] = int(time.time())
-                        self.param_cache[api]["options"] = []
+                        options = []
                         for key in result.keys():
                             if isinstance(result[key], list):
                                 for element in result[key]:
@@ -423,8 +442,12 @@ class CloudMonkeyShell(cmd.Cmd, object):
                                             name = element['name']
                                         elif 'username' in element.keys():
                                             name = element['username']
-                                        self.param_cache[api]["options"].append((uuid, name,))
+                                        options.append((uuid, name,))
                                         uuids.append(uuid)
+                        self.param_cache[api] = {}
+                        self.param_cache[api]["ts"] = int(time.time())
+                        self.param_cache[api]["options"] = options
+
                     if len(uuids) > 0:
                         print
                         for option in self.param_cache[api]["options"]:
