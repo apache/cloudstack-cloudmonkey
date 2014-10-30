@@ -542,7 +542,7 @@ class CloudMonkeyShell(cmd.Cmd, object):
             for option in default_profile.keys():
                 value = self.get_attr(option)
                 if option in ["password", "apikey", "secretkey"] and value:
-                    value = value[:2] + "XX" + value[4:6] + "YY..."
+                    value = value[:2] + "XXX" + value[4:6] + "YYY...(hidden)"
                 print "    %s = %s" % (option, value)
             print
 
