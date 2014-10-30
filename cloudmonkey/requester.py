@@ -43,7 +43,6 @@ def logger_debug(logger, message):
 
 def writeError(msg):
     sys.stderr.write(msg)
-    print msg
 
 
 def login(url, username, password):
@@ -75,8 +74,8 @@ def login(url, username, password):
         session = None
         sessionkey = None
     elif resp.status_code == 531:
-        writeError("Error authenticating at %s using username: %s" \
-              ", and password: %s" % (url, username, password))
+        writeError("Error authenticating at %s using username: %s"
+                   ", and password: %s\n" % (url, username, password))
         session = None
         sessionkey = None
     else:
@@ -86,13 +85,12 @@ def login(url, username, password):
 
 
 def logout(url, session):
-    if session is None:
+    if not session:
         return
     session.get(url, params={'command': 'logout'})
 
 
 def make_request_with_password(command, args, logger, url, credentials):
-
     error = None
     username = credentials['username']
     password = credentials['password']
@@ -134,16 +132,15 @@ def make_request_with_password(command, args, logger, url, credentials):
             continue
 
         if resp.status_code != 200 and resp.status_code != 401:
-            error = "%s: %s" %\
-                    (str(resp.status_code), resp.headers.get('X-Description'))
+            error = u"{0}: {1}".format(resp.status_code,
+                                       resp.headers.get('X-Description'))
             result = None
             retry = False
 
     return result, error
 
 
-def make_request(command, args, logger, url,
-                 credentials, expires):
+def make_request(command, args, logger, url, credentials, expires):
     response = None
     error = None
 
@@ -152,13 +149,13 @@ def make_request(command, args, logger, url,
                 "please check and fix the url"
         return None, error
 
-    if args is None:
+    if not args:
         args = {}
 
     args["command"] = command
     args["response"] = "json"
     args["signatureversion"] = "3"
-    if expires == "" or expires == None:
+    if not expires:
         expires = 600
     expirationtime = datetime.utcnow() + timedelta(seconds=int(expires))
     args["expires"] = expirationtime.strftime('%Y-%m-%dT%H:%M:%S+0000')
@@ -178,11 +175,10 @@ def make_request(command, args, logger, url,
     request = zip(args.keys(), args.values())
     request.sort(key=lambda x: x[0].lower())
 
-    request_url = "&".join(["=".join([r[0], urllib.quote(unicode(r[1]))])
-                           for r in request])
-    hashStr = "&".join(["=".join([r[0].lower(),
-                                  urllib.quote(unicode(r[1])).lower()])
-                                  for r in request])
+    request_url = u"&".join([u"=".join([r[0], urllib.quote(r[1])])
+                            for r in request])
+    hashStr = u"&".join([u"=".join([r[0].lower(), urllib.quote(r[1]).lower()])
+                        for r in request])
 
     sig = urllib.quote(base64.encodestring(hmac.new(secretkey, hashStr,
                        hashlib.sha1).digest()).strip())
@@ -194,7 +190,7 @@ def make_request(command, args, logger, url,
         connection = urllib2.urlopen(request_url)
         response = connection.read()
     except HTTPError, e:
-        error = "Error:%s %s" % (e.msg, e.info().getheader('X-Description'))
+        error = u"{0}: {1}".format(e.msg, e.info().getheader('X-Description'))
     except URLError, e:
         error = e.reason
 
@@ -222,7 +218,7 @@ def monkeyrequest(command, args, isasync, asyncblock, logger, url,
 
     def process_json(response):
         try:
-            response = json.loads(str(response))
+            response = json.loads(unicode(response))
         except ValueError, e:
             logger_debug(logger, "Error processing json: %s" % e)
             writeError("Error processing json: %s" % e)
@@ -231,7 +227,7 @@ def monkeyrequest(command, args, isasync, asyncblock, logger, url,
         return response
 
     response = process_json(response)
-    if response is None:
+    if not response:
         return response, error
 
     isasync = isasync and (asyncblock == "true")
@@ -241,7 +237,7 @@ def monkeyrequest(command, args, isasync, asyncblock, logger, url,
         jobid = response[responsekey]['jobid']
         command = "queryAsyncJobResult"
         request = {'jobid': jobid}
-        if timeout == "" or timeout == None:
+        if not timeout:
             timeout = 3600
         timeout = int(timeout)
         pollperiod = 2
