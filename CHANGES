@@ -4,18 +4,18 @@ Apache CloudStack CloudMonkey Changelog
 Version 5.3.0
 =============
 This release includes
-- Server profile related bugfixes
-- Blank server profile names not allowed
-- Current server profile is displayed on prompt
 - API arguments are URL encoded now
-- Non-interactive commands from command line are outputted without colors
-- Errors messages are written to stderr
 - Autocompletion for config 'set' options
+- Current server profile displayed on prompt
+- Server profile related bugfixes, blank profile names are not allowed
 - Filtering support for default display output
 - Filtering by single key only outputs results without key names
-- Parameter completion options are cached to speed up rendering of options
-- Parameter completion uses list api heuristics and related APIs as fallback
 - New command line arg: -d for display (json, table or default)
+- Non-interactive commands from command line are outputted without colors
+- Parameter completion uses list api heuristics and related APIs as fallback
+- Parameter completion options are cached to speed up rendering of options
+- CloudMonkey returns non-zero exit code when run on shell and a error is return
+  from managment server, the error message is written to stderr
 
 Make sure you backup your config before you upgrade cloudmonkey from previous releases.
 With this release `cloudmonkey` will automatically fix your config file, add missing
