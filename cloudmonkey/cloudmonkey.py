@@ -440,8 +440,11 @@ class CloudMonkeyShell(cmd.Cmd, object):
                     if not api:
                         logger.debug("[Paramcompl] Using relative approx")
                         params = self.apicache[verb][subject]['params']
-                        related = filter(lambda x: x['name'] == param,
-                                         params)[0]['related']
+                        arg = filter(lambda x: x['name'] == param, params)[0]
+                        if "type" in arg and arg["type"] == "boolean":
+                            return filter(lambda x: x.startswith(value),
+                                          ["true", "false"])
+                        related = arg['related']
                         apis = filter(lambda x: 'list' in x, related)
                         logger.debug("[Paramcompl] Related APIs: %s" % apis)
                         if len(apis) > 0:
