@@ -540,7 +540,10 @@ class CloudMonkeyShell(cmd.Cmd, object):
         if key.strip() == 'profile':
             print "\nLoaded server profile '%s' with options:" % value
             for option in default_profile.keys():
-                print "    %s = %s" % (option, self.get_attr(option))
+                value = self.get_attr(option)
+                if option in ["password", "apikey", "secretkey"] and value:
+                    value = value[:2] + "XX" + value[4:6] + "YY..."
+                print "    %s = %s" % (option, value)
             print
 
     def complete_set(self, text, line, begidx, endidx):
