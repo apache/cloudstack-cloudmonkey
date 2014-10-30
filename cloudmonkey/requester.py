@@ -178,14 +178,14 @@ def make_request(command, args, logger, url,
     request = zip(args.keys(), args.values())
     request.sort(key=lambda x: x[0].lower())
 
-    request_url = "&".join(["=".join([r[0], urllib.quote_plus(str(r[1]))])
+    request_url = "&".join(["=".join([r[0], urllib.quote(unicode(r[1]))])
                            for r in request])
     hashStr = "&".join(["=".join([r[0].lower(),
-                       str.lower(urllib.quote_plus(str(r[1]))).replace("+",
-                       "%20")]) for r in request])
+                                  urllib.quote(unicode(r[1])).lower()])
+                                  for r in request])
 
-    sig = urllib.quote_plus(base64.encodestring(hmac.new(secretkey, hashStr,
-                            hashlib.sha1).digest()).strip())
+    sig = urllib.quote(base64.encodestring(hmac.new(secretkey, hashStr,
+                       hashlib.sha1).digest()).strip())
     request_url += "&signature=%s" % sig
     request_url = "%s?%s" % (url, request_url)
 

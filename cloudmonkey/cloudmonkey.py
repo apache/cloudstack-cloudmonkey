@@ -30,7 +30,6 @@ try:
     import sys
     import time
     import types
-    import urllib
 
     from cachemaker import loadcache, savecache, monkeycache, splitverbsubject
     from config import __version__, __description__, __projecturl__
@@ -369,9 +368,6 @@ class CloudMonkeyShell(cmd.Cmd, object):
         isasync = False
         if 'asyncapis' in self.apicache:
             isasync = apiname in self.apicache['asyncapis']
-
-        for key in args_dict.keys():
-            args_dict[key] = urllib.quote(args_dict[key])
 
         result = self.make_request(apiname, args_dict, isasync)
 
