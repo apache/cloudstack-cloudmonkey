@@ -74,6 +74,7 @@ class CloudMonkeyShell(cmd.Cmd, object):
     config_options = []
     profile_names = []
     verbs = []
+    error_on_last_command = False
     param_cache = {}
     prompt = "🐵 > "
     protocol = "http"
@@ -291,12 +292,14 @@ class CloudMonkeyShell(cmd.Cmd, object):
             self.monkeyprint(result)
 
     def make_request(self, command, args={}, isasync=False):
+        self.error_on_last_command = False
         response, error = monkeyrequest(command, args, isasync,
                                         self.asyncblock, logger,
                                         self.url, self.credentials,
                                         self.timeout, self.expires)
         if error is not None:
             self.monkeyprint("Error %s" % error)
+            self.error_on_last_command = True
         return response
 
     def update_param_cache(self, api, result={}):
@@ -704,6 +707,8 @@ def main():
         shell.onecmd(" ".join(map(lambda x: x.replace("\\ ", " ")
                                              .replace(" ", "\\ "),
                                   args.commands)))
+        if shell.error_on_last_command:
+            sys.exit(1)
     else:
         shell.cmdloop()
 
