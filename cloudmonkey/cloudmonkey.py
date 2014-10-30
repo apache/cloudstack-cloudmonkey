@@ -99,7 +99,7 @@ class CloudMonkeyShell(cmd.Cmd, object):
             if os.path.exists(self.history_file):
                 readline.read_history_file(self.history_file)
         except IOError, e:
-            logger.debug("Error: Unable to read history. " + str(e))
+            logger.debug(u"Error: Unable to read history. " + unicode(e))
         atexit.register(readline.write_history_file, self.history_file)
 
     def init_credential_store(self):
@@ -148,9 +148,10 @@ class CloudMonkeyShell(cmd.Cmd, object):
         for verb in self.verbs:
             def add_grammar(verb):
                 def grammar_closure(self, args):
-                    if args is None:
+                    if not args:
                         return
-                    if self.pipe_runner("%s %s" % (verb, args)):
+                    args = args.decode("utf-8")
+                    if self.pipe_runner(u"{0} {1}".format(verb, args)):
                         return
                     if ' --help' in args or ' -h' in args:
                         self.do_help("%s %s" % (verb, args))
@@ -160,26 +161,28 @@ class CloudMonkeyShell(cmd.Cmd, object):
                         cmd = self.apicache[verb][args_partition[0]]['name']
                         args = args_partition[2]
                     except KeyError, e:
-                        self.monkeyprint("Error: invalid %s api arg" % verb, e)
+                        self.monkeyprint("Error: invalid %s api arg " % verb,
+                                         str(e))
                         return
-                    self.default("%s %s" % (cmd, args))
+                    self.default(u"{0} {1}".format(cmd, args))
                 return grammar_closure
 
             grammar_handler = add_grammar(verb)
             grammar_handler.__doc__ = "%ss resources" % verb.capitalize()
-            grammar_handler.__name__ = 'do_' + str(verb)
+            grammar_handler.__name__ = "do_" + str(verb)
             setattr(self.__class__, grammar_handler.__name__, grammar_handler)
 
     def monkeyprint(self, *args):
-        output = ""
+        output = u""
         try:
             for arg in args:
-                if isinstance(type(arg), types.NoneType):
+                if isinstance(type(arg), types.NoneType) or not arg:
                     continue
-                output += str(arg)
+                output += arg
         except Exception, e:
-            print(e)
+            print(str(e))
 
+        output = output.encode("utf-8")
         if self.color == 'true':
             monkeyprint(output)
         else:
@@ -189,18 +192,18 @@ class CloudMonkeyShell(cmd.Cmd, object):
                 print output
 
     def print_result(self, result, result_filter=[]):
-        if result is None or len(result) == 0:
+        if not result or len(result) == 0:
             return
 
         def printer_helper(printer, toprow):
             if printer:
-                self.monkeyprint(printer)
+                self.monkeyprint(printer.get_string())
             return PrettyTable(toprow)
 
         def print_result_json(result, result_filter=None):
             tfilter = {}  # temp var to hold a dict of the filters
             tresult = copy.deepcopy(result)  # dupe the result to filter
-            if result_filter is not None:
+            if result_filter:
                 for res in result_filter:
                     tfilter[res] = 1
                 for okey, oval in result.iteritems():
@@ -225,17 +228,18 @@ class CloudMonkeyShell(cmd.Cmd, object):
                                     del(tresult[okey][x])
                                 except:
                                     pass
-            print json.dumps(tresult,
-                             sort_keys=True,
-                             indent=2,
-                             separators=(',', ': '))
+            self.monkeyprint(json.dumps(tresult,
+                                        sort_keys=True,
+                                        indent=2,
+                                        ensure_ascii=False,
+                                        separators=(',', ': ')))
 
         def print_result_tabular(result, result_filter=None):
             toprow = None
             printer = None
             for node in result:
                 if toprow != node.keys():
-                    if result_filter is not None and len(result_filter) != 0:
+                    if result_filter and len(result_filter) != 0:
                         commonkeys = filter(lambda x: x in node.keys(),
                                             result_filter)
                         if commonkeys != toprow:
@@ -248,7 +252,7 @@ class CloudMonkeyShell(cmd.Cmd, object):
                 if printer and row:
                     printer.add_row(row)
             if printer:
-                self.monkeyprint(printer)
+                self.monkeyprint(printer.get_string())
 
         def print_result_as_dict(result, result_filter=[]):
             if self.display == "json":
@@ -259,14 +263,15 @@ class CloudMonkeyShell(cmd.Cmd, object):
                               x not in ['id', 'count', 'name'] and x):
                 if not (isinstance(result[key], list) or
                         isinstance(result[key], dict)):
-                    if result_filter is not None and key not in result_filter:
+                    if result_filter and key not in result_filter:
                         continue
-                    if result_filter is not None and len(result_filter) == 1:
-                        self.monkeyprint(result[key])
+                    value = unicode(result[key])
+                    if result_filter and len(result_filter) == 1:
+                        self.monkeyprint(value)
                     else:
-                        self.monkeyprint("%s = %s" % (key, result[key]))
+                        self.monkeyprint(key, " = ", value)
                 else:
-                    if result_filter is not None and key not in result_filter:
+                    if result_filter and key not in result_filter:
                         self.print_result(result[key], result_filter)
                         continue
                     self.monkeyprint(key + ":")
@@ -287,7 +292,7 @@ class CloudMonkeyShell(cmd.Cmd, object):
             print_result_as_list(result, result_filter)
         elif isinstance(result, str):
             print result
-        elif not (str(result) is None):
+        elif result:
             self.monkeyprint(result)
 
     def make_request(self, command, args={}, isasync=False):
@@ -296,8 +301,8 @@ class CloudMonkeyShell(cmd.Cmd, object):
                                         self.asyncblock, logger,
                                         self.url, self.credentials,
                                         self.timeout, self.expires)
-        if error is not None:
-            self.monkeyprint("Error %s" % error)
+        if error:
+            self.monkeyprint(u"Error {0}".format(error))
             self.error_on_last_command = True
         return response
 
@@ -313,7 +318,7 @@ class CloudMonkeyShell(cmd.Cmd, object):
             if isinstance(result[key], list):
                 for element in result[key]:
                     if 'id' in element.keys():
-                        uuid = str(element['id'])
+                        uuid = unicode(element['id'])
                         name = ""
                         keyspace = ["name", "displayname",
                                     "username", "description"]
@@ -332,19 +337,26 @@ class CloudMonkeyShell(cmd.Cmd, object):
         if self.pipe_runner(args):
             return
 
+        try:
+            args = args.strip()
+            args.decode("utf-8")
+        except UnicodeError, ignore:
+            args = args.encode("utf-8")
+
         apiname = args.partition(' ')[0]
         verb, subject = splitverbsubject(apiname)
 
-        lexp = shlex.shlex(args.strip())
+        lexp = shlex.shlex(args)
         lexp.whitespace = " "
         lexp.whitespace_split = True
         lexp.posix = True
         args = []
         while True:
             next_val = lexp.next()
-            if next_val is None:
+            if not next_val:
                 break
-            args.append(next_val.replace('\x00', ''))
+            next_val = next_val.decode("utf-8")
+            args.append(next_val.replace(u'\x00', u''))
 
         args_dict = dict(map(lambda x: [x.partition("=")[0],
                                         x.partition("=")[2]],
@@ -367,7 +379,8 @@ class CloudMonkeyShell(cmd.Cmd, object):
 
         isasync = False
         if 'asyncapis' in self.apicache:
-            isasync = apiname in self.apicache['asyncapis']
+            if apiname.decode("utf-8") in self.apicache["asyncapis"]:
+                isasync = True
 
         result = self.make_request(apiname, args_dict, isasync)
 
@@ -379,10 +392,10 @@ class CloudMonkeyShell(cmd.Cmd, object):
             for responsekey in responsekeys:
                 self.print_result(result[responsekey], field_filter)
             print
-            if apiname.startswith("list"):
+            if apiname.startswith("list") and "id" not in args_dict:
                 self.update_param_cache(apiname, result)
         except Exception as e:
-            self.monkeyprint("Error on parsing and printing", e)
+            self.monkeyprint("Error on parsing and printing ", e)
 
     def completedefault(self, text, line, begidx, endidx):
         partitions = line.partition(" ")
@@ -484,7 +497,7 @@ class CloudMonkeyShell(cmd.Cmd, object):
         it rollbacks last datastore or api precached datastore.
         """
         response = self.make_request("listApis")
-        if response is None:
+        if not response:
             monkeyprint("Failed to sync apis, please check your config?")
             monkeyprint("Note: `sync` requires api discovery service enabled" +
                         " on the CloudStack management server")
@@ -572,7 +585,7 @@ class CloudMonkeyShell(cmd.Cmd, object):
             self.credentials['session'] = session
             self.credentials['sessionkey'] = sessionkey
         except Exception, e:
-            self.monkeyprint("Error: Login failed to the server: ", str(e))
+            self.monkeyprint("Error: Login failed to the server: ", unicode(e))
 
     def do_logout(self, args):
         """
@@ -586,11 +599,11 @@ class CloudMonkeyShell(cmd.Cmd, object):
         self.credentials['sessionkey'] = None
 
     def pipe_runner(self, args):
-        if args.find(' |') > -1:
+        if args.find(u" |") > -1:
             pname = self.program_name
             if '.py' in pname:
                 pname = "python " + pname
-            self.do_shell("%s %s" % (pname, args))
+            self.do_shell(u"{0} {1}".format(pname, args))
             return True
         return False
 
@@ -605,7 +618,7 @@ class CloudMonkeyShell(cmd.Cmd, object):
             email=test@test.tt firstname=user$i lastname=user$i \
             password=password username=user$i; done
         """
-        os.system(args)
+        os.system(args.encode("utf-8"))
 
     def do_help(self, args):
         """
@@ -701,7 +714,7 @@ def main():
 
     shell = CloudMonkeyShell(sys.argv[0], args.configFile)
 
-    if args.displayType is not None and args.displayType in displayTypes:
+    if args.displayType and args.displayType in displayTypes:
         shell.set_attr("display", args.displayType)
 
     if len(args.commands) > 0:
