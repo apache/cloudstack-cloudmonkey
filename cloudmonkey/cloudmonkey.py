@@ -366,6 +366,7 @@ class CloudMonkeyShell(cmd.Cmd, object):
             field_filter = filter(lambda x: x is not '',
                                   map(lambda x: x.strip(),
                                       args_dict.pop('filter').split(',')))
+            field_filter = list(set(field_filter))
 
         missing = []
         if verb in self.apicache and subject in self.apicache[verb]:
