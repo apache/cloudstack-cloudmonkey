@@ -424,7 +424,22 @@ class CloudMonkeyShell(cmd.Cmd, object):
                 idx = param.find("=")
                 value = param[idx + 1:]
                 param = param[:idx]
-                if len(value) < 36 and idx != -1:
+                if param == "filter":
+                    response_params = self.apicache[verb][subject]["response"]
+                    used = filter(lambda x: x.strip() != "", value.split(",")[:-1])
+                    unused = map(lambda x: x['name'] + ",", filter(lambda x:
+                                 "name" in x and x["name"] not in used,
+                                 response_params))
+                    last_value = value.split(",")[-1]
+                    if last_value:
+                        unused = filter(lambda x: x.startswith(last_value),
+                                        unused)
+                    suffix = ",".join(used)
+                    if suffix:
+                        suffix += ","
+                    return filter(lambda x: x.startswith(value),
+                                  map(lambda x: suffix + x, unused))
+                elif len(value) < 36 and idx != -1:
                     api = None
                     logger.debug("[Paramcompl] For %s %s %s=" % (verb, subject,
                                                                  param))
