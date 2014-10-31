@@ -43,6 +43,7 @@ def logger_debug(logger, message):
 
 def writeError(msg):
     sys.stderr.write(msg)
+    sys.stderr.write("\n")
 
 
 def login(url, username, password):
@@ -218,7 +219,7 @@ def monkeyrequest(command, args, isasync, asyncblock, logger, url,
 
     def process_json(response):
         try:
-            response = json.loads(unicode(response))
+            response = json.loads(response, "utf-8")
         except ValueError, e:
             logger_debug(logger, "Error processing json: %s" % e)
             writeError("Error processing json: %s" % e)
