@@ -203,8 +203,10 @@ def make_request(command, args, logger, url, credentials, expires):
         elif response.status_code != 200 and response.status_code != 401:
             error = "{0}: {1}".format(response.status_code,
                                       response.headers.get('X-Description'))
+    except requests.exceptions.ConnectionError, e:
+        return None, "Connection refused by server: %s" % e
     except Exception, pokemon:
-        error = unicode(pokemon)
+        error = pokemon.message
 
     logger_debug(logger, "Response received: %s" % result)
     if error is not None:
