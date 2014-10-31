@@ -59,6 +59,7 @@ else:
     import rlcompleter
     if 'libedit' in readline.__doc__:
         readline.parse_and_bind("bind ^I rl_complete")
+        readline.parse_and_bind("bind ^R em-inc-search-prev")
     else:
         readline.parse_and_bind("tab: complete")
 
