@@ -51,6 +51,7 @@ try:
 except ImportError:
     apicache = {'count': 0, 'verbs': [], 'asyncapis': []}
 
+normal_readline = True
 try:
     import readline
 except ImportError, e:
@@ -60,6 +61,7 @@ else:
     if 'libedit' in readline.__doc__:
         readline.parse_and_bind("bind ^I rl_complete")
         readline.parse_and_bind("bind ^R em-inc-search-prev")
+        normal_readline = False
     else:
         readline.parse_and_bind("tab: complete")
 
@@ -439,8 +441,13 @@ class CloudMonkeyShell(cmd.Cmd, object):
                     suffix = ",".join(used)
                     if suffix:
                         suffix += ","
-                    return filter(lambda x: x.startswith(value),
-                                  map(lambda x: suffix + x, unused))
+                    global normal_readline
+                    if normal_readline:
+                        return filter(lambda x: x.startswith(last_value),
+                                      map(lambda x: x, unused))
+                    else: # OSX fix
+                        return filter(lambda x: x.startswith(value),
+                                      map(lambda x: suffix + x, unused))
                 elif len(value) < 36 and idx != -1:
                     api = None
                     logger.debug("[Paramcompl] For %s %s %s=" % (verb, subject,
