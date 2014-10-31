@@ -133,8 +133,8 @@ def make_request_with_password(command, args, logger, url, credentials):
             continue
 
         if resp.status_code != 200 and resp.status_code != 401:
-            error = u"{0}: {1}".format(resp.status_code,
-                                       resp.headers.get('X-Description'))
+            error = "{0}: {1}".format(resp.status_code,
+                                      resp.headers.get('X-Description'))
             result = None
             retry = False
 
@@ -142,7 +142,7 @@ def make_request_with_password(command, args, logger, url, credentials):
 
 
 def make_request(command, args, logger, url, credentials, expires):
-    response = None
+    result = None
     error = None
 
     if not url.startswith('http'):
@@ -161,6 +161,11 @@ def make_request(command, args, logger, url, credentials, expires):
     expirationtime = datetime.utcnow() + timedelta(seconds=int(expires))
     args["expires"] = expirationtime.strftime('%Y-%m-%dT%H:%M:%S+0000')
 
+    for key, value in args.iteritems():
+        if isinstance(value, unicode):
+            value = value.encode("utf-8")
+        args[key] = value
+
     # try to use the apikey/secretkey method by default
     # followed by trying to check if we're using integration port
     # finally use the username/password method
@@ -171,37 +176,42 @@ def make_request(command, args, logger, url, credentials, expires):
         except (requests.exceptions.ConnectionError, Exception), e:
             return None, e
 
+    def sign_request(params, secret_key):
+        request = zip(params.keys(), params.values())
+        request.sort(key=lambda x: x[0].lower())
+        hash_str = "&".join(
+            ["=".join(
+                [r[0].lower(),
+                 urllib.quote_plus(str(r[1])).lower().replace("+", "%20")]
+            ) for r in request]
+        )
+        return base64.encodestring(hmac.new(secret_key, hash_str,
+                                   hashlib.sha1).digest()).strip()
+
     args['apiKey'] = credentials['apikey']
-    secretkey = credentials['secretkey']
-    request = zip(args.keys(), map(lambda x: x.encode("utf-8"), args.values()))
-    request.sort(key=lambda x: x[0].lower())
-
-    request_url = u"&".join([u"=".join([r[0], urllib.quote(r[1])])
-                            for r in request])
-    hashStr = u"&".join([u"=".join([r[0].lower(), urllib.quote(r[1]).lower()])
-                        for r in request])
-
-    sig = urllib.quote(base64.encodestring(hmac.new(secretkey, hashStr,
-                       hashlib.sha1).digest()).strip())
-    request_url += "&signature=%s" % sig
-    request_url = "%s?%s" % (url, request_url)
+    args["signature"] = sign_request(args, credentials['secretkey'])
 
     try:
-        logger_debug(logger, "Request sent: %s" % request_url)
-        connection = urllib2.urlopen(request_url)
-        response = connection.read()
-    except HTTPError, e:
-        error = u"{0}{1}: {2}".format(e.code, e.msg,
-                                      e.info().getheader('X-Description'))
-    except URLError, e:
-        error = e.reason
+        response = requests.get(url, params=args)
+        logger_debug(logger, "Request sent: %s" % response.url)
+        result = response.text
 
-    logger_debug(logger, "Response received: %s" % response)
+        if response.status_code == 200:  # success
+            error = None
+        elif response.status_code == 401:      # auth issue
+            error = "401 Authentication error"
+        elif response.status_code != 200 and response.status_code != 401:
+            error = "{0}: {1}".format(response.status_code,
+                                      response.headers.get('X-Description'))
+    except Exception, pokemon:
+        error = unicode(pokemon)
+
+    logger_debug(logger, "Response received: %s" % result)
     if error is not None:
         logger_debug(logger, "Error: %s" % (error))
-        return response, error
+        return result, error
 
-    return response, error
+    return result, error
 
 
 def monkeyrequest(command, args, isasync, asyncblock, logger, url,
@@ -215,7 +225,7 @@ def monkeyrequest(command, args, isasync, asyncblock, logger, url,
 
     logger_debug(logger, "======== END Request ========\n")
 
-    if error is not None:
+    if error is not None and not response:
         return response, error
 
     def process_json(response):
