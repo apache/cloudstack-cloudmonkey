@@ -335,14 +335,14 @@ class CloudMonkeyShell(cmd.Cmd, object):
         return sorted(uuids)
 
     def default(self, args):
-        if self.pipe_runner(args):
-            return
-
         try:
             args = args.strip()
             args.decode("utf-8")
         except UnicodeError, ignore:
             args = args.encode("utf-8")
+
+        if self.pipe_runner(args):
+            return
 
         apiname = args.partition(' ')[0]
         verb, subject = splitverbsubject(apiname)
@@ -616,11 +616,14 @@ class CloudMonkeyShell(cmd.Cmd, object):
         self.credentials['sessionkey'] = None
 
     def pipe_runner(self, args):
-        if args.find(u" |") > -1:
+        if args.find(" |") > -1:
             pname = self.program_name
             if '.py' in pname:
                 pname = "python " + pname
-            self.do_shell(u"{0} {1}".format(pname, args))
+            if isinstance(args, str):
+                self.do_shell("{0} {1}".format(pname, args))
+            else:
+                self.do_shell(u"{0} {1}".format(pname, args))
             return True
         return False
 
@@ -635,7 +638,10 @@ class CloudMonkeyShell(cmd.Cmd, object):
             email=test@test.tt firstname=user$i lastname=user$i \
             password=password username=user$i; done
         """
-        os.system(args.encode("utf-8"))
+        if isinstance(args, str):
+            os.system(args)
+        else:
+            os.system(args.encode("utf-8"))
 
     def do_help(self, args):
         """
