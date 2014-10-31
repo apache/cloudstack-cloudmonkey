@@ -4,8 +4,9 @@ Apache CloudStack CloudMonkey Changelog
 Version 5.3.0
 =============
 This release includes
-- API arguments are URL encoded now
-- Autocompletion for config 'set' options
+- CloudMonkey becomes unicode friendly
+- Autocompletion for filters, precache changes
+- Autocompletion for config 'set' options and boolean api args
 - Current server profile displayed on prompt
 - Server profile related bugfixes, blank profile names are not allowed
 - Filtering support for default display output
