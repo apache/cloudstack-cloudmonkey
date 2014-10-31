@@ -76,7 +76,7 @@ def login(url, username, password):
         sessionkey = None
     elif resp.status_code == 531:
         writeError("Error authenticating at %s using username: %s"
-                   ", and password: %s\n" % (url, username, password))
+                   ", and password: %s" % (url, username, password))
         session = None
         sessionkey = None
     else:
@@ -173,7 +173,7 @@ def make_request(command, args, logger, url, credentials, expires):
 
     args['apiKey'] = credentials['apikey']
     secretkey = credentials['secretkey']
-    request = zip(args.keys(), args.values())
+    request = zip(args.keys(), map(lambda x: x.encode("utf-8"), args.values()))
     request.sort(key=lambda x: x[0].lower())
 
     request_url = u"&".join([u"=".join([r[0], urllib.quote(r[1])])
@@ -191,7 +191,8 @@ def make_request(command, args, logger, url, credentials, expires):
         connection = urllib2.urlopen(request_url)
         response = connection.read()
     except HTTPError, e:
-        error = u"{0}: {1}".format(e.msg, e.info().getheader('X-Description'))
+        error = u"{0}{1}: {2}".format(e.code, e.msg,
+                                      e.info().getheader('X-Description'))
     except URLError, e:
         error = e.reason
 
