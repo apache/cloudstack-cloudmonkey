@@ -181,6 +181,8 @@ class CloudMonkeyShell(cmd.Cmd, object):
             for arg in args:
                 if isinstance(type(arg), types.NoneType) or not arg:
                     continue
+                if not (isinstance(arg, str) or isinstance(arg, unicode)):
+                    arg = unicode(arg)
                 output += arg
         except Exception, e:
             print(str(e))
@@ -388,7 +390,10 @@ class CloudMonkeyShell(cmd.Cmd, object):
 
         result = self.make_request(apiname, args_dict, isasync)
 
-        if not result:
+        if not result or not isinstance(result, dict):
+            if isinstance(result, unicode):
+                result = result.decode("utf-8")
+            logger.debug("Invalid command result: %s" % result)
             return
 
         try:

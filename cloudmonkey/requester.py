@@ -93,6 +93,7 @@ def logout(url, session):
 
 def make_request_with_password(command, args, logger, url, credentials):
     error = None
+    args = args.copy()
     username = credentials['username']
     password = credentials['password']
 
@@ -153,6 +154,7 @@ def make_request(command, args, logger, url, credentials, expires):
     if not args:
         args = {}
 
+    args = args.copy()
     args["command"] = command
     args["response"] = "json"
     args["signatureversion"] = "3"
@@ -241,7 +243,7 @@ def monkeyrequest(command, args, isasync, asyncblock, logger, url,
         return response
 
     response = process_json(response)
-    if not response:
+    if not response or not isinstance(response, dict):
         return response, error
 
     isasync = isasync and (asyncblock == "true")
@@ -266,7 +268,7 @@ def monkeyrequest(command, args, isasync, asyncblock, logger, url,
 
             response, error = make_request(command, request, logger, url,
                                            credentials, expires)
-            if error is not None:
+            if error and not response:
                 return response, error
 
             response = process_json(response)
@@ -276,6 +278,9 @@ def monkeyrequest(command, args, isasync, asyncblock, logger, url,
                 continue
 
             result = response[responsekeys[0]]
+            if "errorcode" in result or "errortext" in result:
+                return response, error
+
             jobstatus = result['jobstatus']
             if jobstatus == 2:
                 jobresult = result["jobresult"]
@@ -283,8 +288,10 @@ def monkeyrequest(command, args, isasync, asyncblock, logger, url,
                         jobid, jobresult["errorcode"], jobresult["errortext"])
                 return response, error
             elif jobstatus == 1:
-                print "\r" + " " * progress,
+                print "\r" + " " * progress
                 return response, error
+            elif jobstatus == 0:
+                pass # Job in progress
             else:
                 logger_debug(logger, "We should not arrive here!")
                 sys.stdout.flush()
