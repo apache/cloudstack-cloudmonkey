@@ -44,6 +44,12 @@ except ImportError:
     else:
         requires.append('readline')
 
+# Upgrade notes for 5.3.0
+print "If you're upgrading, run the following to enable parameter completion:"
+print "  cloudmonkey sync"
+print "  cloudmonkey set paramcompletion true"
+print "Parameter completion may fail, if the above is not run!"
+
 setup(
     name = 'cloudmonkey',
     version = __version__,

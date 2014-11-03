@@ -193,6 +193,7 @@ class CloudMonkeyShell(cmd.Cmd, object):
         else:
             if output.startswith("Error"):
                 sys.stderr.write(output + "\n")
+                sys.stderr.flush()
             else:
                 print output
 
@@ -435,7 +436,8 @@ class CloudMonkeyShell(cmd.Cmd, object):
                 param = param[:idx]
                 if param == "filter":
                     response_params = self.apicache[verb][subject]["response"]
-                    used = filter(lambda x: x.strip() != "", value.split(",")[:-1])
+                    used = filter(lambda x: x.strip() != "",
+                                  value.split(",")[:-1])
                     unused = map(lambda x: x['name'] + ",", filter(lambda x:
                                  "name" in x and x["name"] not in used,
                                  response_params))
@@ -450,7 +452,7 @@ class CloudMonkeyShell(cmd.Cmd, object):
                     if normal_readline:
                         return filter(lambda x: x.startswith(last_value),
                                       map(lambda x: x, unused))
-                    else: # OSX fix
+                    else:  # OSX fix
                         return filter(lambda x: x.startswith(value),
                                       map(lambda x: suffix + x, unused))
                 elif len(value) < 36 and idx != -1:
@@ -563,7 +565,8 @@ class CloudMonkeyShell(cmd.Cmd, object):
         key, value = (args[0].strip(), args[2].strip())
         if not key:
             return
-        if not value:
+        allowed_blank_keys = ["username", "password", "apikey", "secretkey"]
+        if key not in allowed_blank_keys and not value:
             print "Blank value of %s is not allowed" % key
             return
 
@@ -599,7 +602,7 @@ class CloudMonkeyShell(cmd.Cmd, object):
         elif option == "display":
             return [s for s in ["default", "table", "json"]
                     if s.startswith(value)]
-        elif option == "asyncblock" or option == "color":
+        elif option in ["asyncblock", "color", "paramcompletion"]:
             return [s for s in ["true", "false"] if s.startswith(value)]
 
         return []
@@ -761,6 +764,16 @@ def main():
             sys.exit(1)
     else:
         shell.cmdloop()
+
+    try:
+        sys.stdout.close()
+    except:
+        pass
+    try:
+        sys.stderr.close()
+    except:
+        pass
+
 
 if __name__ == "__main__":
     main()

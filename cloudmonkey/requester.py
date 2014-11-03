@@ -44,6 +44,7 @@ def logger_debug(logger, message):
 def writeError(msg):
     sys.stderr.write(msg)
     sys.stderr.write("\n")
+    sys.stderr.flush()
 
 
 def login(url, username, password):
@@ -291,7 +292,7 @@ def monkeyrequest(command, args, isasync, asyncblock, logger, url,
                 print "\r" + " " * progress
                 return response, error
             elif jobstatus == 0:
-                pass # Job in progress
+                pass  # Job in progress
             else:
                 logger_debug(logger, "We should not arrive here!")
                 sys.stdout.flush()
