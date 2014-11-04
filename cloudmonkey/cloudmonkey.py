@@ -759,9 +759,21 @@ def main():
 
     if len(args.commands) > 0:
         shell.set_attr("color", "false")
-        shell.onecmd(" ".join(map(lambda x: x.replace("\\ ", " ")
-                                             .replace(" ", "\\ "),
-                                  args.commands)))
+        commands = []
+        for command in args.commands:
+            split_command = command.split("=")
+            if len(split_command) > 1:
+                key = split_command[0]
+                value = split_command[1]
+                if " " not in value or \
+                   (value.startswith("\"") and value.endswith("\"")) or \
+                   (value.startswith("\'") and value.endswith("\'")):
+                    commands.append(command)
+                else:
+                    commands.append("%s=\"%s\"" % (key, value))
+            else:
+                commands.append(command)
+        shell.onecmd(" ".join(commands))
         if shell.error_on_last_command:
             sys.exit(1)
     else:
