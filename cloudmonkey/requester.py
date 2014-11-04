@@ -171,10 +171,13 @@ def make_request(command, args, logger, url, credentials, expires,
     expirationtime = datetime.utcnow() + timedelta(seconds=int(expires))
     args["expires"] = expirationtime.strftime('%Y-%m-%dT%H:%M:%S+0000')
 
-    for key, value in args.iteritems():
+    for key in args.keys():
+        value = args[key]
         if isinstance(value, unicode):
             value = value.encode("utf-8")
         args[key] = value
+        if not key or not value:
+            args.pop(key)
 
     # try to use the apikey/secretkey method by default
     # followed by trying to check if we're using integration port
