@@ -306,7 +306,8 @@ class CloudMonkeyShell(cmd.Cmd, object):
         response, error = monkeyrequest(command, args, isasync,
                                         self.asyncblock, logger,
                                         self.url, self.credentials,
-                                        self.timeout, self.expires)
+                                        self.timeout, self.expires,
+                                        self.verifysslcert == 'true')
         if error:
             self.monkeyprint(u"Error {0}".format(error))
             self.error_on_last_command = True
@@ -602,7 +603,8 @@ class CloudMonkeyShell(cmd.Cmd, object):
         elif option == "display":
             return [s for s in ["default", "table", "json"]
                     if s.startswith(value)]
-        elif option in ["asyncblock", "color", "paramcompletion"]:
+        elif option in ["asyncblock", "color", "paramcompletion",
+                        "verifysslcert"]:
             return [s for s in ["true", "false"] if s.startswith(value)]
 
         return []

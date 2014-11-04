@@ -27,13 +27,18 @@ try:
     import time
     import urllib
     import urllib2
+
     from datetime import datetime, timedelta
     from urllib2 import HTTPError, URLError
-
 except ImportError, e:
     print "Import error in %s : %s" % (__name__, e)
     import sys
     sys.exit()
+
+
+# Disable HTTPS verification warnings.
+from requests.packages import urllib3
+urllib3.disable_warnings()
 
 
 def logger_debug(logger, message):
@@ -92,7 +97,8 @@ def logout(url, session):
     session.get(url, params={'command': 'logout'})
 
 
-def make_request_with_password(command, args, logger, url, credentials):
+def make_request_with_password(command, args, logger, url, credentials,
+                               verifysslcert=False):
     error = None
     args = args.copy()
     username = credentials['username']
@@ -122,7 +128,7 @@ def make_request_with_password(command, args, logger, url, credentials):
         args['sessionkey'] = sessionkey
 
         # make the api call
-        resp = session.get(url, params=args)
+        resp = session.get(url, params=args, verify=verifysslcert)
         result = resp.text
         logger_debug(logger, "Response received: %s" % resp.text)
 
@@ -143,7 +149,8 @@ def make_request_with_password(command, args, logger, url, credentials):
     return result, error
 
 
-def make_request(command, args, logger, url, credentials, expires):
+def make_request(command, args, logger, url, credentials, expires,
+                 verifysslcert=False):
     result = None
     error = None
 
@@ -174,8 +181,8 @@ def make_request(command, args, logger, url, credentials, expires):
     # finally use the username/password method
     if not credentials['apikey'] and not ("8096" in url):
         try:
-            return make_request_with_password(command, args,
-                                              logger, url, credentials)
+            return make_request_with_password(command, args, logger, url,
+                                              credentials, verifysslcert)
         except (requests.exceptions.ConnectionError, Exception), e:
             return None, e
 
@@ -195,7 +202,7 @@ def make_request(command, args, logger, url, credentials, expires):
     args["signature"] = sign_request(args, credentials['secretkey'])
 
     try:
-        response = requests.get(url, params=args)
+        response = requests.get(url, params=args, verify=verifysslcert)
         logger_debug(logger, "Request sent: %s" % response.url)
         result = response.text
 
@@ -220,13 +227,13 @@ def make_request(command, args, logger, url, credentials, expires):
 
 
 def monkeyrequest(command, args, isasync, asyncblock, logger, url,
-                  credentials, timeout, expires):
+                  credentials, timeout, expires, verifysslcert=False):
     response = None
     error = None
     logger_debug(logger, "======== START Request ========")
     logger_debug(logger, "Requesting command=%s, args=%s" % (command, args))
     response, error = make_request(command, args, logger, url,
-                                   credentials, expires)
+                                   credentials, expires, verifysslcert)
 
     logger_debug(logger, "======== END Request ========\n")
 
@@ -268,7 +275,7 @@ def monkeyrequest(command, args, isasync, asyncblock, logger, url,
             logger_debug(logger, "Job %s to timeout in %ds" % (jobid, timeout))
 
             response, error = make_request(command, request, logger, url,
-                                           credentials, expires)
+                                           credentials, expires, verifysslcert)
             if error and not response:
                 return response, error
 

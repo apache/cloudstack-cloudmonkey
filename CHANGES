@@ -17,6 +17,7 @@ This release includes
 - Parameter completion options are cached to speed up rendering of options
 - CloudMonkey returns non-zero exit code when run on shell and a error is return
   from managment server, the error message is written to stderr
+- Adds new config parameter 'verifysslcert' to enable/disable SSL cert checking
 
 Make sure you backup your config before you upgrade cloudmonkey from previous releases.
 With this release `cloudmonkey` will automatically fix your config file, add missing

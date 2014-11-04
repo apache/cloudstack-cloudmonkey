@@ -68,6 +68,7 @@ default_profile['username'] = 'admin'
 default_profile['password'] = 'password'
 default_profile['apikey'] = ''
 default_profile['secretkey'] = ''
+default_profile['verifysslcert'] = 'true'
 
 
 def write_config(get_attr, config_file):
@@ -188,7 +189,7 @@ def read_config(get_attr, set_attr, config_file):
                     set_attr(key, config_fields[section][key])
                 else:
                     set_attr(key, default_profile[key])
-                missing_keys.append(key)
+                missing_keys.append("%s = %s" % (key, get_attr(key)))
             # Cosmetic fix for prompt
             if key == 'prompt':
                 set_attr(key, get_attr('prompt').strip() + " ")
