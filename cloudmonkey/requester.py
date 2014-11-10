@@ -27,18 +27,29 @@ try:
     import time
     import urllib
     import urllib2
+
     from datetime import datetime, timedelta
     from urllib2 import HTTPError, URLError
-
 except ImportError, e:
     print "Import error in %s : %s" % (__name__, e)
     import sys
     sys.exit()
 
 
+# Disable HTTPS verification warnings.
+from requests.packages import urllib3
+urllib3.disable_warnings()
+
+
 def logger_debug(logger, message):
     if logger is not None:
         logger.debug(message)
+
+
+def writeError(msg):
+    sys.stderr.write(msg)
+    sys.stderr.write("\n")
+    sys.stderr.flush()
 
 
 def login(url, username, password):
@@ -60,18 +71,18 @@ def login(url, username, password):
     try:
         resp = session.post(url, params=args)
     except requests.exceptions.ConnectionError, e:
-        print "Connection refused by server"
+        writeError("Connection refused by server: %s" % e)
         return None, None
 
     if resp.status_code == 200:
         sessionkey = resp.json()['loginresponse']['sessionkey']
     elif resp.status_code == 405:
-        print "Method not allowed, unauthorized access on URL: %s" % url
+        writeError("Method not allowed, unauthorized access on URL: %s" % url)
         session = None
         sessionkey = None
     elif resp.status_code == 531:
-        print "Error authenticating at %s, with username: %s" \
-              ", and password: %s" % (url, username, password)
+        writeError("Error authenticating at %s using username: %s"
+                   ", and password: %s" % (url, username, password))
         session = None
         sessionkey = None
     else:
@@ -81,14 +92,15 @@ def login(url, username, password):
 
 
 def logout(url, session):
-    if session is None:
+    if not session:
         return
     session.get(url, params={'command': 'logout'})
 
 
-def make_request_with_password(command, args, logger, url, credentials):
-
+def make_request_with_password(command, args, logger, url, credentials,
+                               verifysslcert=False):
     error = None
+    args = args.copy()
     username = credentials['username']
     password = credentials['password']
 
@@ -109,14 +121,14 @@ def make_request_with_password(command, args, logger, url, credentials):
         if not (session and sessionkey):
             session, sessionkey = login(url, username, password)
             if not (session and sessionkey):
-                return None, 'Error authenticating'
+                return None, 'Authentication failed'
             credentials['session'] = session
             credentials['sessionkey'] = sessionkey
 
         args['sessionkey'] = sessionkey
 
         # make the api call
-        resp = session.get(url, params=args)
+        resp = session.get(url, params=args, verify=verifysslcert)
         result = resp.text
         logger_debug(logger, "Response received: %s" % resp.text)
 
@@ -129,17 +141,16 @@ def make_request_with_password(command, args, logger, url, credentials):
             continue
 
         if resp.status_code != 200 and resp.status_code != 401:
-            error = "%s: %s" %\
-                    (str(resp.status_code), resp.headers.get('X-Description'))
+            error = "{0}: {1}".format(resp.status_code,
+                                      resp.headers.get('X-Description'))
             result = None
             retry = False
 
     return result, error
 
-def make_request(command, args, logger, url, 
-                 credentials, expires, region):
-
-    response = None
+def make_request(command, args, logger, url, credentials, expires, region,
+                 verifysslcert=False):
+    result = None
     error = None
 
     if not url.startswith('http'):
@@ -147,87 +158,120 @@ def make_request(command, args, logger, url,
                 "please check and fix the url"
         return None, error
 
-    if args is None:
+    if not args:
         args = {}
 
+    args = args.copy()
     args["command"] = command
     args["region"] = region
     args["response"] = "json"
     args["signatureversion"] = "3"
+    if not expires:
+        expires = 600
     expirationtime = datetime.utcnow() + timedelta(seconds=int(expires))
     args["expires"] = expirationtime.strftime('%Y-%m-%dT%H:%M:%S+0000')
+
+    for key in args.keys():
+        value = args[key]
+        if isinstance(value, unicode):
+            value = value.encode("utf-8")
+        args[key] = value
+        if not key or not value:
+            args.pop(key)
 
     # try to use the apikey/secretkey method by default
     # followed by trying to check if we're using integration port
     # finally use the username/password method
     if not credentials['apikey'] and not ("8096" in url):
         try:
-            return make_request_with_password(command, args,
-                                              logger, url, credentials)
+            return make_request_with_password(command, args, logger, url,
+                                              credentials, verifysslcert)
         except (requests.exceptions.ConnectionError, Exception), e:
             return None, e
 
-    args['apiKey'] = credentials['apikey']
-    secretkey = credentials['secretkey']
-    request = zip(args.keys(), args.values())
-    request.sort(key=lambda x: x[0].lower())
+    def sign_request(params, secret_key):
+        request = zip(params.keys(), params.values())
+        request.sort(key=lambda x: x[0].lower())
+        hash_str = "&".join(
+            ["=".join(
+                [r[0].lower(),
+                 urllib.quote_plus(str(r[1])).lower().replace("+", "%20")]
+            ) for r in request]
+        )
+        return base64.encodestring(hmac.new(secret_key, hash_str,
+                                   hashlib.sha1).digest()).strip()
 
-    request_url = "&".join(["=".join([r[0], urllib.quote_plus(str(r[1]))])
-                           for r in request])
-    hashStr = "&".join(["=".join([r[0].lower(),
-                       str.lower(urllib.quote_plus(str(r[1]))).replace("+",
-                       "%20")]) for r in request])
-
+<<<<<<< HEAD
     sig = urllib.quote_plus(base64.encodestring(hmac.new(secretkey, hashStr,
                             hashlib.sha1).digest()).strip())
     request_url += "&signature=%s" % sig
 
     request_url = "%s?%s" % (url, request_url)
     ##print("Request sent: %s" % request_url) #Debug/test output
+=======
+    args['apiKey'] = credentials['apikey']
+    args["signature"] = sign_request(args, credentials['secretkey'])
+>>>>>>> cloudmonkey530/5.3
 
     try:
-        logger_debug(logger, "Request sent: %s" % request_url)
-        connection = urllib2.urlopen(request_url)
-        response = connection.read()
-    except HTTPError, e:
-        error = "%s: %s" % (e.msg, e.info().getheader('X-Description'))
-    except URLError, e:
-        error = e.reason
+        response = requests.get(url, params=args, verify=verifysslcert)
+        logger_debug(logger, "Request sent: %s" % response.url)
+        result = response.text
 
-    logger_debug(logger, "Response received: %s" % response)
+        if response.status_code == 200:  # success
+            error = None
+        elif response.status_code == 401:      # auth issue
+            error = "401 Authentication error"
+        elif response.status_code != 200 and response.status_code != 401:
+            error = "{0}: {1}".format(response.status_code,
+                                      response.headers.get('X-Description'))
+    except requests.exceptions.ConnectionError, e:
+        return None, "Connection refused by server: %s" % e
+    except Exception, pokemon:
+        error = pokemon.message
+
+    logger_debug(logger, "Response received: %s" % result)
     if error is not None:
         logger_debug(logger, "Error: %s" % (error))
-        return response, error
+        return result, error
 
-    return response, error
+    return result, error
 
 def monkeyrequest(command, args, isasync, asyncblock, logger, url,
+<<<<<<< HEAD
                   credentials, timeout, expires, region):
+=======
+                  credentials, timeout, expires, verifysslcert=False):
+>>>>>>> cloudmonkey530/5.3
     response = None
     error = None
     logger_debug(logger, "======== START Request ========")
     logger_debug(logger, "Requesting command=%s, args=%s" % (command, args))
 
     response, error = make_request(command, args, logger, url,
+<<<<<<< HEAD
                                    credentials, expires, region)
+=======
+                                   credentials, expires, verifysslcert)
+>>>>>>> cloudmonkey530/5.3
 
     logger_debug(logger, "======== END Request ========\n")
 
-    if error is not None:
+    if error is not None and not response:
         return response, error
 
     def process_json(response):
         try:
-            response = json.loads(str(response))
+            response = json.loads(response, "utf-8")
         except ValueError, e:
             logger_debug(logger, "Error processing json: %s" % e)
-            print "Error processing json:", str(e)
+            writeError("Error processing json: %s" % e)
             response = None
             error = e
         return response
 
     response = process_json(response)
-    if response is None:
+    if not response or not isinstance(response, dict):
         return response, error
 
     isasync = isasync and (asyncblock == "true")
@@ -237,6 +281,8 @@ def monkeyrequest(command, args, isasync, asyncblock, logger, url,
         jobid = response[responsekey]['jobid']
         command = "queryAsyncJobResult"
         request = {'jobid': jobid}
+        if not timeout:
+            timeout = 3600
         timeout = int(timeout)
         pollperiod = 2
         progress = 1
@@ -248,9 +294,14 @@ def monkeyrequest(command, args, isasync, asyncblock, logger, url,
             progress += 1
             logger_debug(logger, "Job %s to timeout in %ds" % (jobid, timeout))
             response, error = make_request(command, request, logger, url,
+<<<<<<< HEAD
                                            credentials, expires, region)
 
             if error is not None:
+=======
+                                           credentials, expires, verifysslcert)
+            if error and not response:
+>>>>>>> cloudmonkey530/5.3
                 return response, error
 
             response = process_json(response)
@@ -260,6 +311,9 @@ def monkeyrequest(command, args, isasync, asyncblock, logger, url,
                 continue
 
             result = response[responsekeys[0]]
+            if "errorcode" in result or "errortext" in result:
+                return response, error
+
             jobstatus = result['jobstatus']
             if jobstatus == 2:
                 jobresult = result["jobresult"]
@@ -267,8 +321,10 @@ def monkeyrequest(command, args, isasync, asyncblock, logger, url,
                         jobid, jobresult["errorcode"], jobresult["errortext"])
                 return response, error
             elif jobstatus == 1:
-                print "\r" + " " * progress,
+                print "\r" + " " * progress
                 return response, error
+            elif jobstatus == 0:
+                pass  # Job in progress
             else:
                 logger_debug(logger, "We should not arrive here!")
                 sys.stdout.flush()

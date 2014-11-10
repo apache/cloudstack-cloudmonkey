@@ -18,15 +18,18 @@
 # under the License.
 
 try:
+    import argcomplete
+    import argparse
     import atexit
     import cmd
+    import copy
     import json
     import logging
     import os
     import shlex
     import sys
+    import time
     import types
-    import copy
 
     from cachemaker import loadcache, savecache, monkeycache, splitverbsubject
     from config import __version__, __description__, __projecturl__
@@ -48,6 +51,7 @@ try:
 except ImportError:
     apicache = {'count': 0, 'verbs': [], 'asyncapis': []}
 
+normal_readline = True
 try:
     import readline
 except ImportError, e:
@@ -56,6 +60,8 @@ else:
     import rlcompleter
     if 'libedit' in readline.__doc__:
         readline.parse_and_bind("bind ^I rl_complete")
+        readline.parse_and_bind("bind ^R em-inc-search-prev")
+        normal_readline = False
     else:
         readline.parse_and_bind("tab: complete")
 
@@ -65,10 +71,13 @@ logger = logging.getLogger(__name__)
 
 class CloudMonkeyShell(cmd.Cmd, object):
     intro = ("☁ Apache CloudStack 🐵 cloudmonkey " + __version__ +
-             " [MODIFIED FOR INTEROUTE VDC 2014-10-15]. Type help or ? to list commands.\n")
+             " [MODIFIED FOR INTEROUTE VDC 2014-11-10]. Type help or ? to list commands.\n")
     ruler = "="
     config_options = []
+    profile_names = []
     verbs = []
+    error_on_last_command = False
+    param_cache = {}
     prompt = "🐵 > "
     protocol = "http"
     host = "localhost"
@@ -93,7 +102,7 @@ class CloudMonkeyShell(cmd.Cmd, object):
             if os.path.exists(self.history_file):
                 readline.read_history_file(self.history_file)
         except IOError, e:
-            logger.debug("Error: Unable to read history. " + str(e))
+            logger.debug(u"Error: Unable to read history. " + unicode(e))
         atexit.register(readline.write_history_file, self.history_file)
 
     def init_credential_store(self):
@@ -105,6 +114,13 @@ class CloudMonkeyShell(cmd.Cmd, object):
         self.host = parsed_url.netloc
         self.port = "8080" if not parsed_url.port else parsed_url.port
         self.path = parsed_url.path
+        self.set_prompt()
+
+    def get_prompt(self):
+        return self.prompt.split(") ")[-1]
+
+    def set_prompt(self):
+        self.prompt = "(%s) %s" % (self.profile, self.get_prompt())
 
     def get_attr(self, field):
         return getattr(self, field)
@@ -121,7 +137,6 @@ class CloudMonkeyShell(cmd.Cmd, object):
         while True:
             try:
                 super(CloudMonkeyShell, self).cmdloop(intro="")
-                self.postloop()
             except KeyboardInterrupt:
                 print("^C")
 
@@ -136,9 +151,10 @@ class CloudMonkeyShell(cmd.Cmd, object):
         for verb in self.verbs:
             def add_grammar(verb):
                 def grammar_closure(self, args):
-                    if args is None:
+                    if not args:
                         return
-                    if self.pipe_runner("%s %s" % (verb, args)):
+                    args = args.decode("utf-8")
+                    if self.pipe_runner(u"{0} {1}".format(verb, args)):
                         return
                     if ' --help' in args or ' -h' in args:
                         self.do_help("%s %s" % (verb, args))
@@ -148,44 +164,52 @@ class CloudMonkeyShell(cmd.Cmd, object):
                         cmd = self.apicache[verb][args_partition[0]]['name']
                         args = args_partition[2]
                     except KeyError, e:
-                        self.monkeyprint("Error: invalid %s api arg" % verb, e)
+                        self.monkeyprint("Error: invalid %s api arg " % verb,
+                                         str(e))
                         return
-                    self.default("%s %s" % (cmd, args))
+                    self.default(u"{0} {1}".format(cmd, args))
                 return grammar_closure
 
             grammar_handler = add_grammar(verb)
             grammar_handler.__doc__ = "%ss resources" % verb.capitalize()
-            grammar_handler.__name__ = 'do_' + str(verb)
+            grammar_handler.__name__ = "do_" + str(verb)
             setattr(self.__class__, grammar_handler.__name__, grammar_handler)
 
     def monkeyprint(self, *args):
-        output = ""
+        output = u""
         try:
             for arg in args:
-                if isinstance(type(arg), types.NoneType):
+                if isinstance(type(arg), types.NoneType) or not arg:
                     continue
-                output += str(arg)
+                if not (isinstance(arg, str) or isinstance(arg, unicode)):
+                    arg = unicode(arg)
+                output += arg
         except Exception, e:
-            print(e)
+            print(str(e))
 
+        output = output.encode("utf-8")
         if self.color == 'true':
             monkeyprint(output)
         else:
-            print(output)
+            if output.startswith("Error"):
+                sys.stderr.write(output + "\n")
+                sys.stderr.flush()
+            else:
+                print output
 
-    def print_result(self, result, result_filter=None):
-        if result is None or len(result) == 0:
+    def print_result(self, result, result_filter=[]):
+        if not result or len(result) == 0:
             return
 
         def printer_helper(printer, toprow):
             if printer:
-                self.monkeyprint(printer)
+                self.monkeyprint(printer.get_string())
             return PrettyTable(toprow)
 
         def print_result_json(result, result_filter=None):
             tfilter = {}  # temp var to hold a dict of the filters
             tresult = copy.deepcopy(result)  # dupe the result to filter
-            if result_filter is not None:
+            if result_filter:
                 for res in result_filter:
                     tfilter[res] = 1
                 for okey, oval in result.iteritems():
@@ -210,17 +234,18 @@ class CloudMonkeyShell(cmd.Cmd, object):
                                     del(tresult[okey][x])
                                 except:
                                     pass
-            print json.dumps(tresult,
-                             sort_keys=True,
-                             indent=2,
-                             separators=(',', ': '))
+            self.monkeyprint(json.dumps(tresult,
+                                        sort_keys=True,
+                                        indent=2,
+                                        ensure_ascii=False,
+                                        separators=(',', ': ')))
 
         def print_result_tabular(result, result_filter=None):
             toprow = None
             printer = None
             for node in result:
                 if toprow != node.keys():
-                    if result_filter is not None and len(result_filter) != 0:
+                    if result_filter and len(result_filter) != 0:
                         commonkeys = filter(lambda x: x in node.keys(),
                                             result_filter)
                         if commonkeys != toprow:
@@ -233,9 +258,9 @@ class CloudMonkeyShell(cmd.Cmd, object):
                 if printer and row:
                     printer.add_row(row)
             if printer:
-                self.monkeyprint(printer)
+                self.monkeyprint(printer.get_string())
 
-        def print_result_as_dict(result, result_filter=None):
+        def print_result_as_dict(result, result_filter=[]):
             if self.display == "json":
                 print_result_json(result, result_filter)
                 return
@@ -244,18 +269,27 @@ class CloudMonkeyShell(cmd.Cmd, object):
                               x not in ['id', 'count', 'name'] and x):
                 if not (isinstance(result[key], list) or
                         isinstance(result[key], dict)):
-                    self.monkeyprint("%s = %s" % (key, result[key]))
+                    if result_filter and key not in result_filter:
+                        continue
+                    value = unicode(result[key])
+                    if result_filter and len(result_filter) == 1:
+                        self.monkeyprint(value)
+                    else:
+                        self.monkeyprint(key, " = ", value)
                 else:
+                    if result_filter and key not in result_filter:
+                        self.print_result(result[key], result_filter)
+                        continue
                     self.monkeyprint(key + ":")
                     self.print_result(result[key], result_filter)
 
-        def print_result_as_list(result, result_filter=None):
+        def print_result_as_list(result, filter=[]):
             for node in result:
                 if isinstance(node, dict) and self.display == 'table':
-                    print_result_tabular(result, result_filter)
+                    print_result_tabular(result, filter)
                     break
-                self.print_result(node)
-                if len(result) > 1:
+                self.print_result(node, filter)
+                if result and (filter is None or len(filter) != 1):
                     self.monkeyprint(self.ruler * 80)
 
         if isinstance(result, dict):
@@ -264,36 +298,72 @@ class CloudMonkeyShell(cmd.Cmd, object):
             print_result_as_list(result, result_filter)
         elif isinstance(result, str):
             print result
-        elif not (str(result) is None):
+        elif result:
             self.monkeyprint(result)
 
     def make_request(self, command, args={}, isasync=False):
+        self.error_on_last_command = False
         response, error = monkeyrequest(command, args, isasync,
                                         self.asyncblock, logger,
-                                        self.url, self.credentials, 
-                                        self.timeout, self.expires, self.region)
-
-        if error is not None:
-            self.monkeyprint(error)
+                                        self.url, self.credentials,
+                                        self.timeout, self.expires, self.region,
+                                        self.verifysslcert == 'true')
+        if error:
+            self.monkeyprint(u"Error {0}".format(error))
+            self.error_on_last_command = True
         return response
 
+    def update_param_cache(self, api, result={}):
+        if not api:
+            return
+        logger.debug("Updating param cache for %s API" % api)
+        responsekey = filter(lambda x: 'response' in x, result.keys())[0]
+        result = result[responsekey]
+        options = []
+        uuids = []
+        for key in result.keys():
+            if isinstance(result[key], list):
+                for element in result[key]:
+                    if 'id' in element.keys():
+                        uuid = unicode(element['id'])
+                        name = ""
+                        keyspace = ["name", "displayname",
+                                    "username", "description"]
+                        for name_key in keyspace:
+                            if name_key in element.keys():
+                                name = element[name_key]
+                                break
+                        options.append((uuid, name,))
+                        uuids.append(uuid)
+        self.param_cache[api] = {}
+        self.param_cache[api]["ts"] = int(time.time())
+        self.param_cache[api]["options"] = sorted(options)
+        return sorted(uuids)
+
     def default(self, args):
+        try:
+            args = args.strip()
+            args.decode("utf-8")
+        except UnicodeError, ignore:
+            args = args.encode("utf-8")
+
         if self.pipe_runner(args):
             return
 
         apiname = args.partition(' ')[0]
         verb, subject = splitverbsubject(apiname)
 
-        lexp = shlex.shlex(args.strip())
+        lexp = shlex.shlex(args)
         lexp.whitespace = " "
         lexp.whitespace_split = True
         lexp.posix = True
         args = []
         while True:
             next_val = lexp.next()
-            if next_val is None:
+            if not next_val:
                 break
-            args.append(next_val.replace('\x00', ''))
+            next_val = next_val.decode("utf-8")
+            args.append(next_val.replace(u'\x00', u''))
 
         args_dict = dict(map(lambda x: [x.partition("=")[0],
                                         x.partition("=")[2]],
@@ -303,6 +373,7 @@ class CloudMonkeyShell(cmd.Cmd, object):
             field_filter = filter(lambda x: x is not '',
                                   map(lambda x: x.strip(),
                                       args_dict.pop('filter').split(',')))
+            field_filter = list(set(field_filter))
 
         missing = []
         if verb in self.apicache and subject in self.apicache[verb]:
@@ -316,19 +387,26 @@ class CloudMonkeyShell(cmd.Cmd, object):
 
         isasync = False
         if 'asyncapis' in self.apicache:
-            isasync = apiname in self.apicache['asyncapis']
+            if apiname.decode("utf-8") in self.apicache["asyncapis"]:
+                isasync = True
 
         result = self.make_request(apiname, args_dict, isasync)
 
-        if result is None:
+        if not result or not isinstance(result, dict):
+            if isinstance(result, unicode):
+                result = result.decode("utf-8")
+            logger.debug("Invalid command result: %s" % result)
             return
+
         try:
             responsekeys = filter(lambda x: 'response' in x, result.keys())
             for responsekey in responsekeys:
                 self.print_result(result[responsekey], field_filter)
             print
+            if apiname.startswith("list") and "id" not in args_dict:
+                self.update_param_cache(apiname, result)
         except Exception as e:
-            self.monkeyprint("🙈  Error on parsing and printing", e)
+            self.monkeyprint("Error on parsing and printing ", e)
 
     def completedefault(self, text, line, begidx, endidx):
         partitions = line.partition(" ")
@@ -357,26 +435,90 @@ class CloudMonkeyShell(cmd.Cmd, object):
                 idx = param.find("=")
                 value = param[idx + 1:]
                 param = param[:idx]
-                if len(value) < 36 and idx != -1:
-                    params = self.apicache[verb][subject]['params']
-                    related = filter(lambda x: x['name'] == param,
-                                     params)[0]['related']
-                    api = min(filter(lambda x: 'list' in x, related), key=len)
-                    response = self.make_request(api, args={'listall': 'true'})
-                    responsekey = filter(lambda x: 'response' in x,
-                                         response.keys())[0]
-                    result = response[responsekey]
+                if param == "filter":
+                    response_params = self.apicache[verb][subject]["response"]
+                    used = filter(lambda x: x.strip() != "",
+                                  value.split(",")[:-1])
+                    unused = map(lambda x: x['name'] + ",", filter(lambda x:
+                                 "name" in x and x["name"] not in used,
+                                 response_params))
+                    last_value = value.split(",")[-1]
+                    if last_value:
+                        unused = filter(lambda x: x.startswith(last_value),
+                                        unused)
+                    suffix = ",".join(used)
+                    if suffix:
+                        suffix += ","
+                    global normal_readline
+                    if normal_readline:
+                        return filter(lambda x: x.startswith(last_value),
+                                      map(lambda x: x, unused))
+                    else:  # OSX fix
+                        return filter(lambda x: x.startswith(value),
+                                      map(lambda x: suffix + x, unused))
+                elif len(value) < 36 and idx != -1:
+                    api = None
+                    logger.debug("[Paramcompl] For %s %s %s=" % (verb, subject,
+                                                                 param))
+                    if "id" in param:
+                        logger.debug("[Paramcompl] Using 'list' heuristics")
+                        if param == "id" or param == "ids":
+                            entity = subject
+                        else:
+                            entity = param.replace("id", "")
+                        apis = []
+                        for resource in self.apicache["list"]:
+                            if resource.startswith(entity):
+                                api = self.apicache["list"][resource]['name']
+                                if (entity + "s") == resource.lower():
+                                    break
+                                apis.append(api)
+                                api = None
+                        if len(apis) > 0 and not api:
+                            logger.debug("[Paramcompl] APIs: %s" % apis)
+                            api = min(apis, key=len)
+                        logger.debug("[Paramcompl] Possible API: %s" % api)
+                    if not api:
+                        logger.debug("[Paramcompl] Using relative approx")
+                        params = self.apicache[verb][subject]['params']
+                        arg = filter(lambda x: x['name'] == param, params)[0]
+                        if "type" in arg and arg["type"] == "boolean":
+                            return filter(lambda x: x.startswith(value),
+                                          ["true", "false"])
+                        related = arg['related']
+                        apis = filter(lambda x: 'list' in x, related)
+                        logger.debug("[Paramcompl] Related APIs: %s" % apis)
+                        if len(apis) > 0:
+                            api = apis[0]
+                        else:
+                            return
                     uuids = []
-                    for key in result.keys():
-                        if isinstance(result[key], list):
-                            for element in result[key]:
-                                if 'id' in element.keys():
-                                    uuids.append(element['id'])
+                    cache_burst_ts = int(time.time()) - 900
+                    logger.debug("Trying paramcompletion using API: %s" % api)
+                    if api in self.param_cache.keys() and \
+                        len(self.param_cache[api]["options"]) > 0 and \
+                            self.param_cache[api]["ts"] > cache_burst_ts:
+                        for option in self.param_cache[api]["options"]:
+                            uuid = option[0]
+                            if uuid.startswith(value):
+                                uuids.append(uuid)
+                    else:
+                        api_args = {'listall': 'true', 'templatefilter': 'all'}
+                        response = self.make_request(api, args=api_args)
+                        if not response:
+                            return
+                        uuids = self.update_param_cache(api, response)
+                    if len(uuids) > 1:
+                        print
+                        for option in self.param_cache[api]["options"]:
+                            uuid = option[0]
+                            name = option[1]
+                            if uuid.startswith(value):
+                                print uuid, name
                     autocompletions = uuids
                     search_string = value
 
-        if subject != "" and (self.display == "table" or
-                              self.display == "json"):
+        if subject != "" and line.split(" ")[-1].find('=') == -1:
             autocompletions.append("filter=")
         return [s for s in autocompletions if s.startswith(search_string)]
 
@@ -387,7 +529,7 @@ class CloudMonkeyShell(cmd.Cmd, object):
         it rollbacks last datastore or api precached datastore.
         """
         response = self.make_request("listApis")
-        if response is None:
+        if not response:
             monkeyprint("Failed to sync apis, please check your config?")
             monkeyprint("Note: `sync` requires api discovery service enabled" +
                         " on the CloudStack management server")
@@ -421,27 +563,51 @@ class CloudMonkeyShell(cmd.Cmd, object):
         set log_file /var/log/cloudmonkey.log
         """
         args = args.strip().partition(" ")
-        key, value = (args[0], args[2])
+        key, value = (args[0].strip(), args[2].strip())
+        if not key:
+            return
+        allowed_blank_keys = ["username", "password", "apikey", "secretkey"]
+        if key not in allowed_blank_keys and not value:
+            print "Blank value of %s is not allowed" % key
+            return
+
+        self.prompt = self.get_prompt()
         setattr(self, key, value)
         if key in ['host', 'port', 'path', 'protocol']:
             key = 'url'
-            self.url = "%s://%s:%s%s" % (self.protocol, self.host, self.port, self.path)
+            self.url = "%s://%s:%s%s" % (self.protocol, self.host,
+                                         self.port, self.path)
             print "This option has been deprecated, please set 'url' instead"
             print "This server url will be used:", self.url
         write_config(self.get_attr, self.config_file)
+        read_config(self.get_attr, self.set_attr, self.config_file)
+        self.init_credential_store()
         if key.strip() == 'profile':
-            read_config(self.get_attr, self.set_attr, self.config_file)
-            self.init_credential_store()
-            print "\nLoaded server profile '%s' with options:" % key
+            print "\nLoaded server profile '%s' with options:" % value
             for option in default_profile.keys():
-                print "    %s = %s" % (option, self.get_attr(option))
+                value = self.get_attr(option)
+                if option in ["password", "apikey", "secretkey"] and value:
+                    value = value[:2] + "XXX" + value[4:6] + "YYY...(hidden)"
+                print "    %s = %s" % (option, value)
             print
 
     def complete_set(self, text, line, begidx, endidx):
-        mline = line.partition(" ")[2]
-        offs = len(mline) - len(text)
-        return [s[offs:] for s in self.config_options
-                if s.startswith(mline)]
+        mline = line.partition(" ")[2].lstrip().partition(" ")
+        option = mline[0].strip()
+        separator = mline[1]
+        value = mline[2].lstrip()
+        if separator == "":
+            return [s for s in self.config_options if s.startswith(option)]
+        elif option == "profile":
+            return [s for s in self.profile_names if s.startswith(value)]
+        elif option == "display":
+            return [s for s in ["default", "table", "json"]
+                    if s.startswith(value)]
+        elif option in ["asyncblock", "color", "paramcompletion",
+                        "verifysslcert"]:
+            return [s for s in ["true", "false"] if s.startswith(value)]
+
+        return []
 
     def do_login(self, args):
         """
@@ -453,7 +619,7 @@ class CloudMonkeyShell(cmd.Cmd, object):
             self.credentials['session'] = session
             self.credentials['sessionkey'] = sessionkey
         except Exception, e:
-            print "Error while trying to log in to the server: ", str(e)
+            self.monkeyprint("Error: Login failed to the server: ", unicode(e))
 
     def do_logout(self, args):
         """
@@ -467,11 +633,14 @@ class CloudMonkeyShell(cmd.Cmd, object):
         self.credentials['sessionkey'] = None
 
     def pipe_runner(self, args):
-        if args.find(' |') > -1:
+        if args.find(" |") > -1:
             pname = self.program_name
             if '.py' in pname:
                 pname = "python " + pname
-            self.do_shell("%s %s" % (pname, args))
+            if isinstance(args, str):
+                self.do_shell("{0} {1}".format(pname, args))
+            else:
+                self.do_shell(u"{0} {1}".format(pname, args))
             return True
         return False
 
@@ -486,7 +655,10 @@ class CloudMonkeyShell(cmd.Cmd, object):
             email=test@test.tt firstname=user$i lastname=user$i \
             password=password username=user$i; done
         """
-        os.system(args)
+        if isinstance(args, str):
+            os.system(args)
+        else:
+            os.system(args.encode("utf-8"))
 
     def do_help(self, args):
         """
@@ -554,41 +726,68 @@ class CloudMonkeyShell(cmd.Cmd, object):
         return self.do_EOF(args)
 
 
-class MonkeyParser(OptionParser):
-    def format_help(self, formatter=None):
-        if formatter is None:
-            formatter = self.formatter
-        result = []
-        if self.usage:
-            result.append("Usage: cloudmonkey [options] [cmds] [params]\n\n")
-        if self.description:
-            result.append(self.format_description(formatter) + "\n")
-        result.append(self.format_option_help(formatter))
-        result.append("\nTry cloudmonkey [help|?]\n")
-        return "".join(result)
-
-
 def main():
-    parser = MonkeyParser()
-    parser.add_option("-c", "--config-file",
-                      dest="cfile", default=config_file,
-                      help="config file for cloudmonkey", metavar="FILE")
-    parser.add_option("-v", "--version",
-                      action="store_true", dest="version", default=False,
-                      help="prints cloudmonkey version information")
+    displayTypes = ["json", "table", "default"]
+    parser = argparse.ArgumentParser(usage="cloudmonkey [options] [commands]",
+                                     description=__description__,
+                                     epilog="Try cloudmonkey [help|?]")
 
-    (options, args) = parser.parse_args()
-    if options.version:
-        print "cloudmonkey", __version__
-        print __description__, "(%s)" % __projecturl__
-        sys.exit(0)
+    parser.add_argument("-v", "--version", action="version",
+                        default=argparse.SUPPRESS,
+                        version="cloudmonkey %s" % __version__,
+                        help="show CloudMonkey's version and exit")
 
-    shell = CloudMonkeyShell(sys.argv[0], options.cfile)
+    parser.add_argument("-c", "--config-file",
+                        dest="configFile", default=config_file,
+                        help="config file for cloudmonkey", metavar="FILE")
 
-    if len(args) > 0:
-        shell.onecmd(' '.join(args))
+    parser.add_argument("-d", "--display-type",
+                        dest="displayType", default=None,
+                        help="output display type, json, table or default",
+                        choices=tuple(displayTypes))
+
+    parser.add_argument("commands", nargs=argparse.REMAINDER,
+                        help="API commands")
+
+    argcomplete.autocomplete(parser)
+    args = parser.parse_args()
+
+    shell = CloudMonkeyShell(sys.argv[0], args.configFile)
+
+    if args.displayType and args.displayType in displayTypes:
+        shell.set_attr("display", args.displayType)
+
+    if len(args.commands) > 0:
+        shell.set_attr("color", "false")
+        commands = []
+        for command in args.commands:
+            split_command = command.split("=")
+            if len(split_command) > 1:
+                key = split_command[0]
+                value = split_command[1]
+                if " " not in value or \
+                   (value.startswith("\"") and value.endswith("\"")) or \
+                   (value.startswith("\'") and value.endswith("\'")):
+                    commands.append(command)
+                else:
+                    commands.append("%s=\"%s\"" % (key, value))
+            else:
+                commands.append(command)
+        shell.onecmd(" ".join(commands))
+        if shell.error_on_last_command:
+            sys.exit(1)
     else:
         shell.cmdloop()
+
+    try:
+        sys.stdout.close()
+    except:
+        pass
+    try:
+        sys.stderr.close()
+    except:
+        pass
+
 
 if __name__ == "__main__":
     main()

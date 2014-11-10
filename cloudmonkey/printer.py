@@ -50,12 +50,12 @@ def get_colorscheme():
 
 
 class MonkeyLexer(RegexLexer):
-    keywords = ['[a-z]*id', '^[a-z A-Z]*:']
+    keywords = ['[a-z]*id', '"[a-z]*id"', '^[a-z A-Z]*:']
     attributes = ['[Tt]rue', '[Ff]alse']
     params = ['[a-z]*[Nn]ame', 'type', '[Ss]tate']
 
     uuid_rgx = r'[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}'
-    date_rgx = r'[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9:]{8}-[0-9]{4}'
+    date_rgx = r'[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9:]{8}[0-9+]{5}'
 
     def makelistre(lis):
         return r'(' + r'|'.join(lis) + r')'
@@ -64,7 +64,9 @@ class MonkeyLexer(RegexLexer):
         'root': [
             (r' ', Whitespace),
             (date_rgx, Number),
+            (r'"' + date_rgx + r'"', Number),
             (uuid_rgx, Literal),
+            (r'"' + uuid_rgx + r'"', Literal),
             (r'(?:\b\d+\b(?:-\b\d+|%)?)', Number),
             (r'^[-=]*\n', Operator.Word),
             (r'Error', Error),
@@ -116,4 +118,7 @@ def monkeyprint(text):
     lexer = MonkeyLexer()
     lexer.encoding = 'utf-8'
     fmter.encoding = 'utf-8'
-    highlight(text, lexer, fmter, sys.stdout)
+    if text.startswith("Error"):
+        highlight(text, lexer, fmter, sys.stderr)
+    else:
+        highlight(text, lexer, fmter, sys.stdout)

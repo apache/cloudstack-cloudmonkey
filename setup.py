@@ -31,7 +31,8 @@ from cloudmonkey import __project__, __projecturl__, __projectemail__
 requires = [
               'Pygments>=1.5',
               'prettytable>=0.6',
-              'requests'
+              'requests',
+              'argcomplete'
             ]
 
 try:
@@ -42,6 +43,12 @@ except ImportError:
         requires.append('pyreadline')
     else:
         requires.append('readline')
+
+# Upgrade notes for 5.3.0
+print "If you're upgrading, run the following to enable parameter completion:"
+print "  cloudmonkey sync"
+print "  cloudmonkey set paramcompletion true"
+print "Parameter completion may fail, if the above is not run!"
 
 setup(
     name = 'cloudmonkey',

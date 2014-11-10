@@ -132,6 +132,7 @@ def monkeycache(apis):
 
         apidict['requiredparams'] = required
         apidict['params'] = apiparams
+        apidict['response'] = getvalue(api, 'response')
         if verb not in cache:
             cache[verb] = {}
         cache[verb][subject] = apidict
