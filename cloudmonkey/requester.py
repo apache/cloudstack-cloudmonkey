@@ -201,17 +201,8 @@ def make_request(command, args, logger, url, credentials, expires, region,
         return base64.encodestring(hmac.new(secret_key, hash_str,
                                    hashlib.sha1).digest()).strip()
 
-<<<<<<< HEAD
-    sig = urllib.quote_plus(base64.encodestring(hmac.new(secretkey, hashStr,
-                            hashlib.sha1).digest()).strip())
-    request_url += "&signature=%s" % sig
-
-    request_url = "%s?%s" % (url, request_url)
-    ##print("Request sent: %s" % request_url) #Debug/test output
-=======
     args['apiKey'] = credentials['apikey']
     args["signature"] = sign_request(args, credentials['secretkey'])
->>>>>>> cloudmonkey530/5.3
 
     try:
         response = requests.get(url, params=args, verify=verifysslcert)
@@ -238,22 +229,14 @@ def make_request(command, args, logger, url, credentials, expires, region,
     return result, error
 
 def monkeyrequest(command, args, isasync, asyncblock, logger, url,
-<<<<<<< HEAD
-                  credentials, timeout, expires, region):
-=======
-                  credentials, timeout, expires, verifysslcert=False):
->>>>>>> cloudmonkey530/5.3
+                  credentials, timeout, expires, region, verifysslcert=False):
     response = None
     error = None
     logger_debug(logger, "======== START Request ========")
     logger_debug(logger, "Requesting command=%s, args=%s" % (command, args))
 
     response, error = make_request(command, args, logger, url,
-<<<<<<< HEAD
-                                   credentials, expires, region)
-=======
-                                   credentials, expires, verifysslcert)
->>>>>>> cloudmonkey530/5.3
+                                   credentials, expires, region, verifysslcert)
 
     logger_debug(logger, "======== END Request ========\n")
 
@@ -294,14 +277,8 @@ def monkeyrequest(command, args, isasync, asyncblock, logger, url,
             progress += 1
             logger_debug(logger, "Job %s to timeout in %ds" % (jobid, timeout))
             response, error = make_request(command, request, logger, url,
-<<<<<<< HEAD
-                                           credentials, expires, region)
-
-            if error is not None:
-=======
-                                           credentials, expires, verifysslcert)
+                                           credentials, expires, region, verifysslcert)
             if error and not response:
->>>>>>> cloudmonkey530/5.3
                 return response, error
 
             response = process_json(response)
