@@ -409,7 +409,7 @@ class CloudMonkeyShell(cmd.Cmd, object):
             self.monkeyprint("Error on parsing and printing ", e)
 
     def completedefault(self, text, line, begidx, endidx):
-        partitions = line.partition(" ")
+        partitions = line[:endidx].partition(" ")
         verb = partitions[0].strip()
         rline = partitions[2].lstrip().partition(" ")
         subject = rline[0]
@@ -423,7 +423,8 @@ class CloudMonkeyShell(cmd.Cmd, object):
         search_string = ""
 
         if separator != " ":   # Complete verb subjects
-            autocompletions = self.apicache[verb].keys()
+            autocompletions = map(lambda x: x + " ",
+                                  self.apicache[verb].keys())
             search_string = subject
         else:                  # Complete subject params
             autocompletions = map(lambda x: x + "=",
@@ -431,7 +432,7 @@ class CloudMonkeyShell(cmd.Cmd, object):
                                       self.apicache[verb][subject]['params']))
             search_string = text
             if self.paramcompletion == 'true':
-                param = line.split(" ")[-1]
+                param = line[:endidx].split(" ")[-1]
                 idx = param.find("=")
                 value = param[idx + 1:]
                 param = param[:idx]
@@ -484,7 +485,7 @@ class CloudMonkeyShell(cmd.Cmd, object):
                         arg = filter(lambda x: x['name'] == param, params)[0]
                         if "type" in arg and arg["type"] == "boolean":
                             return filter(lambda x: x.startswith(value),
-                                          ["true", "false"])
+                                          ["true ", "false "])
                         related = arg['related']
                         apis = filter(lambda x: 'list' in x, related)
                         logger.debug("[Paramcompl] Related APIs: %s" % apis)
@@ -515,7 +516,7 @@ class CloudMonkeyShell(cmd.Cmd, object):
                             name = option[1]
                             if uuid.startswith(value):
                                 print uuid, name
-                    autocompletions = uuids
+                    autocompletions = map(lambda x: x + " ", uuids)
                     search_string = value
 
         if subject != "" and line.split(" ")[-1].find('=') == -1:
