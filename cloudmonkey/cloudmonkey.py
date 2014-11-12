@@ -107,7 +107,7 @@ class CloudMonkeyShell(cmd.Cmd, object):
 
     def init_credential_store(self):
         self.credentials = {'apikey': self.apikey, 'secretkey': self.secretkey,
-                            'username': self.username,
+                            'domain': self.domain, 'username': self.username,
                             'password': self.password}
         parsed_url = urlparse(self.url)
         self.protocol = "http" if not parsed_url.scheme else parsed_url.scheme
@@ -566,7 +566,8 @@ class CloudMonkeyShell(cmd.Cmd, object):
         key, value = (args[0].strip(), args[2].strip())
         if not key:
             return
-        allowed_blank_keys = ["username", "password", "apikey", "secretkey"]
+        allowed_blank_keys = ["username", "password", "apikey", "secretkey",
+                              "domain"]
         if key not in allowed_blank_keys and not value:
             print "Blank value of %s is not allowed" % key
             return

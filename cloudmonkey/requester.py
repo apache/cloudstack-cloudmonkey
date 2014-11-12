@@ -52,7 +52,7 @@ def writeError(msg):
     sys.stderr.flush()
 
 
-def login(url, username, password):
+def login(url, username, password, domain="/"):
     """
     Login and obtain a session to be used for subsequent API calls
     Wrong username/password leads to HTTP error code 531
@@ -62,7 +62,7 @@ def login(url, username, password):
     args["command"] = 'login'
     args["username"] = username
     args["password"] = password
-    args["domain"] = "/"
+    args["domain"] = domain
     args["response"] = "json"
 
     sessionkey = ''
@@ -82,7 +82,8 @@ def login(url, username, password):
         sessionkey = None
     elif resp.status_code == 531:
         writeError("Error authenticating at %s using username: %s"
-                   ", and password: %s" % (url, username, password))
+                   ", password: %s, domain: %s" % (url, username, password,
+                                                   domain))
         session = None
         sessionkey = None
     else:
@@ -103,6 +104,7 @@ def make_request_with_password(command, args, logger, url, credentials,
     args = args.copy()
     username = credentials['username']
     password = credentials['password']
+    domain = credentials['domain']
 
     if not (username and password):
         error = "Username and password cannot be empty"
@@ -119,7 +121,7 @@ def make_request_with_password(command, args, logger, url, credentials,
 
         # obtain a valid session if not supplied
         if not (session and sessionkey):
-            session, sessionkey = login(url, username, password)
+            session, sessionkey = login(url, username, password, domain)
             if not (session and sessionkey):
                 return None, 'Authentication failed'
             credentials['session'] = session
