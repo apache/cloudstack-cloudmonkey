@@ -492,7 +492,10 @@ class CloudMonkeyShell(cmd.Cmd, object):
                         if len(apis) > 0:
                             api = apis[0]
                         else:
-                            return
+                            if param == "account":
+                                api = "listAccounts"
+                            else:
+                                return
                     uuids = []
                     cache_burst_ts = int(time.time()) - 900
                     logger.debug("Trying paramcompletion using API: %s" % api)
