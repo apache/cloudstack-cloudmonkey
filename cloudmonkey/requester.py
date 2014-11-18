@@ -197,7 +197,7 @@ def make_request(command, args, logger, url, credentials, expires,
         hash_str = "&".join(
             ["=".join(
                 [r[0].lower(),
-                 urllib.quote_plus(str(r[1])).lower().replace("+", "%20")]
+                 urllib.quote_plus(str(r[1])).lower().replace("+", "%20").replace("%3A",":")]
             ) for r in request]
         )
         return base64.encodestring(hmac.new(secret_key, hash_str,
