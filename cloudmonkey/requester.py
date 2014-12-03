@@ -52,7 +52,7 @@ def writeError(msg):
     sys.stderr.flush()
 
 
-def login(url, username, password, domain="/"):
+def login(url, username, password, domain="/", verifysslcert=False):
     """
     Login and obtain a session to be used for subsequent API calls
     Wrong username/password leads to HTTP error code 531
@@ -69,7 +69,7 @@ def login(url, username, password, domain="/"):
     session = requests.Session()
 
     try:
-        resp = session.post(url, params=args)
+        resp = session.post(url, params=args, verify=verifysslcert)
     except requests.exceptions.ConnectionError, e:
         writeError("Connection refused by server: %s" % e)
         return None, None
@@ -121,7 +121,8 @@ def make_request_with_password(command, args, logger, url, credentials,
 
         # obtain a valid session if not supplied
         if not (session and sessionkey):
-            session, sessionkey = login(url, username, password, domain)
+            session, sessionkey = login(url, username, password, domain,
+                                        verifysslcert)
             if not (session and sessionkey):
                 return None, 'Authentication failed'
             credentials['session'] = session
