@@ -52,6 +52,10 @@ except ImportError:
     apicache = {'count': 0, 'verbs': [], 'asyncapis': []}
 
 normal_readline = True
+# Fix terminal env before importing readline
+# Without it, char ESC[?1034h gets printed in output
+if os.environ['TERM'].startswith('xterm'):
+    os.environ['TERM'] = 'vt100'
 try:
     import readline
 except ImportError, e:
