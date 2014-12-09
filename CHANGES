@@ -1,6 +1,18 @@
 Apache CloudStack CloudMonkey Changelog
 ---------------------------------------
 
+Version 5.3.1
+=============
+This release includes
+- Users can specify domain when using username/password auth per server profile
+- Autocompletion of args works when cursor is not at the end of the line
+- CLOUDSTACK-7935: keep colons in the request to ACS
+- Account parameters are sometimes UUIDs and sometimes string, CloudMonkey
+  now automatically autocompletes for both UUID and string account args
+- Pass verifysslcert option while user logs in using username/password
+- Importing readline no longer outputs escape characters
+- CloudMonkey will not output extra empty lines in stdout output
+
 Version 5.3.0
 =============
 This release includes
