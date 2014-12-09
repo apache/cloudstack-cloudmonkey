@@ -406,7 +406,6 @@ class CloudMonkeyShell(cmd.Cmd, object):
             responsekeys = filter(lambda x: 'response' in x, result.keys())
             for responsekey in responsekeys:
                 self.print_result(result[responsekey], field_filter)
-            print
             if apiname.startswith("list") and "id" not in args_dict:
                 self.update_param_cache(apiname, result)
         except Exception as e:
