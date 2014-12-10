@@ -12,7 +12,8 @@ This release includes
 - Pass verifysslcert option while user logs in using username/password
 - Importing readline no longer outputs escape characters
 - CloudMonkey will not output extra empty lines in stdout output
-- New command line arg: -p for profile
+- New command line arg: -p or --profile (load server profile)
+- New command line arg: -a or --async (do not block on async APIs)
 
 Version 5.3.0
 =============

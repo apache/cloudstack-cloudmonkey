@@ -260,7 +260,7 @@ def monkeyrequest(command, args, isasync, asyncblock, logger, url,
     if not response or not isinstance(response, dict):
         return response, error
 
-    isasync = isasync and (asyncblock == "true")
+    isasync = isasync and (asyncblock == "true" or asyncblock == "True")
     responsekey = filter(lambda x: 'response' in x, response.keys())[0]
 
     if isasync and 'jobid' in response[responsekey]:

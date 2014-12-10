@@ -137,7 +137,7 @@ class CloudMonkeyShell(cmd.Cmd, object):
         pass
 
     def cmdloop(self, intro=None):
-        interpreterMode = True
+        self.interpreterMode = True
         print(self.intro)
         print "Using management server profile:", self.profile, "\n"
         while True:
@@ -751,6 +751,9 @@ def main():
                         dest="configFile", default=config_file,
                         help="config file for cloudmonkey", metavar="FILE")
 
+    parser.add_argument("-a", "--async", action="store_true",
+                        help="do not block on async API calls")
+
     parser.add_argument("-d", "--display-type",
                         dest="displayType", default=None,
                         help="output display type, json, table or default",
@@ -770,6 +773,9 @@ def main():
 
     if args.displayType and args.displayType in displayTypes:
         shell.set_attr("display", args.displayType)
+
+    if args.async:
+        shell.set_attr("asyncblock", "false")
 
     if args.serverProfile and args.serverProfile.strip() != '':
         shell.do_set("profile %s" % args.serverProfile)
