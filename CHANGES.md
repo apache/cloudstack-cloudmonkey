@@ -12,6 +12,7 @@ This release includes
 - Pass verifysslcert option while user logs in using username/password
 - Importing readline no longer outputs escape characters
 - CloudMonkey will not output extra empty lines in stdout output
+- New command line arg: -p for profile
 
 Version 5.3.0
 =============
@@ -23,13 +24,13 @@ This release includes
 - Server profile related bugfixes, blank profile names are not allowed
 - Filtering support for default display output
 - Filtering by single key only outputs results without key names
-- New command line arg: -d for display (json, table or default)
 - Non-interactive commands from command line are outputted without colors
 - Parameter completion uses list api heuristics and related APIs as fallback
 - Parameter completion options are cached to speed up rendering of options
 - CloudMonkey returns non-zero exit code when run on shell and a error is return
   from managment server, the error message is written to stderr
 - Adds new config parameter 'verifysslcert' to enable/disable SSL cert checking
+- New command line arg: -d for display (json, table or default)
 
 Make sure you backup your config before you upgrade cloudmonkey from previous releases.
 With this release `cloudmonkey` will automatically fix your config file, add missing

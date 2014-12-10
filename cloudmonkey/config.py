@@ -91,7 +91,7 @@ def write_config(get_attr, config_file):
     if profile is None or profile == '':
         profile = default_profile_name
     if profile in mandatory_sections:
-        print "Server profile name cannot be", profile
+        print "Server profile name cannot be '%s'" % profile
         sys.exit(1)
 
     has_profile_changed = False
@@ -131,7 +131,7 @@ def write_config(get_attr, config_file):
     return config
 
 
-def read_config(get_attr, set_attr, config_file):
+def read_config(get_attr, set_attr, config_file, require_profile=None):
     global config_fields, config_dir, mandatory_sections
     global default_profile, default_profile_name
     if not os.path.exists(config_dir):
@@ -160,6 +160,12 @@ def read_config(get_attr, set_attr, config_file):
     else:
         global default_profile_name
         profile = default_profile_name
+
+    if require_profile and require_profile.strip() != '':
+        profile = require_profile
+    elif require_profile is not None:
+        print "Invalid profile, falling back to current profile"
+
     if profile is None or profile == '' or profile in mandatory_sections:
         print "Server profile cannot be", profile
         sys.exit(1)
@@ -168,7 +174,8 @@ def read_config(get_attr, set_attr, config_file):
                                      config.sections()))
 
     if not config.has_section(profile):
-        print "Selected profile (%s) does not exist, using defaults" % profile
+        print ("Selected profile (%s) does not exist," +
+               " using default values") % profile
         try:
             config.add_section(profile)
         except ValueError, e:

@@ -88,11 +88,13 @@ class CloudMonkeyShell(cmd.Cmd, object):
     port = "8080"
     path = "/client/api"
 
-    def __init__(self, pname, cfile):
+    def __init__(self, pname, cfile, profile=None):
         self.program_name = pname
         self.config_file = cfile
         self.config_options = read_config(self.get_attr, self.set_attr,
-                                          self.config_file)
+                                          self.config_file, profile)
+        if profile and profile.strip() != '':
+            self.profile = profile
         self.loadcache()
         self.init_credential_store()
         logging.basicConfig(filename=self.log_file,
@@ -754,13 +756,17 @@ def main():
                         help="output display type, json, table or default",
                         choices=tuple(displayTypes))
 
+    parser.add_argument("-p", "--profile",
+                        dest="serverProfile", default=None,
+                        help="override current server profile to use")
+
     parser.add_argument("commands", nargs=argparse.REMAINDER,
                         help="API commands")
 
     argcomplete.autocomplete(parser)
     args = parser.parse_args()
 
-    shell = CloudMonkeyShell(sys.argv[0], args.configFile)
+    shell = CloudMonkeyShell(sys.argv[0], args.configFile, args.serverProfile)
 
     if args.displayType and args.displayType in displayTypes:
         shell.set_attr("display", args.displayType)
