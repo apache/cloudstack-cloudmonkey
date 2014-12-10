@@ -131,7 +131,7 @@ def write_config(get_attr, config_file):
     return config
 
 
-def read_config(get_attr, set_attr, config_file, require_profile=None):
+def read_config(get_attr, set_attr, config_file):
     global config_fields, config_dir, mandatory_sections
     global default_profile, default_profile_name
     if not os.path.exists(config_dir):
@@ -160,11 +160,6 @@ def read_config(get_attr, set_attr, config_file, require_profile=None):
     else:
         global default_profile_name
         profile = default_profile_name
-
-    if require_profile and require_profile.strip() != '':
-        profile = require_profile
-    elif require_profile is not None:
-        print "Invalid profile, falling back to current profile"
 
     if profile is None or profile == '' or profile in mandatory_sections:
         print "Server profile cannot be", profile

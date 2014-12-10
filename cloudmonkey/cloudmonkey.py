@@ -80,6 +80,7 @@ class CloudMonkeyShell(cmd.Cmd, object):
     config_options = []
     profile_names = []
     verbs = []
+    interpreterMode = False
     error_on_last_command = False
     param_cache = {}
     prompt = "🐵 > "
@@ -88,13 +89,11 @@ class CloudMonkeyShell(cmd.Cmd, object):
     port = "8080"
     path = "/client/api"
 
-    def __init__(self, pname, cfile, profile=None):
+    def __init__(self, pname, cfile):
         self.program_name = pname
         self.config_file = cfile
         self.config_options = read_config(self.get_attr, self.set_attr,
-                                          self.config_file, profile)
-        if profile and profile.strip() != '':
-            self.profile = profile
+                                          self.config_file)
         self.loadcache()
         self.init_credential_store()
         logging.basicConfig(filename=self.log_file,
@@ -138,6 +137,7 @@ class CloudMonkeyShell(cmd.Cmd, object):
         pass
 
     def cmdloop(self, intro=None):
+        interpreterMode = True
         print(self.intro)
         print "Using management server profile:", self.profile, "\n"
         while True:
@@ -592,7 +592,7 @@ class CloudMonkeyShell(cmd.Cmd, object):
         write_config(self.get_attr, self.config_file)
         read_config(self.get_attr, self.set_attr, self.config_file)
         self.init_credential_store()
-        if key.strip() == 'profile':
+        if key.strip() == 'profile' and self.interpreterMode:
             print "\nLoaded server profile '%s' with options:" % value
             for option in default_profile.keys():
                 value = self.get_attr(option)
@@ -758,7 +758,7 @@ def main():
 
     parser.add_argument("-p", "--profile",
                         dest="serverProfile", default=None,
-                        help="override current server profile to use")
+                        help="server profile to load")
 
     parser.add_argument("commands", nargs=argparse.REMAINDER,
                         help="API commands")
@@ -766,10 +766,13 @@ def main():
     argcomplete.autocomplete(parser)
     args = parser.parse_args()
 
-    shell = CloudMonkeyShell(sys.argv[0], args.configFile, args.serverProfile)
+    shell = CloudMonkeyShell(sys.argv[0], args.configFile)
 
     if args.displayType and args.displayType in displayTypes:
         shell.set_attr("display", args.displayType)
+
+    if args.serverProfile and args.serverProfile.strip() != '':
+        shell.do_set("profile %s" % args.serverProfile)
 
     if len(args.commands) > 0:
         shell.set_attr("color", "false")
