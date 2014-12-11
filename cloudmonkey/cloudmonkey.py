@@ -207,14 +207,11 @@ class CloudMonkeyShell(cmd.Cmd, object):
         if not result or len(result) == 0:
             return
 
-        def printer_helper(printer, toprow):
-            if printer:
-                self.monkeyprint(printer.get_string())
-            return PrettyTable(toprow)
-
-        def print_result_json(result, result_filter=None):
+        filtered_result = copy.deepcopy(result)
+        if result_filter and isinstance(result_filter, list) \
+            and len(result_filter) > 0:
             tfilter = {}  # temp var to hold a dict of the filters
-            tresult = copy.deepcopy(result)  # dupe the result to filter
+            tresult = filtered_result  # dupe the result to filter
             if result_filter:
                 for res in result_filter:
                     tfilter[res] = 1
@@ -240,72 +237,67 @@ class CloudMonkeyShell(cmd.Cmd, object):
                                     del(tresult[okey][x])
                                 except:
                                     pass
-            self.monkeyprint(json.dumps(tresult,
+            filtered_result = tresult
+
+        def print_result_json(result):
+            self.monkeyprint(json.dumps(result,
                                         sort_keys=True,
                                         indent=2,
                                         ensure_ascii=False,
                                         separators=(',', ': ')))
 
-        def print_result_tabular(result, result_filter=None):
+        def print_result_tabular(result):
+            def print_table(printer, toprow):
+                if printer:
+                    self.monkeyprint(printer.get_string())
+                return PrettyTable(toprow)
             toprow = None
             printer = None
             for node in result:
                 if toprow != node.keys():
-                    if result_filter and len(result_filter) != 0:
-                        commonkeys = filter(lambda x: x in node.keys(),
-                                            result_filter)
-                        if commonkeys != toprow:
-                            toprow = commonkeys
-                            printer = printer_helper(printer, toprow)
-                    else:
                         toprow = node.keys()
-                        printer = printer_helper(printer, toprow)
+                        printer = print_table(printer, toprow)
                 row = map(lambda x: node[x], toprow)
                 if printer and row:
                     printer.add_row(row)
-            if printer:
-                self.monkeyprint(printer.get_string())
+            print_table(printer, toprow)
 
-        def print_result_as_dict(result, result_filter=[]):
-            if self.display == "json":
-                print_result_json(result, result_filter)
-                return
-
+        def print_result_as_dict(result):
             for key in sorted(result.keys(), key=lambda x:
                               x not in ['id', 'count', 'name'] and x):
-                if not (isinstance(result[key], list) or
-                        isinstance(result[key], dict)):
-                    if result_filter and key not in result_filter:
-                        continue
-                    value = unicode(result[key])
-                    if result_filter and len(result_filter) == 1:
-                        self.monkeyprint(value)
-                    else:
-                        self.monkeyprint(key, " = ", value)
-                else:
-                    if result_filter and key not in result_filter:
-                        self.print_result(result[key], result_filter)
-                        continue
+                if isinstance(result[key], list):
                     self.monkeyprint(key + ":")
-                    self.print_result(result[key], result_filter)
+                    print_result_as_list(result[key])
+                elif isinstance(result[key], dict):
+                    print_result_as_dict(result[key])
+                else:
+                    value = unicode(result[key])
+                    self.monkeyprint(key, " = ", value)
 
-        def print_result_as_list(result, filter=[]):
-            for node in result:
-                if isinstance(node, dict) and self.display == 'table':
-                    print_result_tabular(result, filter)
-                    break
-                self.print_result(node, filter)
-                if result and (filter is None or len(filter) != 1):
+        def print_result_as_list(result):
+            for idx, node in enumerate(result):
+                if isinstance(node, dict):
+                    if self.display == 'table':
+                        print_result_tabular(result)
+                        break
+                    print_result_as_dict(node)
+                elif isinstance(node, list):
+                    print_result_as_list(node)
+                else:
+                    self.monkeyprint(filtered_result)
+                if result and node and (idx+1) < len(result):
                     self.monkeyprint(self.ruler * 80)
 
-        if isinstance(result, dict):
-            print_result_as_dict(result, result_filter)
-        elif isinstance(result, list):
-            print_result_as_list(result, result_filter)
-        elif isinstance(result, str):
-            print result
-        elif result:
-            self.monkeyprint(result)
+        if self.display == "json":
+            print_result_json(filtered_result)
+            return
+
+        if isinstance(filtered_result, dict):
+            print_result_as_dict(filtered_result)
+        elif isinstance(filtered_result, list):
+            print_result_as_list(filtered_result)
+        else:
+            self.monkeyprint(filtered_result)
 
     def make_request(self, command, args={}, isasync=False):
         self.error_on_last_command = False
@@ -374,11 +366,11 @@ class CloudMonkeyShell(cmd.Cmd, object):
         args_dict = dict(map(lambda x: [x.partition("=")[0],
                                         x.partition("=")[2]],
                              args[1:])[x] for x in range(len(args) - 1))
-        field_filter = None
+
+        field_filter = []
         if 'filter' in args_dict:
-            field_filter = filter(lambda x: x is not '',
-                                  map(lambda x: x.strip(),
-                                      args_dict.pop('filter').split(',')))
+            field_filter = filter(lambda x: x.strip() != '',
+                                            args_dict.pop('filter').split(','))
             field_filter = list(set(field_filter))
 
         missing = []
