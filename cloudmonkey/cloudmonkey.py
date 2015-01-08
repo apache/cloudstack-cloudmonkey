@@ -269,6 +269,7 @@ class CloudMonkeyShell(cmd.Cmd, object):
                     self.monkeyprint(key + ":")
                     print_result_as_list(result[key])
                 elif isinstance(result[key], dict):
+                    self.monkeyprint(key + ":")
                     print_result_as_dict(result[key])
                 else:
                     value = unicode(result[key])
