@@ -1,6 +1,8 @@
 #!/bin/sh
-
 set -x
+
+mkdir ./.tools/tmp
+cd ./.tools/tmp
 
 MYSQL_ROOT_PASSWORD="password"
 
@@ -21,7 +23,7 @@ get_jar() {
 	if [ -n "$(find "$HOME/.m2" -name "$2*.jar")" ]; then
 		find "$HOME/.m2" -name "$2*.jar" -print -quit
 	else
-		# Couldn't install jetty-runner
+		# Couldn't install jar
 		return 1
 	fi
 }
@@ -34,7 +36,7 @@ mkdir -p database-imports/
 
 if [ ! -f 'cloudstack.war' ]; then
 	wget -O 'cloudstack.war' "$CLOUDSTACK_WAR_URL"
-	jar -xvf cloudstack.war
+	unzip cloudstack.war -d exploded_cloudstack_war
 	svn export --force "$CLOUDSTACK_REPO_URL/utils/conf/db.properties"
 	svn export --force "$CLOUDSTACK_REPO_URL/developer/developer-prefill.sql" "database-imports/developer-prefill.sql"
 	svn export --force "$CLOUDSTACK_REPO_URL/setup/db" "database-imports"
