@@ -1,6 +1,6 @@
 # cloudmonkey-interoute (using Cloudmonkey version 5.3.0)
 
-This is a fork of the Cloudmonkey command line interface (version 5.3.0), modified for use with the [Interoute Virtual Data Centre](http://cloudstore.interoute.com/main/WhatInterouteVDC).
+This is a fork of the (Cloudmonkey command line interface)(https://github.com/apache/cloudstack-cloudmonkey), version 5.3.0, modified for use with the [Interoute Virtual Data Centre](http://cloudstore.interoute.com/main/WhatInterouteVDC).
 
 The modification required is to handle API access to the different VDC regions (Europe, North America (USA), Asia). This is implemented using a new configuration variable `region`.
 
@@ -36,3 +36,5 @@ Or to upgrade an existing installation:
 This version of Cloudmonkey may not work with other cloud computing providers that are also compatible with Cloudmonkey. So be careful if you use Cloudmonkey with several providers.
 
 (The reason is that this version adds a new parameter input 'region=...' to every API call. API servers generally ignore any parameters that are not recognised, however if the server is programmed to do validity checking then Cloudmonkey may not work.)
+
+An alternative is to use [Python's virtualenv](http://www.pythoncentral.io/how-to-install-virtualenv-python) tool so that you can operate multiple versions of Cloudmonkey.
