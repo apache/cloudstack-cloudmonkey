@@ -744,7 +744,10 @@ def main():
                         dest="configFile", default=config_file,
                         help="config file for cloudmonkey", metavar="FILE")
 
-    parser.add_argument("-a", "--async", action="store_true",
+    parser.add_argument("-b", "--block-async", action="store_true",
+                        help="block and poll result on async API calls")
+
+    parser.add_argument("-n", "--noblock-async", action="store_true",
                         help="do not block on async API calls")
 
     parser.add_argument("-d", "--display-type",
@@ -767,7 +770,10 @@ def main():
     if args.displayType and args.displayType in displayTypes:
         shell.set_attr("display", args.displayType)
 
-    if args.async:
+    if args.block_async:
+        shell.set_attr("asyncblock", "true")
+
+    if args.noblock_async:
         shell.set_attr("asyncblock", "false")
 
     if args.serverProfile and args.serverProfile.strip() != '':
