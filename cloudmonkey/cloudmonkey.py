@@ -770,11 +770,11 @@ def main():
     if args.displayType and args.displayType in displayTypes:
         shell.set_attr("display", args.displayType)
 
-    if args.block_async:
-        shell.set_attr("asyncblock", "true")
-
     if args.noblock_async:
         shell.set_attr("asyncblock", "false")
+
+    if args.block_async:
+        shell.set_attr("asyncblock", "true")
 
     if args.serverProfile and args.serverProfile.strip() != '':
         shell.do_set("profile %s" % args.serverProfile)
