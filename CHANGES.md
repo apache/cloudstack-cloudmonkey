@@ -14,7 +14,8 @@ This release includes
 - CloudMonkey will not output extra empty lines in stdout output
 - Filtered result output is uniform across output display formats
 - New command line arg: -p or --profile (load server profile)
-- New command line arg: -a or --async (do not block on async APIs)
+- New command line arg: -b, --block-async (block and poll result on async API calls)
+- New command line arg: -n, --noblock-async (do not block on async API calls)
 
 Version 5.3.0
 =============
