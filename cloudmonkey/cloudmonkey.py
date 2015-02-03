@@ -358,11 +358,15 @@ class CloudMonkeyShell(cmd.Cmd, object):
         lexp.posix = True
         args = []
         while True:
-            next_val = lexp.next()
-            if not next_val:
-                break
-            next_val = next_val.decode("utf-8")
-            args.append(next_val.replace(u'\x00', u''))
+            try:
+                next_val = lexp.next()
+                if not next_val:
+                    break
+                next_val = next_val.decode("utf-8")
+                args.append(next_val.replace(u'\x00', u''))
+            except ValueError, err:
+                self.monkeyprint("Command parsing error: ", err)
+                return
 
         args_dict = dict(map(lambda x: [x.partition("=")[0],
                                         x.partition("=")[2]],
