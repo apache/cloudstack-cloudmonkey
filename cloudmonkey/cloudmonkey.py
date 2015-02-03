@@ -380,7 +380,7 @@ class CloudMonkeyShell(cmd.Cmd, object):
 
         missing = []
         if verb in self.apicache and subject in self.apicache[verb]:
-            missing = filter(lambda x: x not in [key.split('[')[0]
+            missing = filter(lambda x: x not in [key.split('[')[0].lower()
                                                  for key in args_dict],
                              self.apicache[verb][subject]['requiredparams'])
 
