@@ -21,6 +21,7 @@ try:
     import base64
     import hashlib
     import hmac
+    import itertools
     import json
     import requests
     import sys
@@ -270,14 +271,15 @@ def monkeyrequest(command, args, isasync, asyncblock, logger, url,
         if not timeout:
             timeout = 3600
         timeout = int(timeout)
-        pollperiod = 2
-        progress = 1
+        cursor = itertools.cycle(['|', '/', '-', '\\'])
         while timeout > 0:
-            print '\r' + '.' * progress,
-            sys.stdout.flush()
-            time.sleep(pollperiod)
-            timeout = timeout - pollperiod
-            progress += 1
+            interval = 2
+            while interval > 0:
+                print '\r' + cursor.next(),
+                sys.stdout.flush()
+                time.sleep(0.1)
+                interval -= 0.1
+            timeout = timeout - 2
             logger_debug(logger, "Job %s to timeout in %ds" % (jobid, timeout))
 
             response, error = make_request(command, request, logger, url,
@@ -302,7 +304,7 @@ def monkeyrequest(command, args, isasync, asyncblock, logger, url,
                         jobid, jobresult["errorcode"], jobresult["errortext"])
                 return response, error
             elif jobstatus == 1:
-                print "\r" + " " * progress
+                print "\r  "
                 return response, error
             elif jobstatus == 0:
                 pass  # Job in progress
