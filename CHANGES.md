@@ -13,6 +13,8 @@ This release includes
 - Importing readline no longer outputs escape characters
 - CloudMonkey will not output extra empty lines in stdout output
 - Filtered result output is uniform across output display formats
+- Async blocked API now show a spinning cursor instead of print dots
+- When finding missing API args, it does case insensitive search
 - New command line arg: -p or --profile (load server profile)
 - New command line arg: -b, --block-async (block and poll result on async API calls)
 - New command line arg: -n, --noblock-async (do not block on async API calls)
