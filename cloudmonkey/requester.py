@@ -271,11 +271,11 @@ def monkeyrequest(command, args, isasync, asyncblock, logger, url,
         if not timeout:
             timeout = 3600
         timeout = int(timeout)
-        cursor = itertools.cycle(['|', '/', '-', '\\'])
+        cursor = itertools.cycle([u'|', u'/', u'-', u'\\'])
         while timeout > 0:
             interval = 2
             while interval > 0:
-                print '\r' + cursor.next(),
+                sys.stdout.write(u"%s\r" % cursor.next())
                 sys.stdout.flush()
                 time.sleep(0.1)
                 interval -= 0.1
@@ -304,7 +304,8 @@ def monkeyrequest(command, args, isasync, asyncblock, logger, url,
                         jobid, jobresult["errorcode"], jobresult["errortext"])
                 return response, error
             elif jobstatus == 1:
-                print "\r  "
+                sys.stdout.write(u"\r \n")
+                sys.stdout.flush()
                 return response, error
             elif jobstatus == 0:
                 pass  # Job in progress
