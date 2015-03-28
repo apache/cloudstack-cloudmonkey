@@ -21,6 +21,7 @@ try:
     import base64
     import hashlib
     import hmac
+    import itertools
     import json
     import requests
     import sys
@@ -52,7 +53,7 @@ def writeError(msg):
     sys.stderr.flush()
 
 
-def login(url, username, password):
+def login(url, username, password, domain="/", verifysslcert=False):
     """
     Login and obtain a session to be used for subsequent API calls
     Wrong username/password leads to HTTP error code 531
@@ -62,14 +63,14 @@ def login(url, username, password):
     args["command"] = 'login'
     args["username"] = username
     args["password"] = password
-    args["domain"] = "/"
+    args["domain"] = domain
     args["response"] = "json"
 
     sessionkey = ''
     session = requests.Session()
 
     try:
-        resp = session.post(url, params=args)
+        resp = session.post(url, params=args, verify=verifysslcert)
     except requests.exceptions.ConnectionError, e:
         writeError("Connection refused by server: %s" % e)
         return None, None
@@ -82,7 +83,8 @@ def login(url, username, password):
         sessionkey = None
     elif resp.status_code == 531:
         writeError("Error authenticating at %s using username: %s"
-                   ", and password: %s" % (url, username, password))
+                   ", password: %s, domain: %s" % (url, username, password,
+                                                   domain))
         session = None
         sessionkey = None
     else:
@@ -103,6 +105,7 @@ def make_request_with_password(command, args, logger, url, credentials,
     args = args.copy()
     username = credentials['username']
     password = credentials['password']
+    domain = credentials['domain']
 
     if not (username and password):
         error = "Username and password cannot be empty"
@@ -119,7 +122,8 @@ def make_request_with_password(command, args, logger, url, credentials,
 
         # obtain a valid session if not supplied
         if not (session and sessionkey):
-            session, sessionkey = login(url, username, password)
+            session, sessionkey = login(url, username, password, domain,
+                                        verifysslcert)
             if not (session and sessionkey):
                 return None, 'Authentication failed'
             credentials['session'] = session
@@ -195,7 +199,7 @@ def make_request(command, args, logger, url, credentials, expires, region,
         hash_str = "&".join(
             ["=".join(
                 [r[0].lower(),
-                 urllib.quote_plus(str(r[1])).lower().replace("+", "%20")]
+                 urllib.quote_plus(str(r[1])).lower().replace("+", "%20").replace("%3A",":")]
             ) for r in request]
         )
         return base64.encodestring(hmac.new(secret_key, hash_str,
@@ -257,7 +261,7 @@ def monkeyrequest(command, args, isasync, asyncblock, logger, url,
     if not response or not isinstance(response, dict):
         return response, error
 
-    isasync = isasync and (asyncblock == "true")
+    isasync = isasync and (asyncblock == "true" or asyncblock == "True")
     responsekey = filter(lambda x: 'response' in x, response.keys())[0]
 
     if isasync and 'jobid' in response[responsekey]:
@@ -267,14 +271,15 @@ def monkeyrequest(command, args, isasync, asyncblock, logger, url,
         if not timeout:
             timeout = 3600
         timeout = int(timeout)
-        pollperiod = 2
-        progress = 1
+        cursor = itertools.cycle([u'|', u'/', u'-', u'\\'])
         while timeout > 0:
-            print '\r' + '.' * progress,
-            sys.stdout.flush()
-            time.sleep(pollperiod)
-            timeout = timeout - pollperiod
-            progress += 1
+            interval = 2
+            while interval > 0:
+                sys.stdout.write(u"%s\r" % cursor.next())
+                sys.stdout.flush()
+                time.sleep(0.1)
+                interval -= 0.1
+            timeout = timeout - 2
             logger_debug(logger, "Job %s to timeout in %ds" % (jobid, timeout))
             response, error = make_request(command, request, logger, url,
                                            credentials, expires, region, verifysslcert)
@@ -298,7 +303,8 @@ def monkeyrequest(command, args, isasync, asyncblock, logger, url,
                         jobid, jobresult["errorcode"], jobresult["errortext"])
                 return response, error
             elif jobstatus == 1:
-                print "\r" + " " * progress
+                sys.stdout.write(u"\r \n")
+                sys.stdout.flush()
                 return response, error
             elif jobstatus == 0:
                 pass  # Job in progress

@@ -1,12 +1,31 @@
 Apache CloudStack CloudMonkey Changelog
 ---------------------------------------
 
-(2014-11-10) INTEROUTE FORK OF VERSION 5.3.0
+(2015-03-28) INTEROUTE FORK OF VERSION 5.3.1
 ============================================
-A modification is required for using Cloudmonkey with Interoute Virtual Data Centre. This is to handle access
-to the different VDC regions, by creating a new configuration variable 'region'.
+A modification is required for using Cloudmonkey with Interoute Virtual Data Centre. 
+This is to handle access to the different VDC regions, by creating a new configuration 
+variable 'region'. 
 The files cloudmonkey.py, requester.py and config.py have been modified.
 
+=======
+Version 5.3.1
+=============
+This release includes
+- Users can specify domain when using username/password auth per server profile
+- Autocompletion of args works when cursor is not at the end of the line
+- CLOUDSTACK-7935: keep colons in the request to ACS
+- Account parameters are sometimes UUIDs and sometimes string, CloudMonkey
+  now automatically autocompletes for both UUID and string account args
+- Pass verifysslcert option while user logs in using username/password
+- Importing readline no longer outputs escape characters
+- CloudMonkey will not output extra empty lines in stdout output
+- Filtered result output is uniform across output display formats
+- Async blocked API now show a spinning cursor instead of print dots
+- When finding missing API args, it does case insensitive search
+- New command line arg: -p or --profile (load server profile)
+- New command line arg: -b, --block-async (block and poll result on async API calls)
+- New command line arg: -n, --noblock-async (do not block on async API calls)
 
 Version 5.3.0
 =============
@@ -18,13 +37,13 @@ This release includes
 - Server profile related bugfixes, blank profile names are not allowed
 - Filtering support for default display output
 - Filtering by single key only outputs results without key names
-- New command line arg: -d for display (json, table or default)
 - Non-interactive commands from command line are outputted without colors
 - Parameter completion uses list api heuristics and related APIs as fallback
 - Parameter completion options are cached to speed up rendering of options
 - CloudMonkey returns non-zero exit code when run on shell and a error is return
   from managment server, the error message is written to stderr
 - Adds new config parameter 'verifysslcert' to enable/disable SSL cert checking
+- New command line arg: -d for display (json, table or default)
 
 Make sure you backup your config before you upgrade cloudmonkey from previous releases.
 With this release `cloudmonkey` will automatically fix your config file, add missing

@@ -35,7 +35,7 @@ buildcache:
 
 install: clean
 	python setup.py sdist
-	pip install dist/cloudmonkey-*.tar.gz
+	pip install --upgrade dist/cloudmonkey-*.tar.gz
 
 clean:
 	rm -frv build dist *egg-info
