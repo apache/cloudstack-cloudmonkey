@@ -32,6 +32,8 @@ Push the new branch to github.com:
 
 At this point, download the modified branch into a 'virtualenv' and test it. If testing is OK, go ahead and merge the new branch into the `cloudmonkey-interoute` master branch:
 
+    git checkout master
+
     git merge interoute_mod_531_regions
 
 And push the changed master to github.com:
