@@ -209,7 +209,7 @@ class CloudMonkeyShell(cmd.Cmd, object):
 
         filtered_result = copy.deepcopy(result)
         if result_filter and isinstance(result_filter, list) \
-            and len(result_filter) > 0:
+                and len(result_filter) > 0:
             tfilter = {}  # temp var to hold a dict of the filters
             tresult = filtered_result  # dupe the result to filter
             if result_filter:
@@ -375,7 +375,7 @@ class CloudMonkeyShell(cmd.Cmd, object):
         field_filter = []
         if 'filter' in args_dict:
             field_filter = filter(lambda x: x.strip() != '',
-                                            args_dict.pop('filter').split(','))
+                                  args_dict.pop('filter').split(','))
             field_filter = list(set(field_filter))
 
         missing = []
