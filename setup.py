@@ -32,6 +32,7 @@ requires = [
               'Pygments>=1.5',
               'prettytable>=0.6',
               'requests',
+              'requests-toolbelt',
               'argcomplete'
             ]
 

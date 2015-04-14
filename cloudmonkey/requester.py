@@ -24,12 +24,14 @@ try:
     import itertools
     import json
     import requests
+    import ssl
     import sys
     import time
     import urllib
     import urllib2
 
     from datetime import datetime, timedelta
+    from requests_toolbelt import SSLAdapter
     from urllib2 import HTTPError, URLError
 except ImportError, e:
     print "Import error in %s : %s" % (__name__, e)
@@ -68,6 +70,7 @@ def login(url, username, password, domain="/", verifysslcert=False):
 
     sessionkey = ''
     session = requests.Session()
+    session.mount('https://', SSLAdapter(ssl.PROTOCOL_TLSv1))
 
     try:
         resp = session.post(url, params=args, verify=verifysslcert)
@@ -209,8 +212,11 @@ def make_request(command, args, logger, url, credentials, expires,
     args['apiKey'] = credentials['apikey']
     args["signature"] = sign_request(args, credentials['secretkey'])
 
+    session = requests.Session()
+    session.mount('https://', SSLAdapter(ssl.PROTOCOL_TLSv1))
+
     try:
-        response = requests.get(url, params=args, verify=verifysslcert)
+        response = session.get(url, params=args, verify=verifysslcert)
         logger_debug(logger, "Request sent: %s" % response.url)
         result = response.text
 
