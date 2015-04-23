@@ -33,7 +33,9 @@ try:
 
     from cachemaker import loadcache, savecache, monkeycache, splitverbsubject
     from config import __version__, __description__, __projecturl__
+    from config import display_types
     from config import read_config, write_config, config_file, default_profile
+    from dicttoxml import dicttoxml
     from optparse import OptionParser
     from prettytable import PrettyTable
     from printer import monkeyprint
@@ -41,6 +43,7 @@ try:
     from requester import login
     from requester import logout
     from urlparse import urlparse
+    from xml.dom.minidom import parseString
 except ImportError, e:
     print("Import error in %s : %s" % (__name__, e))
     import sys
@@ -246,6 +249,11 @@ class CloudMonkeyShell(cmd.Cmd, object):
                                         ensure_ascii=False,
                                         separators=(',', ': ')))
 
+        def print_result_xml(result):
+            custom_root = "CloudStack-%s" % self.profile.replace(" ", "_")
+            xml = dicttoxml(result, attr_type=False, custom_root=custom_root)
+            self.monkeyprint(parseString(xml).toprettyxml())
+
         def print_result_tabular(result):
             def print_table(printer, toprow):
                 if printer:
@@ -291,6 +299,10 @@ class CloudMonkeyShell(cmd.Cmd, object):
 
         if self.display == "json":
             print_result_json(filtered_result)
+            return
+
+        if self.display == "xml":
+            print_result_xml(filtered_result)
             return
 
         if isinstance(filtered_result, dict):
@@ -608,7 +620,7 @@ class CloudMonkeyShell(cmd.Cmd, object):
         elif option == "profile":
             return [s for s in self.profile_names if s.startswith(value)]
         elif option == "display":
-            return [s for s in ["default", "table", "json"]
+            return [s for s in display_types
                     if s.startswith(value)]
         elif option in ["asyncblock", "color", "paramcompletion",
                         "verifysslcert"]:
@@ -734,7 +746,6 @@ class CloudMonkeyShell(cmd.Cmd, object):
 
 
 def main():
-    displayTypes = ["json", "table", "default"]
     parser = argparse.ArgumentParser(usage="cloudmonkey [options] [commands]",
                                      description=__description__,
                                      epilog="Try cloudmonkey [help|?]")
@@ -756,8 +767,8 @@ def main():
 
     parser.add_argument("-d", "--display-type",
                         dest="displayType", default=None,
-                        help="output display type, json, table or default",
-                        choices=tuple(displayTypes))
+                        help="output display type, json, xml, table or default",
+                        choices=tuple(display_types))
 
     parser.add_argument("-p", "--profile",
                         dest="serverProfile", default=None,
@@ -771,7 +782,7 @@ def main():
 
     shell = CloudMonkeyShell(sys.argv[0], args.configFile)
 
-    if args.displayType and args.displayType in displayTypes:
+    if args.displayType and args.displayType in display_types:
         shell.set_attr("display", args.displayType)
 
     if args.noblock_async:

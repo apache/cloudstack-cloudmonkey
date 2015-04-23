@@ -38,6 +38,9 @@ param_type = ['boolean', 'date', 'float', 'integer', 'short', 'list',
 
 iterable_type = ['set', 'list', 'object']
 
+# cloudmonkey display types
+display_types = ["json", "xml", "table", "default"]
+
 config_dir = expanduser('~/.cloudmonkey')
 config_file = expanduser(config_dir + '/config')
 
