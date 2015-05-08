@@ -57,7 +57,8 @@ except ImportError:
 normal_readline = True
 # Fix terminal env before importing readline
 # Without it, char ESC[?1034h gets printed in output
-if os.environ['TERM'].startswith('xterm'):
+# There is not TERM variable in some environment such as Docker.
+if not 'TERM' in os.environ or os.environ['TERM'].startswith('xterm'):
     os.environ['TERM'] = 'vt100'
 try:
     import readline
