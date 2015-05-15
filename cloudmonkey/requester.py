@@ -183,7 +183,7 @@ def make_request(command, args, logger, url, credentials, expires,
         if isinstance(value, unicode):
             value = value.encode("utf-8")
         args[key] = value
-        if not key or not value:
+        if not key:
             args.pop(key)
 
     # try to use the apikey/secretkey method by default
