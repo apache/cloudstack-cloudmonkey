@@ -172,6 +172,7 @@ def make_request(command, args, logger, url, credentials, expires,
     args = args.copy()
     args["command"] = command
     args["response"] = "json"
+    signatureversion = int(signatureversion)
     if signatureversion >= 3:
         args["signatureversion"] = signatureversion
         if not expires:
