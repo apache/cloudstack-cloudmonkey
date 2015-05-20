@@ -73,6 +73,7 @@ default_profile['domain'] = '/'
 default_profile['apikey'] = ''
 default_profile['secretkey'] = ''
 default_profile['verifysslcert'] = 'true'
+default_profile['signatureversion'] = '3'
 
 
 def write_config(get_attr, config_file):
