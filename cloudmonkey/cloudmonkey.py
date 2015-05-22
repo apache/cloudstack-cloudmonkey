@@ -800,7 +800,7 @@ def main():
         shell.set_attr("color", "false")
         commands = []
         for command in args.commands:
-            split_command = command.split("=")
+            split_command = command.split("=", 1)
             if len(split_command) > 1:
                 key = split_command[0]
                 value = split_command[1]
