@@ -58,7 +58,7 @@ normal_readline = True
 # Fix terminal env before importing readline
 # Without it, char ESC[?1034h gets printed in output
 # There is not TERM variable in some environment such as Docker.
-if not 'TERM' in os.environ or os.environ['TERM'].startswith('xterm'):
+if 'TERM' not in os.environ or os.environ['TERM'].startswith('xterm'):
     os.environ['TERM'] = 'vt100'
 try:
     import readline
@@ -117,7 +117,8 @@ class CloudMonkeyShell(cmd.Cmd, object):
     def init_credential_store(self):
         self.credentials = {'apikey': self.apikey, 'secretkey': self.secretkey,
                             'domain': self.domain, 'username': self.username,
-                            'password': self.password, 'signatureversion': self.signatureversion}
+                            'password': self.password,
+                            'signatureversion': self.signatureversion}
         parsed_url = urlparse(self.url)
         self.protocol = "http" if not parsed_url.scheme else parsed_url.scheme
         self.host = parsed_url.netloc
@@ -769,7 +770,7 @@ def main():
 
     parser.add_argument("-d", "--display-type",
                         dest="displayType", default=None,
-                        help="output display type, json, xml, table or default",
+                        help="output displays: json, xml, table or default",
                         choices=tuple(display_types))
 
     parser.add_argument("-p", "--profile",

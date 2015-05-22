@@ -159,7 +159,7 @@ def make_request_with_password(command, args, logger, url, credentials,
 
 
 def make_request(command, args, logger, url, credentials, expires,
-                 verifysslcert=False,signatureversion=3):
+                 verifysslcert=False, signatureversion=3):
     result = None
     error = None
 
@@ -248,13 +248,15 @@ def make_request(command, args, logger, url, credentials, expires,
 
 
 def monkeyrequest(command, args, isasync, asyncblock, logger, url,
-                  credentials, timeout, expires, verifysslcert=False, signatureversion=3):
+                  credentials, timeout, expires, verifysslcert=False,
+                  signatureversion=3):
     response = None
     error = None
     logger_debug(logger, "======== START Request ========")
     logger_debug(logger, "Requesting command=%s, args=%s" % (command, args))
     response, error = make_request(command, args, logger, url,
-                                   credentials, expires, verifysslcert, signatureversion)
+                                   credentials, expires, verifysslcert,
+                                   signatureversion)
 
     logger_debug(logger, "======== END Request ========\n")
 
