@@ -159,7 +159,7 @@ def make_request_with_password(command, args, logger, url, credentials,
 
 
 def make_request(command, args, logger, url, credentials, expires,
-                 verifysslcert=False):
+                 verifysslcert=False,signatureversion=3):
     result = None
     error = None
 
@@ -174,11 +174,13 @@ def make_request(command, args, logger, url, credentials, expires,
     args = args.copy()
     args["command"] = command
     args["response"] = "json"
-    args["signatureversion"] = "3"
-    if not expires:
-        expires = 600
-    expirationtime = datetime.utcnow() + timedelta(seconds=int(expires))
-    args["expires"] = expirationtime.strftime('%Y-%m-%dT%H:%M:%S+0000')
+    signatureversion = int(signatureversion)
+    if signatureversion >= 3:
+        args["signatureversion"] = signatureversion
+        if not expires:
+            expires = 600
+        expirationtime = datetime.utcnow() + timedelta(seconds=int(expires))
+        args["expires"] = expirationtime.strftime('%Y-%m-%dT%H:%M:%S+0000')
 
     for key in args.keys():
         value = args[key]
@@ -246,13 +248,13 @@ def make_request(command, args, logger, url, credentials, expires,
 
 
 def monkeyrequest(command, args, isasync, asyncblock, logger, url,
-                  credentials, timeout, expires, verifysslcert=False):
+                  credentials, timeout, expires, verifysslcert=False, signatureversion=3):
     response = None
     error = None
     logger_debug(logger, "======== START Request ========")
     logger_debug(logger, "Requesting command=%s, args=%s" % (command, args))
     response, error = make_request(command, args, logger, url,
-                                   credentials, expires, verifysslcert)
+                                   credentials, expires, verifysslcert, signatureversion)
 
     logger_debug(logger, "======== END Request ========\n")
 
