@@ -187,6 +187,9 @@ def make_request(command, args, logger, url, credentials, expires,
         args[key] = value
         if not key:
             args.pop(key)
+        else:
+            if key in ['publickey', 'privatekey', 'certificate']:
+                args[key] = urllib.quote_plus(str(value))
 
     # try to use the apikey/secretkey method by default
     # followed by trying to check if we're using integration port
