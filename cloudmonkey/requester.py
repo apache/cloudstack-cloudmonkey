@@ -148,8 +148,10 @@ def make_request_with_password(command, args, logger, url, credentials,
             continue
 
         if resp.status_code != 200 and resp.status_code != 401:
-            error = "{0}: {1}".format(resp.status_code,
-                                      resp.headers.get('X-Description'))
+            error_message = resp.headers.get('X-Description')
+            if not error_message:
+                error_message = resp.text
+            error = "{0}: {1}".format(resp.status_code, error_message)
             result = None
             retry = False
 
