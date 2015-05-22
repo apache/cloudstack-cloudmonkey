@@ -117,7 +117,7 @@ class CloudMonkeyShell(cmd.Cmd, object):
     def init_credential_store(self):
         self.credentials = {'apikey': self.apikey, 'secretkey': self.secretkey,
                             'domain': self.domain, 'username': self.username,
-                            'password': self.password}
+                            'password': self.password, 'signatureversion': self.signatureversion}
         parsed_url = urlparse(self.url)
         self.protocol = "http" if not parsed_url.scheme else parsed_url.scheme
         self.host = parsed_url.netloc
@@ -319,7 +319,8 @@ class CloudMonkeyShell(cmd.Cmd, object):
                                         self.asyncblock, logger,
                                         self.url, self.credentials,
                                         self.timeout, self.expires,
-                                        self.verifysslcert == 'true')
+                                        self.verifysslcert == 'true',
+                                        self.signatureversion)
         if error:
             self.monkeyprint(u"Error {0}".format(error))
             self.error_on_last_command = True
