@@ -22,6 +22,7 @@ try:
     import argparse
     import atexit
     import cmd
+    import csv
     import copy
     import json
     import logging
@@ -256,6 +257,28 @@ class CloudMonkeyShell(cmd.Cmd, object):
             xml = dicttoxml(result, attr_type=False, custom_root=custom_root)
             self.monkeyprint(parseString(xml).toprettyxml())
 
+        def print_result_csv(result):
+            if "count" in result:
+                result.pop("count")
+
+            if len(result.keys()) == 1:
+                item = result[result.keys()[0]]
+                if isinstance(item, list):
+                    result = item
+                elif isinstance(item, dict):
+                    result = [item]
+
+            if isinstance(result, list) and len(result) > 0:
+                if isinstance(result[0], dict):
+                    writer = csv.DictWriter(sys.stdout, result[0].keys())
+                    writer.writeheader()
+                    for item in result:
+                        writer.writerow(item)
+            elif isinstance(result, dict):
+                writer = csv.DictWriter(sys.stdout, result.keys())
+                writer.writeheader()
+                writer.writerow(result)
+
         def print_result_tabular(result):
             def print_table(printer, toprow):
                 if printer:
@@ -305,6 +328,10 @@ class CloudMonkeyShell(cmd.Cmd, object):
 
         if self.display == "xml":
             print_result_xml(filtered_result)
+            return
+
+        if self.display == "csv":
+            print_result_csv(filtered_result)
             return
 
         if isinstance(filtered_result, dict):
