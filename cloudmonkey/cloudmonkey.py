@@ -22,6 +22,7 @@ try:
     import argparse
     import atexit
     import cmd
+    import csv
     import copy
     import json
     import logging
@@ -58,7 +59,7 @@ normal_readline = True
 # Fix terminal env before importing readline
 # Without it, char ESC[?1034h gets printed in output
 # There is not TERM variable in some environment such as Docker.
-if not 'TERM' in os.environ or os.environ['TERM'].startswith('xterm'):
+if 'TERM' not in os.environ or os.environ['TERM'].startswith('xterm'):
     os.environ['TERM'] = 'vt100'
 try:
     import readline
@@ -117,7 +118,8 @@ class CloudMonkeyShell(cmd.Cmd, object):
     def init_credential_store(self):
         self.credentials = {'apikey': self.apikey, 'secretkey': self.secretkey,
                             'domain': self.domain, 'username': self.username,
-                            'password': self.password, 'signatureversion': self.signatureversion}
+                            'password': self.password,
+                            'signatureversion': self.signatureversion}
         parsed_url = urlparse(self.url)
         self.protocol = "http" if not parsed_url.scheme else parsed_url.scheme
         self.host = parsed_url.netloc
@@ -255,6 +257,28 @@ class CloudMonkeyShell(cmd.Cmd, object):
             xml = dicttoxml(result, attr_type=False, custom_root=custom_root)
             self.monkeyprint(parseString(xml).toprettyxml())
 
+        def print_result_csv(result):
+            if "count" in result:
+                result.pop("count")
+
+            if len(result.keys()) == 1:
+                item = result[result.keys()[0]]
+                if isinstance(item, list):
+                    result = item
+                elif isinstance(item, dict):
+                    result = [item]
+
+            if isinstance(result, list) and len(result) > 0:
+                if isinstance(result[0], dict):
+                    writer = csv.DictWriter(sys.stdout, result[0].keys())
+                    writer.writeheader()
+                    for item in result:
+                        writer.writerow(item)
+            elif isinstance(result, dict):
+                writer = csv.DictWriter(sys.stdout, result.keys())
+                writer.writeheader()
+                writer.writerow(result)
+
         def print_result_tabular(result):
             def print_table(printer, toprow):
                 if printer:
@@ -304,6 +328,10 @@ class CloudMonkeyShell(cmd.Cmd, object):
 
         if self.display == "xml":
             print_result_xml(filtered_result)
+            return
+
+        if self.display == "csv":
+            print_result_csv(filtered_result)
             return
 
         if isinstance(filtered_result, dict):
@@ -769,7 +797,7 @@ def main():
 
     parser.add_argument("-d", "--display-type",
                         dest="displayType", default=None,
-                        help="output display type, json, xml, table or default",
+                        help="output displays: json, xml, table or default",
                         choices=tuple(display_types))
 
     parser.add_argument("-p", "--profile",

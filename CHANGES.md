@@ -5,6 +5,7 @@ Version 5.3.2
 =============
 This release includes
 - A new XML display output mode
+- A new CSV display output mode
 
 Version 5.3.1
 =============
