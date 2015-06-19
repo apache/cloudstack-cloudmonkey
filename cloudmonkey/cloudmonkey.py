@@ -270,9 +270,16 @@ class CloudMonkeyShell(cmd.Cmd, object):
 
             if isinstance(result, list) and len(result) > 0:
                 if isinstance(result[0], dict):
-                    writer = csv.DictWriter(sys.stdout, result[0].keys())
+                    keys = result[0].keys()
+                    writer = csv.DictWriter(sys.stdout, keys)
                     writer.writeheader()
                     for item in result:
+                        for k in keys:
+                            if k not in item:
+                                item[k] = None
+                            else:
+                                if type(item[k]) is unicode:
+                                    item[k] = item[k].encode('utf8')
                         writer.writerow(item)
             elif isinstance(result, dict):
                 writer = csv.DictWriter(sys.stdout, result.keys())
