@@ -291,12 +291,19 @@ class CloudMonkeyShell(cmd.Cmd, object):
                 if printer:
                     self.monkeyprint(printer.get_string())
                 return PrettyTable(toprow)
-            toprow = None
             printer = None
+            toprow = []
+            if not result:
+                return
+            toprow = set(reduce(lambda x, y: x + y, map(lambda x: x.keys(),
+                         filter(lambda x: isinstance(x, dict), result))))
+            printer = print_table(printer, toprow)
             for node in result:
-                if toprow != node.keys():
-                        toprow = node.keys()
-                        printer = print_table(printer, toprow)
+                if not node:
+                    continue
+                for key in toprow:
+                    if key not in node:
+                        node[key] = ''
                 row = map(lambda x: node[x], toprow)
                 if printer and row:
                     printer.add_row(row)
