@@ -7,6 +7,33 @@ with Apache CloudStack 4.0-incubating and above.
 
 ![version badge](https://badge.fury.io/py/cloudmonkey.png) ![download badge](http://img.shields.io/pypi/dm/cloudmonkey.png)
 
+
+### For users
+
+Install:
+
+    $ pip install cloudmonkey
+
+Upgrade:
+
+    $ pip install --upgrade cloudmonkey
+
+Please see the [CloudMonkey Wiki](https://cwiki.apache.org/confluence/display/CLOUDSTACK/CloudStack+cloudmonkey+CLI) for usage.
+
+
+### Using Docker image
+
+Use with CloudStack managemenent server as container: 
+
+    $ docker run -ti --rm --link cloudstack:8080 docker.io/cloudstack/cloudmonkey
+
+Use your own CloudMonkey configuration file:
+
+    $ docker run -ti --rm -v `pwd`/.cloudmonkey:/cloudmonkey docker.io/cloudstack/cloudmonkey
+
+
+### Build
+
 All:
 
     Cleans and then builds with precache
@@ -36,17 +63,6 @@ Install:
 
     $ make install
 
-### For users
-
-Install:
-
-    $ pip install cloudmonkey
-
-Upgrade:
-
-    $ pip install --upgrade cloudmonkey
-
-Please see the [CloudMonkey Wiki](https://cwiki.apache.org/confluence/display/CLOUDSTACK/CloudStack+cloudmonkey+CLI) for usage.
 
 ### Mailing lists
 
@@ -60,13 +76,19 @@ Please see the [CloudMonkey Wiki](https://cwiki.apache.org/confluence/display/CL
 
 [Marketing Mailing List](mailto:marketing-subscribe@cloudstack.apache.org)
 
+
 ### Contributing
 
-Send your patches on Apache [Review Board](https://reviews.apache.org/groups/cloudstack/)
-for CloudStack CloudMonkey.
-
-Discuss features development on the `Dev` mailing lists.
+Discuss features development on the [Development Mailing List](mailto:dev-subscribe@cloudstack.apache.org).
 Report issues on the `User` mailing list and open issue on [JIRA](http://issues.apache.org/jira/browse/CLOUDSTACK).
+
+1. Fork the repository on Github
+2. Create a named feature branch (like `add_component_x`)
+3. Write your change
+4. Write tests for your change (if applicable)
+5. Run the tests, ensuring they all pass
+6. Submit a Pull Request using Github
+
 
 ### License
 
