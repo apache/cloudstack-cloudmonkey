@@ -23,13 +23,19 @@ Please see the [CloudMonkey Wiki](https://cwiki.apache.org/confluence/display/CL
 
 ### Using Docker image
 
-Use with CloudStack managemenent server as container: 
+The default configuration provided connect to CloudStack managemenent server as container: 
 
-    $ docker run -ti --rm --link cloudstack:8080 docker.io/cloudstack/cloudmonkey
+Enter the CLI:
+
+    $ docker run -ti --rm --link cloudstack:8080 cloudstack/cloudmonkey
+
+To execute single api command:
+
+    $ docker run -ti --rm --link cloudstack:8080 cloudstack/cloudmonkey list accounts
 
 Use your own CloudMonkey configuration file:
 
-    $ docker run -ti --rm -v `pwd`/.cloudmonkey:/cloudmonkey docker.io/cloudstack/cloudmonkey
+    $ docker run -ti --rm -v `pwd`/.cloudmonkey:/cloudmonkey cloudstack/cloudmonkey
 
 
 ### Build
