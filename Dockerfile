@@ -24,15 +24,10 @@ LABEL Vendor="Apache.org"
 LABEL License=ApacheV2
 LABEL Version=5.3.2
 
-#COPY dist/cloudmonkey-*.tar.gz /
 COPY . /cloudstack-cloudmonkey
-#WORKDIR /cloudmonkey
-#RUN pip install /cloudmonkey-*.tar.gz
-#RUN rm /*.tar.gz
 RUN pip install requests
 RUN (cd /cloudstack-cloudmonkey; python setup.py build)
 RUN (cd /cloudstack-cloudmonkey; python setup.py install)
-
 
 RUN mkdir -p /cloudmonkey
 WORKDIR /cloudmonkey
