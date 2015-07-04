@@ -23,7 +23,7 @@ Please see the [CloudMonkey Wiki](https://cwiki.apache.org/confluence/display/CL
 
 ### Using Docker image
 
-The default configuration provided connect to CloudStack managemenent server as container: 
+The default configuration provided connect to CloudStack managemenent server as container:
 
 Enter the CLI:
 
