@@ -270,9 +270,16 @@ class CloudMonkeyShell(cmd.Cmd, object):
 
             if isinstance(result, list) and len(result) > 0:
                 if isinstance(result[0], dict):
-                    writer = csv.DictWriter(sys.stdout, result[0].keys())
+                    keys = result[0].keys()
+                    writer = csv.DictWriter(sys.stdout, keys)
                     writer.writeheader()
                     for item in result:
+                        for k in keys:
+                            if k not in item:
+                                item[k] = None
+                            else:
+                                if type(item[k]) is unicode:
+                                    item[k] = item[k].encode('utf8')
                         writer.writerow(item)
             elif isinstance(result, dict):
                 writer = csv.DictWriter(sys.stdout, result.keys())
@@ -284,12 +291,19 @@ class CloudMonkeyShell(cmd.Cmd, object):
                 if printer:
                     self.monkeyprint(printer.get_string())
                 return PrettyTable(toprow)
-            toprow = None
             printer = None
+            toprow = []
+            if not result:
+                return
+            toprow = set(reduce(lambda x, y: x + y, map(lambda x: x.keys(),
+                         filter(lambda x: isinstance(x, dict), result))))
+            printer = print_table(printer, toprow)
             for node in result:
-                if toprow != node.keys():
-                        toprow = node.keys()
-                        printer = print_table(printer, toprow)
+                if not node:
+                    continue
+                for key in toprow:
+                    if key not in node:
+                        node[key] = ''
                 row = map(lambda x: node[x], toprow)
                 if printer and row:
                     printer.add_row(row)

@@ -277,6 +277,9 @@ def monkeyrequest(command, args, isasync, asyncblock, logger, url,
     if not response or not isinstance(response, dict):
         return response, error
 
+    if 'response' not in response:
+        return response, 'Invalid response received: %s' % response
+
     isasync = isasync and (asyncblock == "true" or asyncblock == "True")
     responsekey = filter(lambda x: 'response' in x, response.keys())[0]
 
