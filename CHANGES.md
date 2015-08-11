@@ -6,6 +6,7 @@ Version 5.3.2
 This release includes
 - A new XML display output mode
 - A new CSV display output mode
+- SSL and response related fixes and enhancements
 
 Version 5.3.1
 =============
