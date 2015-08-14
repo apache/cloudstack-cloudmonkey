@@ -4,9 +4,14 @@ Apache CloudStack CloudMonkey Changelog
 Version 5.3.2
 =============
 This release includes
+- Spinner printing improvements
+- Monkey patching SSL requests
+- Encode publickey, privatekey and certificates in APIs
+- Configurable signature version
+- Fix tabular output mode
+- Better response checking in the API response
 - A new XML display output mode
 - A new CSV display output mode
-- SSL and response related fixes and enhancements
 
 Version 5.3.1
 =============
