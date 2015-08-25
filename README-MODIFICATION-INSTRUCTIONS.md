@@ -25,12 +25,18 @@ Do the merge:
     git pull upstream master
 
 This will create some conflicts which will require manual edits, then 'git commit' these edits in the branch. Also edit `README.md` to change the Cloudmonkey version number.
+
+    git commit -a -m "Modified Cloudmonkey v5.3.1 for Interoute"
  
 Push the new branch to github.com:
 
     git push origin interoute_mod_531_regions
 
-At this point, download the modified branch into a 'virtualenv' and test it. If testing is OK, go ahead and merge the new branch into the `cloudmonkey-interoute` master branch:
+At this point, download the modified branch into a 'virtualenv' and test it:
+
+    git clone -b interoute_mod_531_regions https://github.com/Interoute/cloudmonkey-interoute.git
+
+If testing is OK, go ahead and merge the new branch into the `cloudmonkey-interoute` master branch:
 
     git checkout master
 
