@@ -22,6 +22,7 @@ try:
     import argparse
     import atexit
     import cmd
+    import csv
     import copy
     import json
     import logging
@@ -33,7 +34,9 @@ try:
 
     from cachemaker import loadcache, savecache, monkeycache, splitverbsubject
     from config import __version__, __description__, __projecturl__
+    from config import display_types
     from config import read_config, write_config, config_file, default_profile
+    from dicttoxml import dicttoxml
     from optparse import OptionParser
     from prettytable import PrettyTable
     from printer import monkeyprint
@@ -41,6 +44,7 @@ try:
     from requester import login
     from requester import logout
     from urlparse import urlparse
+    from xml.dom.minidom import parseString
 except ImportError, e:
     print("Import error in %s : %s" % (__name__, e))
     import sys
@@ -54,7 +58,8 @@ except ImportError:
 normal_readline = True
 # Fix terminal env before importing readline
 # Without it, char ESC[?1034h gets printed in output
-if os.environ['TERM'].startswith('xterm'):
+# There is not TERM variable in some environment such as Docker.
+if 'TERM' not in os.environ or os.environ['TERM'].startswith('xterm'):
     os.environ['TERM'] = 'vt100'
 try:
     import readline
@@ -113,7 +118,8 @@ class CloudMonkeyShell(cmd.Cmd, object):
     def init_credential_store(self):
         self.credentials = {'apikey': self.apikey, 'secretkey': self.secretkey,
                             'domain': self.domain, 'username': self.username,
-                            'password': self.password}
+                            'password': self.password,
+                            'signatureversion': self.signatureversion}
         parsed_url = urlparse(self.url)
         self.protocol = "http" if not parsed_url.scheme else parsed_url.scheme
         self.host = parsed_url.netloc
@@ -209,7 +215,7 @@ class CloudMonkeyShell(cmd.Cmd, object):
 
         filtered_result = copy.deepcopy(result)
         if result_filter and isinstance(result_filter, list) \
-            and len(result_filter) > 0:
+                and len(result_filter) > 0:
             tfilter = {}  # temp var to hold a dict of the filters
             tresult = filtered_result  # dupe the result to filter
             if result_filter:
@@ -246,17 +252,58 @@ class CloudMonkeyShell(cmd.Cmd, object):
                                         ensure_ascii=False,
                                         separators=(',', ': ')))
 
+        def print_result_xml(result):
+            custom_root = "CloudStack-%s" % self.profile.replace(" ", "_")
+            xml = dicttoxml(result, attr_type=False, custom_root=custom_root)
+            self.monkeyprint(parseString(xml).toprettyxml())
+
+        def print_result_csv(result):
+            if "count" in result:
+                result.pop("count")
+
+            if len(result.keys()) == 1:
+                item = result[result.keys()[0]]
+                if isinstance(item, list):
+                    result = item
+                elif isinstance(item, dict):
+                    result = [item]
+
+            if isinstance(result, list) and len(result) > 0:
+                if isinstance(result[0], dict):
+                    keys = result[0].keys()
+                    writer = csv.DictWriter(sys.stdout, keys)
+                    writer.writeheader()
+                    for item in result:
+                        for k in keys:
+                            if k not in item:
+                                item[k] = None
+                            else:
+                                if type(item[k]) is unicode:
+                                    item[k] = item[k].encode('utf8')
+                        writer.writerow(item)
+            elif isinstance(result, dict):
+                writer = csv.DictWriter(sys.stdout, result.keys())
+                writer.writeheader()
+                writer.writerow(result)
+
         def print_result_tabular(result):
             def print_table(printer, toprow):
                 if printer:
                     self.monkeyprint(printer.get_string())
                 return PrettyTable(toprow)
-            toprow = None
             printer = None
+            toprow = []
+            if not result:
+                return
+            toprow = set(reduce(lambda x, y: x + y, map(lambda x: x.keys(),
+                         filter(lambda x: isinstance(x, dict), result))))
+            printer = print_table(printer, toprow)
             for node in result:
-                if toprow != node.keys():
-                        toprow = node.keys()
-                        printer = print_table(printer, toprow)
+                if not node:
+                    continue
+                for key in toprow:
+                    if key not in node:
+                        node[key] = ''
                 row = map(lambda x: node[x], toprow)
                 if printer and row:
                     printer.add_row(row)
@@ -293,6 +340,14 @@ class CloudMonkeyShell(cmd.Cmd, object):
             print_result_json(filtered_result)
             return
 
+        if self.display == "xml":
+            print_result_xml(filtered_result)
+            return
+
+        if self.display == "csv":
+            print_result_csv(filtered_result)
+            return
+
         if isinstance(filtered_result, dict):
             print_result_as_dict(filtered_result)
         elif isinstance(filtered_result, list):
@@ -306,7 +361,7 @@ class CloudMonkeyShell(cmd.Cmd, object):
                                         self.asyncblock, logger,
                                         self.url, self.credentials,
                                         self.timeout, self.expires, self.region,
-                                        self.verifysslcert == 'true')
+                                        self.verifysslcert == 'true', self.signatureversion)
         if error:
             self.monkeyprint(u"Error {0}".format(error))
             self.error_on_last_command = True
@@ -375,7 +430,7 @@ class CloudMonkeyShell(cmd.Cmd, object):
         field_filter = []
         if 'filter' in args_dict:
             field_filter = filter(lambda x: x.strip() != '',
-                                            args_dict.pop('filter').split(','))
+                                  args_dict.pop('filter').split(','))
             field_filter = list(set(field_filter))
 
         missing = []
@@ -608,7 +663,7 @@ class CloudMonkeyShell(cmd.Cmd, object):
         elif option == "profile":
             return [s for s in self.profile_names if s.startswith(value)]
         elif option == "display":
-            return [s for s in ["default", "table", "json"]
+            return [s for s in display_types
                     if s.startswith(value)]
         elif option in ["asyncblock", "color", "paramcompletion",
                         "verifysslcert"]:
@@ -734,7 +789,6 @@ class CloudMonkeyShell(cmd.Cmd, object):
 
 
 def main():
-    displayTypes = ["json", "table", "default"]
     parser = argparse.ArgumentParser(usage="cloudmonkey [options] [commands]",
                                      description=__description__,
                                      epilog="Try cloudmonkey [help|?]")
@@ -756,8 +810,8 @@ def main():
 
     parser.add_argument("-d", "--display-type",
                         dest="displayType", default=None,
-                        help="output display type, json, table or default",
-                        choices=tuple(displayTypes))
+                        help="output displays: json, xml, table or default",
+                        choices=tuple(display_types))
 
     parser.add_argument("-p", "--profile",
                         dest="serverProfile", default=None,
@@ -771,7 +825,7 @@ def main():
 
     shell = CloudMonkeyShell(sys.argv[0], args.configFile)
 
-    if args.displayType and args.displayType in displayTypes:
+    if args.displayType and args.displayType in display_types:
         shell.set_attr("display", args.displayType)
 
     if args.noblock_async:
@@ -787,7 +841,7 @@ def main():
         shell.set_attr("color", "false")
         commands = []
         for command in args.commands:
-            split_command = command.split("=")
+            split_command = command.split("=", 1)
             if len(split_command) > 1:
                 key = split_command[0]
                 value = split_command[1]

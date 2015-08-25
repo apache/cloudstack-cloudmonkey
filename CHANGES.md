@@ -1,14 +1,25 @@
 Apache CloudStack CloudMonkey Changelog
 ---------------------------------------
 
-(2015-03-28) INTEROUTE FORK OF VERSION 5.3.1
+(2015-08-25) INTEROUTE FORK OF VERSION 5.3.2
 ============================================
 A modification is required for using Cloudmonkey with Interoute Virtual Data Centre. 
 This is to handle access to the different VDC regions, by creating a new configuration 
 variable 'region'. 
 The files cloudmonkey.py, requester.py and config.py have been modified.
 
-=======
+Version 5.3.2
+=============
+This release includes
+- Spinner printing improvements
+- Monkey patching SSL requests
+- Encode publickey, privatekey and certificates in APIs
+- Configurable signature version
+- Fix tabular output mode
+- Better response checking in the API response
+- A new XML display output mode
+- A new CSV display output mode
+
 Version 5.3.1
 =============
 This release includes

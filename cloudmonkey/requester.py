@@ -24,12 +24,14 @@ try:
     import itertools
     import json
     import requests
+    import ssl
     import sys
     import time
     import urllib
     import urllib2
 
     from datetime import datetime, timedelta
+    from requests_toolbelt import SSLAdapter
     from urllib2 import HTTPError, URLError
 except ImportError, e:
     print "Import error in %s : %s" % (__name__, e)
@@ -68,6 +70,7 @@ def login(url, username, password, domain="/", verifysslcert=False):
 
     sessionkey = ''
     session = requests.Session()
+    session.mount('https://', SSLAdapter(ssl.PROTOCOL_TLSv1))
 
     try:
         resp = session.post(url, params=args, verify=verifysslcert)
@@ -145,12 +148,15 @@ def make_request_with_password(command, args, logger, url, credentials,
             continue
 
         if resp.status_code != 200 and resp.status_code != 401:
-            error = "{0}: {1}".format(resp.status_code,
-                                      resp.headers.get('X-Description'))
+            error_message = resp.headers.get('X-Description')
+            if not error_message:
+                error_message = resp.text
+            error = "{0}: {1}".format(resp.status_code, error_message)
             result = None
             retry = False
 
     return result, error
+
 
 def make_request(command, args, logger, url, credentials, expires, region,
                  verifysslcert=False):
@@ -169,18 +175,20 @@ def make_request(command, args, logger, url, credentials, expires, region,
     args["command"] = command
     args["region"] = region
     args["response"] = "json"
-    args["signatureversion"] = "3"
-    if not expires:
-        expires = 600
-    expirationtime = datetime.utcnow() + timedelta(seconds=int(expires))
-    args["expires"] = expirationtime.strftime('%Y-%m-%dT%H:%M:%S+0000')
+    signatureversion = int(signatureversion)
+    if signatureversion >= 3:
+        args["signatureversion"] = signatureversion
+        if not expires:
+            expires = 600
+        expirationtime = datetime.utcnow() + timedelta(seconds=int(expires))
+        args["expires"] = expirationtime.strftime('%Y-%m-%dT%H:%M:%S+0000')
 
     for key in args.keys():
         value = args[key]
         if isinstance(value, unicode):
             value = value.encode("utf-8")
         args[key] = value
-        if not key or not value:
+        if not key:
             args.pop(key)
 
     # try to use the apikey/secretkey method by default
@@ -199,7 +207,8 @@ def make_request(command, args, logger, url, credentials, expires, region,
         hash_str = "&".join(
             ["=".join(
                 [r[0].lower(),
-                 urllib.quote_plus(str(r[1])).lower().replace("+", "%20").replace("%3A",":")]
+                 urllib.quote_plus(str(r[1])).lower()
+                 .replace("+", "%20").replace("%3A", ":")]
             ) for r in request]
         )
         return base64.encodestring(hmac.new(secret_key, hash_str,
@@ -208,8 +217,11 @@ def make_request(command, args, logger, url, credentials, expires, region,
     args['apiKey'] = credentials['apikey']
     args["signature"] = sign_request(args, credentials['secretkey'])
 
+    session = requests.Session()
+    session.mount('https://', SSLAdapter(ssl.PROTOCOL_TLSv1))
+
     try:
-        response = requests.get(url, params=args, verify=verifysslcert)
+        response = session.get(url, params=args, verify=verifysslcert)
         logger_debug(logger, "Request sent: %s" % response.url)
         result = response.text
 
@@ -233,14 +245,14 @@ def make_request(command, args, logger, url, credentials, expires, region,
     return result, error
 
 def monkeyrequest(command, args, isasync, asyncblock, logger, url,
-                  credentials, timeout, expires, region, verifysslcert=False):
+                  credentials, timeout, expires, region, verifysslcert=False, signatureversion=3):
     response = None
     error = None
     logger_debug(logger, "======== START Request ========")
     logger_debug(logger, "Requesting command=%s, args=%s" % (command, args))
 
     response, error = make_request(command, args, logger, url,
-                                   credentials, expires, region, verifysslcert)
+                                   credentials, expires, region, verifysslcert, signatureversion)
 
     logger_debug(logger, "======== END Request ========\n")
 
@@ -260,6 +272,10 @@ def monkeyrequest(command, args, isasync, asyncblock, logger, url,
     response = process_json(response)
     if not response or not isinstance(response, dict):
         return response, error
+
+    m = list(v for v in response.keys() if 'response' in v.lower())
+    if not m:
+        return response, 'Invalid response received: %s' % response
 
     isasync = isasync and (asyncblock == "true" or asyncblock == "True")
     responsekey = filter(lambda x: 'response' in x, response.keys())[0]

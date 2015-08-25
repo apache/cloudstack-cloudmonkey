@@ -30,9 +30,11 @@ from cloudmonkey import __project__, __projecturl__, __projectemail__
 
 requires = [
               'Pygments>=1.5',
+              'argcomplete',
+              'dicttoxml',
               'prettytable>=0.6',
               'requests',
-              'argcomplete'
+              'requests-toolbelt',
             ]
 
 try:
