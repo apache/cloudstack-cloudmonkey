@@ -1,6 +1,6 @@
 # MODIFICATION INSTRUCTIONS FOR cloudmonkey-interoute
 
-This is a fork of the [Cloudmonkey command line interface](https://github.com/apache/cloudstack-cloudmonkey), modified for use with the [Interoute Virtual Data Centre](http://cloudstore.interoute.com/main/WhatInterouteVDC).
+This is a fork of the [Cloudmonkey command line interface](https://github.com/apache/cloudstack-cloudmonkey), modified for use with the [Interoute Virtual Data Centre](https://cloudstore.interoute.com/what_is_vdc).
 
 The modification required is to handle API access to the different VDC regions (Europe, North America (USA), Asia). This is implemented using a new configuration variable `region`.
 
