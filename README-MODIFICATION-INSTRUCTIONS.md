@@ -34,7 +34,7 @@ Push the new branch to github.com:
 
 At this point, download the modified branch into a 'virtualenv' and test it:
 
-    git clone -b interoute_mod_531_regions https://github.com/Interoute/cloudmonkey-interoute.git
+    pip install git+https://github.com/Interoute/cloudmonkey-interoute.git@interoute_mod_531_regions
 
 If testing is OK, go ahead and merge the new branch into the `cloudmonkey-interoute` master branch:
 

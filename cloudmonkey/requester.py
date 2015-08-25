@@ -159,7 +159,7 @@ def make_request_with_password(command, args, logger, url, credentials,
 
 
 def make_request(command, args, logger, url, credentials, expires, region,
-                 verifysslcert=False):
+                 verifysslcert=False, signatureversion=3):
     result = None
     error = None
 
@@ -298,7 +298,7 @@ def monkeyrequest(command, args, isasync, asyncblock, logger, url,
             timeout = timeout - 2
             logger_debug(logger, "Job %s to timeout in %ds" % (jobid, timeout))
             response, error = make_request(command, request, logger, url,
-                                           credentials, expires, region, verifysslcert)
+                                           credentials, expires, region, verifysslcert, signatureversion)
             if error and not response:
                 return response, error
 
