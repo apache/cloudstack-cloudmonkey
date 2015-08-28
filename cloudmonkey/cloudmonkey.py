@@ -80,7 +80,7 @@ logger = logging.getLogger(__name__)
 
 class CloudMonkeyShell(cmd.Cmd, object):
     intro = ("☁ Apache CloudStack 🐵 cloudmonkey " + __version__ +
-             ". Type help or ? to list commands.\n")
+             " [MODIFIED FOR INTEROUTE VDC 2015-08-25]. Type help or ? to list commands.\n")
     ruler = "="
     config_options = []
     profile_names = []
@@ -360,9 +360,8 @@ class CloudMonkeyShell(cmd.Cmd, object):
         response, error = monkeyrequest(command, args, isasync,
                                         self.asyncblock, logger,
                                         self.url, self.credentials,
-                                        self.timeout, self.expires,
-                                        self.verifysslcert == 'true',
-                                        self.signatureversion)
+                                        self.timeout, self.expires, self.region,
+                                        self.verifysslcert == 'true', self.signatureversion)
         if error:
             self.monkeyprint(u"Error {0}".format(error))
             self.error_on_last_command = True

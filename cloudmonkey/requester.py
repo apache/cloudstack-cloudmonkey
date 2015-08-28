@@ -158,7 +158,7 @@ def make_request_with_password(command, args, logger, url, credentials,
     return result, error
 
 
-def make_request(command, args, logger, url, credentials, expires,
+def make_request(command, args, logger, url, credentials, expires, region,
                  verifysslcert=False, signatureversion=3):
     result = None
     error = None
@@ -173,6 +173,7 @@ def make_request(command, args, logger, url, credentials, expires,
 
     args = args.copy()
     args["command"] = command
+    args["region"] = region
     args["response"] = "json"
     signatureversion = int(signatureversion)
     if signatureversion >= 3:
@@ -243,17 +244,15 @@ def make_request(command, args, logger, url, credentials, expires,
 
     return result, error
 
-
 def monkeyrequest(command, args, isasync, asyncblock, logger, url,
-                  credentials, timeout, expires, verifysslcert=False,
-                  signatureversion=3):
+                  credentials, timeout, expires, region, verifysslcert=False, signatureversion=3):
     response = None
     error = None
     logger_debug(logger, "======== START Request ========")
     logger_debug(logger, "Requesting command=%s, args=%s" % (command, args))
+
     response, error = make_request(command, args, logger, url,
-                                   credentials, expires, verifysslcert,
-                                   signatureversion)
+                                   credentials, expires, region, verifysslcert, signatureversion)
 
     logger_debug(logger, "======== END Request ========\n")
 
@@ -298,9 +297,8 @@ def monkeyrequest(command, args, isasync, asyncblock, logger, url,
                 interval -= 0.1
             timeout = timeout - 2
             logger_debug(logger, "Job %s to timeout in %ds" % (jobid, timeout))
-
             response, error = make_request(command, request, logger, url,
-                                           credentials, expires, verifysslcert)
+                                           credentials, expires, region, verifysslcert, signatureversion)
             if error and not response:
                 return response, error
 

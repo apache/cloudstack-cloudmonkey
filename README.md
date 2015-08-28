@@ -1,116 +1,41 @@
-## CloudMonkey
+# cloudmonkey-interoute (using Cloudmonkey version 5.3.2)
 
-`cloudmonkey` is a command line interface for [Apache CloudStack](http://cloudstack.apache.org).
-CloudMonkey can be use both as an interactive shell and as a command line tool
-which simplifies Apache CloudStack configuration and management. It can be used
-with Apache CloudStack 4.0-incubating and above.
+This is a fork of the [Cloudmonkey command line interface](https://github.com/apache/cloudstack-cloudmonkey), version 5.3.2, modified for use with the [Interoute Virtual Data Centre](https://cloudstore.interoute.com/what_is_vdc).
 
-![version badge](https://badge.fury.io/py/cloudmonkey.png) ![download badge](http://img.shields.io/pypi/dm/cloudmonkey.png)
+The modification required is to handle API access to the different VDC regions (Europe, North America (USA), Asia). This is implemented using a new configuration variable `region`.
 
+The default value is 'europe'. Note that the master version of Cloudmonkey will access the default region without modification.
 
-### For users
+See the original repo here: [cloudstack-cloudmonkey](https://github.com/apache/cloudstack-cloudmonkey)
 
-Install:
+## Modifications
 
-    $ pip install cloudmonkey
+The files `cloudmonkey.py`, `requester.py` and `config.py` have been modified. To access the Asia or USA region, add a line to each required profile setting in the Cloudmonkey `config` file:
 
-Upgrade:
+    region = asia
 
-    $ pip install --upgrade cloudmonkey
+or 
 
-Please see the [CloudMonkey Wiki](https://cwiki.apache.org/confluence/display/CLOUDSTACK/CloudStack+cloudmonkey+CLI) for usage.
+    region = usa
 
+(the region name is not case sensitive). You can also change the region interactively while Cloudmonkey is running:
 
-### Using Docker image
-
-The default configuration provided connect to CloudStack managemenent server as container:
-
-Enter the CLI:
-
-    $ docker run -ti --rm --link cloudstack:8080 cloudstack/cloudmonkey
-
-To execute single api command:
-
-    $ docker run -ti --rm --link cloudstack:8080 cloudstack/cloudmonkey list accounts
-
-Use your own CloudMonkey configuration file:
-
-    $ docker run -ti --rm -v `pwd`/.cloudmonkey:/cloudmonkey cloudstack/cloudmonkey
+    set region usa
 
 
-### Build
+## How to install this modified version
 
-All:
+You can make a fresh install of this modified version of Cloudmonkey using the `pip` command:
 
-    Cleans and then builds with precache
-    $ make all
+    sudo pip install git+https://github.com/Interoute/cloudmonkey-interoute.git
 
-Build:
+Or to upgrade an existing installation:
 
-    $ make build
+    sudo pip install --upgrade git+https://github.com/Interoute/cloudmonkey-interoute.git
 
-Build Precache:
+This version of Cloudmonkey may not work with other cloud computing providers that are also compatible with Cloudmonkey. So be careful if you use Cloudmonkey with several providers.
 
-    $ make buildcache
+(The reason is that this version adds a new parameter input 'region=...' to every API call. API servers generally ignore any parameters that are not recognised, however if the server is programmed to do validity checking then Cloudmonkey may not work.)
 
-Build with Precache:
+An alternative is to use [Python's virtualenv](http://www.pythoncentral.io/how-to-install-virtualenv-python) tool so that you can operate multiple versions of Cloudmonkey at the same time.
 
-    $ make buildwithcache
-
-Check changes, code styles:
-
-    $ make check
-
-Clean:
-
-    $ make clean
-
-Install:
-
-    $ make install
-
-
-### Mailing lists
-
-[Development Mailing List](mailto:dev-subscribe@cloudstack.apache.org)
-
-[Users Mailing List](mailto:users-subscribe@cloudstack.apache.org)
-
-[Commits Mailing List](mailto:commits-subscribe@cloudstack.apache.org)
-
-[Issues Mailing List](mailto:issues-subscribe@cloudstack.apache.org)
-
-[Marketing Mailing List](mailto:marketing-subscribe@cloudstack.apache.org)
-
-
-### Contributing
-
-Discuss features development on the [Development Mailing List](mailto:dev-subscribe@cloudstack.apache.org).
-Report issues on the `User` mailing list and open issue on [JIRA](http://issues.apache.org/jira/browse/CLOUDSTACK).
-
-1. Fork the repository on Github
-2. Create a named feature branch (like `add_component_x`)
-3. Write your change
-4. Write tests for your change (if applicable)
-5. Run the tests, ensuring they all pass
-6. Submit a Pull Request using Github
-
-
-### License
-
-Licensed to the Apache Software Foundation (ASF) under one
-or more contributor license agreements.  See the NOTICE file
-distributed with this work for additional information
-regarding copyright ownership.  The ASF licenses this file
-to you under the Apache License, Version 2.0 (the
-"License"); you may not use this file except in compliance
-with the License.  You may obtain a copy of the License at
-
-  http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing,
-software distributed under the License is distributed on an
-"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-KIND, either express or implied.  See the License for the
-specific language governing permissions and limitations
-under the License.
