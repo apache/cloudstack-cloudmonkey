@@ -28,20 +28,13 @@ try:
     import sys
     import time
     import urllib
-    import urllib2
 
     from datetime import datetime, timedelta
     from requests_toolbelt import SSLAdapter
-    from urllib2 import HTTPError, URLError
 except ImportError, e:
     print "Import error in %s : %s" % (__name__, e)
     import sys
     sys.exit()
-
-
-# Disable HTTPS verification warnings.
-from requests.packages import urllib3
-urllib3.disable_warnings()
 
 
 def logger_debug(logger, message):
