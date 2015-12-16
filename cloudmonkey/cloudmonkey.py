@@ -723,6 +723,28 @@ class CloudMonkeyShell(cmd.Cmd, object):
         else:
             os.system(args.encode("utf-8"))
 
+    def do_history(self, args):
+        """
+        Prints cloudmonkey history
+        """
+        if self.pipe_runner("history " + args):
+            return
+        startIdx = 1
+        endIdx = readline.get_current_history_length()
+        numLen = len(str(endIdx))
+        historyArg = args.split(' ')[0]
+        if historyArg.isdigit():
+            startIdx = endIdx - long(historyArg)
+            if startIdx < 1:
+                startIdx = 1
+        elif historyArg == "clear":
+            readline.clear_history()
+            print "CloudMonkey history cleared"
+            return
+        for idx in xrange(startIdx, endIdx):
+            self.monkeyprint("%s %s" % (str(idx).rjust(numLen),
+                                        readline.get_history_item(idx)))
+
     def do_help(self, args):
         """
         Show help docs for various topics
