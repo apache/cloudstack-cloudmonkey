@@ -55,7 +55,7 @@ copyright = u'2012-2014, The Apache Software Foundation'
 # built documents.
 #
 # The short X.Y version.
-version = '5.3.2'
+version = '5.3.3'
 # The full version, including alpha/beta/rc tags.
 release = version
 

@@ -1,6 +1,11 @@
 Apache CloudStack CloudMonkey Changelog
 ---------------------------------------
 
+Version 5.3.3
+=============
+This release includes
+- Support for shell history
+
 Version 5.3.2
 =============
 This release includes

@@ -93,6 +93,7 @@ class CloudMonkeyShell(cmd.Cmd, object):
     host = "localhost"
     port = "8080"
     path = "/client/api"
+    hook_count = 0
 
     def __init__(self, pname, cfile):
         self.program_name = pname
@@ -151,6 +152,13 @@ class CloudMonkeyShell(cmd.Cmd, object):
                 super(CloudMonkeyShell, self).cmdloop(intro="")
             except KeyboardInterrupt:
                 print("^C")
+
+    def precmd(self, line):
+        self.hook_count -= 1
+        if self.hook_count <= 0:
+            self.hook_count = 0
+            readline.set_startup_hook()
+        return line
 
     def loadcache(self):
         if os.path.exists(self.cache_file):
@@ -718,6 +726,9 @@ class CloudMonkeyShell(cmd.Cmd, object):
             email=test@test.tt firstname=user$i lastname=user$i \
             password=password username=user$i; done
         """
+        if args.isdigit():
+            self.do_history("!" + args)
+            return
         if isinstance(args, str):
             os.system(args)
         else:
@@ -737,9 +748,14 @@ class CloudMonkeyShell(cmd.Cmd, object):
             startIdx = endIdx - long(historyArg)
             if startIdx < 1:
                 startIdx = 1
-        elif historyArg == "clear":
+        elif historyArg == "clear" or historyArg == "c":
             readline.clear_history()
             print "CloudMonkey history cleared"
+            return
+        elif len(historyArg) > 1 and historyArg[0] == "!" and historyArg[1:].isdigit():
+            command = readline.get_history_item(long(historyArg[1:]))
+            readline.set_startup_hook(lambda: readline.insert_text(command))
+            self.hook_count = 1
             return
         for idx in xrange(startIdx, endIdx):
             self.monkeyprint("%s %s" % (str(idx).rjust(numLen),
