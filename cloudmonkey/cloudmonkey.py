@@ -580,7 +580,9 @@ class CloudMonkeyShell(cmd.Cmd, object):
                         uuids = self.update_param_cache(api, response)
                     if len(uuids) > 1:
                         print
-                        for option in self.param_cache[api]["options"]:
+                        options = sorted(self.param_cache[api]["options"],
+                                         key=lambda x: x[1])
+                        for option in options:
                             uuid = option[0]
                             name = option[1]
                             if uuid.startswith(value):
