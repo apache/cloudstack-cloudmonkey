@@ -96,6 +96,7 @@ class CloudMonkeyShell(cmd.Cmd, object):
     hook_count = 0
 
     def __init__(self, pname, cfile):
+        self.default_apis = self.completenames('')
         self.program_name = pname
         self.config_file = cfile
         self.config_options = read_config(self.get_attr, self.set_attr,
@@ -169,9 +170,21 @@ class CloudMonkeyShell(cmd.Cmd, object):
             self.verbs = self.apicache['verbs']
 
         for verb in self.verbs:
+            handler_name = "do_" + str(verb)
+            handler_doc = str("%ss resources" % verb.capitalize())
+
+            if hasattr(self, handler_name) and getattr(self, handler_name).__doc__ == handler_doc:
+                continue
+
             def add_grammar(verb):
+                default_handler = None
+                if self.default_apis.__contains__(verb):
+                    default_handler = getattr(self, handler_name)
+
                 def grammar_closure(self, args):
                     if not args:
+                        if default_handler:
+                            default_handler(args)
                         return
                     args = args.decode("utf-8")
                     if self.pipe_runner(u"{0} {1}".format(verb, args)):
@@ -184,15 +197,18 @@ class CloudMonkeyShell(cmd.Cmd, object):
                         cmd = self.apicache[verb][args_partition[0]]['name']
                         args = args_partition[2]
                     except KeyError, e:
-                        self.monkeyprint("Error: invalid %s api arg " % verb,
+                        if default_handler:
+                            default_handler(args)
+                        else:
+                            self.monkeyprint("Error: invalid %s api arg " % verb,
                                          str(e))
                         return
                     self.default(u"{0} {1}".format(cmd, args))
                 return grammar_closure
 
             grammar_handler = add_grammar(verb)
-            grammar_handler.__doc__ = "%ss resources" % verb.capitalize()
-            grammar_handler.__name__ = "do_" + str(verb)
+            grammar_handler.__doc__ = handler_doc
+            grammar_handler.__name__ = handler_name
             setattr(self.__class__, grammar_handler.__name__, grammar_handler)
 
     def monkeyprint(self, *args):
@@ -670,7 +686,7 @@ class CloudMonkeyShell(cmd.Cmd, object):
         separator = mline[1]
         value = mline[2].lstrip()
         if separator == "":
-            return [s for s in self.config_options if s.startswith(option)]
+            return [s for s in self.config_options if s.startswith(option)] + self.completedefault(text, line, begidx, endidx)
         elif option == "profile":
             return [s for s in self.profile_names if s.startswith(value)]
         elif option == "display":
@@ -679,6 +695,8 @@ class CloudMonkeyShell(cmd.Cmd, object):
         elif option in ["asyncblock", "color", "paramcompletion",
                         "verifysslcert"]:
             return [s for s in ["true", "false"] if s.startswith(value)]
+        elif "set" in self.apicache["verbs"]:
+            return self.completedefault(text, line, begidx, endidx)
 
         return []
 
