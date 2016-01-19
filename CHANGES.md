@@ -5,6 +5,8 @@ Version 5.3.3
 =============
 This release includes
 - Support for shell history
+- Sort autocompletion suggestion based on names
+- Improve CSV output and error handling
 
 Version 5.3.2
 =============
