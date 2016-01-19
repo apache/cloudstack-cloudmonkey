@@ -280,7 +280,7 @@ class CloudMonkeyShell(cmd.Cmd, object):
                 if isinstance(result[0], dict):
                     keys = result[0].keys()
                     writer = csv.DictWriter(sys.stdout, keys)
-                    writer.writeheader()
+                    print ','.join(keys)
                     for item in result:
                         for k in keys:
                             if k not in item:
@@ -290,8 +290,9 @@ class CloudMonkeyShell(cmd.Cmd, object):
                                     item[k] = item[k].encode('utf8')
                         writer.writerow(item)
             elif isinstance(result, dict):
-                writer = csv.DictWriter(sys.stdout, result.keys())
-                writer.writeheader()
+                keys = result.keys()
+                writer = csv.DictWriter(sys.stdout, keys)
+                print ','.join(keys)
                 writer.writerow(result)
 
         def print_result_tabular(result):
