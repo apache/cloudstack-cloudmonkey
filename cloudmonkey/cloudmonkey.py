@@ -282,13 +282,16 @@ class CloudMonkeyShell(cmd.Cmd, object):
                     writer = csv.DictWriter(sys.stdout, keys)
                     print ','.join(keys)
                     for item in result:
+                        row = {}
                         for k in keys:
                             if k not in item:
-                                item[k] = None
+                                row[k] = None
                             else:
                                 if type(item[k]) is unicode:
-                                    item[k] = item[k].encode('utf8')
-                        writer.writerow(item)
+                                    row[k] = item[k].encode('utf8')
+                                else:
+                                    row[k] = item[k]
+                        writer.writerow(row)
             elif isinstance(result, dict):
                 keys = result.keys()
                 writer = csv.DictWriter(sys.stdout, keys)
