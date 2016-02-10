@@ -1,6 +1,7 @@
 ## CloudMonkey
 
-`cloudmonkey` is a command line interface for [Apache CloudStack](http://cloudstack.apache.org).
+`cloudmonkey` :cloud::monkey_face: is a command line interface for
+[Apache CloudStack](http://cloudstack.apache.org).
 CloudMonkey can be use both as an interactive shell and as a command line tool
 which simplifies Apache CloudStack configuration and management. It can be used
 with Apache CloudStack 4.0-incubating and above.
@@ -17,6 +18,14 @@ Install:
 Upgrade:
 
     $ pip install --upgrade cloudmonkey
+
+Install/Upgrade latest using git repository:
+
+    $ pip install --upgrade git+https://git-wip-us.apache.org/repos/asf/cloudstack-cloudmonkey.git
+
+Install/upgrade using the Github git mirror:
+
+    $ pip install --upgrade git+https://github.com/apache/cloudstack-cloudmonkey.git
 
 Please see the [CloudMonkey Wiki](https://cwiki.apache.org/confluence/display/CLOUDSTACK/CloudStack+cloudmonkey+CLI) for usage.
 
