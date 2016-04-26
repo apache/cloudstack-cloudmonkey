@@ -67,7 +67,8 @@ except ImportError, e:
     print("Module readline not found, autocompletions will fail", e)
 else:
     import rlcompleter
-    if 'libedit' in readline.__doc__:
+    readline_doc = getattr(readline, '__doc__', '')
+    if readline_doc is not None and 'libedit' in readline_doc:
         readline.parse_and_bind("bind ^I rl_complete")
         readline.parse_and_bind("bind ^R em-inc-search-prev")
         normal_readline = False
