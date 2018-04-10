@@ -1,74 +1,36 @@
 ## CloudMonkey
 
-`cloudmonkey` :cloud::monkey_face: is a command line interface for
+`cloudmonkey` :cloud::monkey_face: is a command line interface (CLI) for
 [Apache CloudStack](http://cloudstack.apache.org).
 CloudMonkey can be use both as an interactive shell and as a command line tool
-which simplifies Apache CloudStack configuration and management. It can be used
-with Apache CloudStack 4.0-incubating and above.
+which simplifies Apache CloudStack configuration and management.
 
-![version badge](https://badge.fury.io/py/cloudmonkey.png) ![download badge](http://img.shields.io/pypi/dm/cloudmonkey.png)
+The modern cloudmonkey is a re-written and simplified port in Go and can be used
+with Apache CloudStack 4.9 and above. The legacy cloudmonkey written in Python
+can be used with Apache CloudStack 4.0-incubating and above.
 
+### Usage
 
-### For users
+Work in progress: 6.0.0-alpha1 (TO BE UPDATED soon)
 
-Install:
+For modern cloudmonkey usage, please see the [usage page](https://github.com/apache/cloudstack-cloudmonkey/wiki/Usage).
 
-    $ pip install cloudmonkey
+Legacy cloudmonkey can be installed using `pip install cloudmonkey`.
+For legacy cloudmonkey, please see the [cwiki usage page](https://cwiki.apache.org/confluence/display/CLOUDSTACK/CloudStack+cloudmonkey+CLI).
 
-Upgrade:
-
-    $ pip install --upgrade cloudmonkey
-
-Install/Upgrade latest using git repository:
-
-    $ pip install --upgrade git+https://git-wip-us.apache.org/repos/asf/cloudstack-cloudmonkey.git
-
-Install/upgrade using the Github git mirror:
-
-    $ pip install --upgrade git+https://github.com/apache/cloudstack-cloudmonkey.git
-
-Please see the [CloudMonkey Wiki](https://cwiki.apache.org/confluence/display/CLOUDSTACK/CloudStack+cloudmonkey+CLI) for usage.
-
-
-### Using Docker image
-
-The default configuration provided connect to CloudStack managemenent server as container:
-
-Enter the CLI:
-
-    $ docker run -ti --rm --link cloudstack:8080 cloudstack/cloudmonkey
-
-To execute single api command:
-
-    $ docker run -ti --rm --link cloudstack:8080 cloudstack/cloudmonkey list accounts
-
-Use your own CloudMonkey configuration file:
-
-    $ docker run -ti --rm -v `pwd`/.cloudmonkey:/cloudmonkey cloudstack/cloudmonkey
-
-
-### Build
-
-All:
-
-    Cleans and then builds with precache
-    $ make all
+### Development
 
 Build:
 
     $ make build
 
-Build Precache:
+Run:
 
-    $ make buildcache
+    $ ./cmk
 
-Build with Precache:
+Build and run:
 
-    $ make buildwithcache
-
-Check changes, code styles:
-
-    $ make check
+    $ make run
 
 Clean:
 
@@ -78,32 +40,36 @@ Install:
 
     $ make install
 
+### Community
 
-### Mailing lists
+You may join the relevant mailing list(s) for cloudmonkey related discussion:
 
 [Development Mailing List](mailto:dev-subscribe@cloudstack.apache.org)
 
 [Users Mailing List](mailto:users-subscribe@cloudstack.apache.org)
 
-[Commits Mailing List](mailto:commits-subscribe@cloudstack.apache.org)
+### Contribution
 
-[Issues Mailing List](mailto:issues-subscribe@cloudstack.apache.org)
-
-[Marketing Mailing List](mailto:marketing-subscribe@cloudstack.apache.org)
-
-
-### Contributing
-
-Discuss features development on the [Development Mailing List](mailto:dev-subscribe@cloudstack.apache.org).
-Report issues on the `User` mailing list and open issue on [JIRA](http://issues.apache.org/jira/browse/CLOUDSTACK).
+Discuss issue(s) and feature(s) on CloudStack [development mailing list](mailto:dev-subscribe@cloudstack.apache.org).
+Report issue(s) on the `user` mailing list and/or open a Github [issue](https://github.com/apache/cloudstack-cloudmonkey/issues).
 
 1. Fork the repository on Github
 2. Create a named feature branch (like `add_component_x`)
-3. Write your change
-4. Write tests for your change (if applicable)
+3. Commit your change
+4. Write tests for your change if applicable
 5. Run the tests, ensuring they all pass
-6. Submit a Pull Request using Github
+6. Submit a [Pull Request](https://github.com/apache/cloudstack-cloudmonkey/pull/new/master) using Github
 
+### History
+
+`cloudmonkey` was originally written in Python and contributed to Apache CloudStack
+project by [Rohit Yadav](http://rohityadav.cloud) on 31 Oct 2012 under the Apache
+License 2.0. The original tool is also referred to as legacy cloudmonkey can
+be installed using `pip install cloudmonkey`.
+
+Starting version 6.0.0, referred to as the modern cloudmonkey, is a simplified
+Go port of the original tool and ships as a standalone executable for several
+targets such as Linux, Mac and Windows.
 
 ### License
 
