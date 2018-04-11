@@ -22,7 +22,7 @@ import (
 	"io"
 	"strings"
 
-	"../config"
+	"cloudmonkey/config"
 	"github.com/mattn/go-shellwords"
 
 	"github.com/rhtyd/readline"

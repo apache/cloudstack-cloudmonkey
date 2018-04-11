@@ -20,8 +20,8 @@ package main
 import (
 	"os"
 
-	"./config"
-	"./cli"
+	"cloudmonkey/cli"
+	"cloudmonkey/config"
 )
 
 func main() {

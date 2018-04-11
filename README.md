@@ -20,25 +20,32 @@ For legacy cloudmonkey, please see the [cwiki usage page](https://cwiki.apache.o
 
 ### Development
 
-Build:
+The following are various make targets you can run:
 
-    $ make build
+    $ make help
 
-Run:
-
-    $ ./cmk
+      all               Build program binary
+      run               Builds and runs cloudmonkey
+      dist              Builds release for various targets
+      clean             Cleans build artifacts
+      lint              Run golint
+      fmt               Run gofmt on all source files
+      check test tests  Run tests
+      test-bench        Run benchmarks
+      test-short        Run only short tests
+      test-verbose      Run tests in verbose mode with coverage reporting
+      test-race         Run tests with race detector
+      test-xml          Run tests with xUnit output
+      test-coverage     Run coverage tests
 
 Build and run:
 
     $ make run
 
-Clean:
+Build and run manually:
 
-    $ make clean
-
-Install:
-
-    $ make install
+    $ make all
+    $ ./bin/cloudmonkey
 
 ### Community
 

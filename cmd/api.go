@@ -22,7 +22,6 @@ import (
 	"errors"
 	"fmt"
 	"strings"
-
 )
 
 var apiCommand *Command

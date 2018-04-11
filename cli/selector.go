@@ -64,11 +64,11 @@ func ShowSelector() string {
 	}
 
 	prompt := promptui.Select{
-		Label:     "Use the arrow keys to navigate: ↓ ↑ → ←  and / toggles search",
-		Items:     options,
-		Templates: templates,
-		Size:      5,
-		Searcher:  searcher,
+		Label:             "Use the arrow keys to navigate: ↓ ↑ → ←  and / toggles search",
+		Items:             options,
+		Templates:         templates,
+		Size:              5,
+		Searcher:          searcher,
 		StartInSearchMode: true,
 		Keys: &promptui.SelectKeys{
 			Prev:     promptui.Key{Code: readline.CharPrev, Display: "↑"},

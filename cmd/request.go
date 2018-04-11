@@ -18,7 +18,7 @@
 package cmd
 
 import (
-	"../config"
+	"cloudmonkey/config"
 	"github.com/rhtyd/readline"
 )
 

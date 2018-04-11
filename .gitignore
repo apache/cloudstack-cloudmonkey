@@ -15,9 +15,11 @@
 # specific language governing permissions and limitations
 # under the License.
 
+bin
 cmk
 dist
 *.exe
 *.test
 *.out
+.gopath~
 .idea

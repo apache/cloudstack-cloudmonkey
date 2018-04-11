@@ -30,7 +30,6 @@ import (
 	"net/url"
 	"sort"
 	"strings"
-
 )
 
 func encodeRequestParams(params url.Values) string {

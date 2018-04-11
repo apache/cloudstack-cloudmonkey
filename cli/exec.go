@@ -18,8 +18,8 @@
 package cli
 
 import (
-	"../cmd"
-	"../config"
+	"cloudmonkey/cmd"
+	"cloudmonkey/config"
 	"github.com/rhtyd/readline"
 )
 
