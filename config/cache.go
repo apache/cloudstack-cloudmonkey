@@ -21,31 +21,46 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"sort"
 	"strings"
 	"unicode"
 )
 
 type ApiArg struct {
 	Name        string
+	Type        string
+	Related     []string
 	Description string
 	Required    bool
 	Length      int
-	Type        string
-	Related     []string
 }
 
 type Api struct {
 	Name         string
-	ResponseName string
-	Description  string
-	Async        bool
-	Related      []string
-	Args         []*ApiArg
-	RequiredArgs []*ApiArg
 	Verb         string
+	Noun         string
+	Args         []*ApiArg
+	RequiredArgs []string
+	Related      []string
+	Async        bool
+	Description  string
+	ResponseName string
 }
 
 var apiCache map[string]*Api
+var apiVerbMap map[string][]*Api
+
+func (c *Config) GetApiVerbMap() map[string][]*Api {
+	if apiVerbMap != nil {
+		return apiVerbMap
+	}
+	apiSplitMap := make(map[string][]*Api)
+	for api := range apiCache {
+		verb := apiCache[api].Verb
+		apiSplitMap[verb] = append(apiSplitMap[verb], apiCache[api])
+	}
+	return apiSplitMap
+}
 
 func (c *Config) GetCache() map[string]*Api {
 	if apiCache == nil {
@@ -73,6 +88,7 @@ func (c *Config) SaveCache(response map[string]interface{}) {
 
 func (c *Config) UpdateCache(response map[string]interface{}) interface{} {
 	apiCache = make(map[string]*Api)
+	apiVerbMap = nil
 
 	count := response["count"]
 	apiList := response["api"].([]interface{})
@@ -85,6 +101,7 @@ func (c *Config) UpdateCache(response map[string]interface{}) interface{} {
 		}
 		apiName := api["name"].(string)
 		isAsync := api["isasync"].(bool)
+		description := api["description"].(string)
 
 		idx := 0
 		for _, chr := range apiName {
@@ -95,22 +112,44 @@ func (c *Config) UpdateCache(response map[string]interface{}) interface{} {
 			}
 		}
 		verb := apiName[:idx]
+		noun := strings.ToLower(apiName[idx:])
 
 		var apiArgs []*ApiArg
 		for _, argNode := range api["params"].([]interface{}) {
 			apiArg, _ := argNode.(map[string]interface{})
+			related := []string{}
+			if apiArg["related"] != nil {
+				related = strings.Split(apiArg["related"].(string), ",")
+				sort.Strings(related)
+			}
 			apiArgs = append(apiArgs, &ApiArg{
-				Name:     apiArg["name"].(string),
-				Type:     apiArg["type"].(string),
-				Required: apiArg["required"].(bool),
+				Name:        apiArg["name"].(string),
+				Type:        apiArg["type"].(string),
+				Required:    apiArg["required"].(bool),
+				Related:     related,
+				Description: apiArg["description"].(string),
 			})
 		}
 
+		sort.Slice(apiArgs, func(i, j int) bool {
+			return apiArgs[i].Name < apiArgs[j].Name
+		})
+
+		var requiredArgs []string
+		for _, arg := range apiArgs {
+			if arg.Required {
+				requiredArgs = append(requiredArgs, arg.Name)
+			}
+		}
+
 		apiCache[strings.ToLower(apiName)] = &Api{
-			Name:  apiName,
-			Async: isAsync,
-			Args:  apiArgs,
-			Verb:  verb,
+			Name:         apiName,
+			Verb:         verb,
+			Noun:         noun,
+			Args:         apiArgs,
+			RequiredArgs: requiredArgs,
+			Async:        isAsync,
+			Description:  description,
 		}
 	}
 	return count

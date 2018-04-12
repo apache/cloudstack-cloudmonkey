@@ -21,5 +21,5 @@ dist
 *.exe
 *.test
 *.out
-.gopath~
+.gopath
 .idea

@@ -35,7 +35,29 @@ type CliCompleter struct {
 
 var completer *CliCompleter
 
-func TrimSpaceLeft(in []rune) []rune {
+func buildApiCacheMap(apiMap map[string][]*config.Api) map[string][]*config.Api {
+	for _, cmd := range cmd.AllCommands() {
+		verb := cmd.Name
+		if cmd.SubCommands != nil && len(cmd.SubCommands) > 0 {
+			for _, scmd := range cmd.SubCommands {
+				dummyApi := &config.Api{
+					Name: scmd,
+					Verb: verb,
+				}
+				apiMap[verb] = append(apiMap[verb], dummyApi)
+			}
+		} else {
+			dummyApi := &config.Api{
+				Name: "",
+				Verb: verb,
+			}
+			apiMap[verb] = append(apiMap[verb], dummyApi)
+		}
+	}
+	return apiMap
+}
+
+func trimSpaceLeft(in []rune) []rune {
 	firstIndex := len(in)
 	for i, r := range in {
 		if unicode.IsSpace(r) == false {
@@ -65,36 +87,9 @@ func doInternal(line []rune, pos int, lineLen int, argName []rune) (newLine [][]
 	return
 }
 
-func (t *CliCompleter) Do(line []rune, pos int) (newLine [][]rune, offset int) {
+func (t *CliCompleter) Do(line []rune, pos int) (options [][]rune, offset int) {
 
-	line = TrimSpaceLeft(line[:pos])
-	lineLen := len(line)
-
-	apiCache := t.Config.GetCache()
-	apiMap := make(map[string][]*config.Api)
-	for api := range apiCache {
-		verb := apiCache[api].Verb
-		apiMap[verb] = append(apiMap[verb], apiCache[api])
-	}
-
-	for _, cmd := range cmd.AllCommands() {
-		verb := cmd.Name
-		if cmd.SubCommands != nil && len(cmd.SubCommands) > 0 {
-			for _, scmd := range cmd.SubCommands {
-				dummyApi := &config.Api{
-					Name: scmd,
-					Verb: verb,
-				}
-				apiMap[verb] = append(apiMap[verb], dummyApi)
-			}
-		} else {
-			dummyApi := &config.Api{
-				Name: "",
-				Verb: verb,
-			}
-			apiMap[verb] = append(apiMap[verb], dummyApi)
-		}
-	}
+	apiMap := buildApiCacheMap(t.Config.GetApiVerbMap())
 
 	var verbs []string
 	for verb := range apiMap {
@@ -105,56 +100,155 @@ func (t *CliCompleter) Do(line []rune, pos int) (newLine [][]rune, offset int) {
 	}
 	sort.Strings(verbs)
 
-	var verbsFound []string
+	line = trimSpaceLeft(line[:pos])
+
+	// Auto-complete verb
+	var verbFound string
 	for _, verb := range verbs {
 		search := verb + " "
 		if !runes.HasPrefix(line, []rune(search)) {
-			sLine, sOffset := doInternal(line, pos, lineLen, []rune(search))
-			newLine = append(newLine, sLine...)
+			sLine, sOffset := doInternal(line, pos, len(line), []rune(search))
+			options = append(options, sLine...)
 			offset = sOffset
 		} else {
-			verbsFound = append(verbsFound, verb)
+			verbFound = verb
+			break
 		}
 	}
+	if len(verbFound) == 0 {
+		return
+	}
 
-	apiArg := false
-	for _, verbFound := range verbsFound {
-		search := verbFound + " "
+	// Auto-complete noun
+	var nounFound string
+	line = trimSpaceLeft(line[len(verbFound):])
+	for _, api := range apiMap[verbFound] {
+		search := api.Noun + " "
+		if !runes.HasPrefix(line, []rune(search)) {
+			sLine, sOffset := doInternal(line, pos, len(line), []rune(search))
+			options = append(options, sLine...)
+			offset = sOffset
+		} else {
+			nounFound = api.Noun
+			break
+		}
+	}
+	if len(nounFound) == 0 {
+		return
+	}
 
-		nLine := TrimSpaceLeft(line[len(search):])
-		offset = lineLen - len(verbFound) - 1
+	// Find API
+	var apiFound *config.Api
+	for _, api := range apiMap[verbFound] {
+		if api.Noun == nounFound {
+			apiFound = api
+			break
+		}
+	}
+	if apiFound == nil {
+		return
+	}
 
-		for _, api := range apiMap[verbFound] {
-			resource := strings.TrimPrefix(strings.ToLower(api.Name), verbFound)
-			search = resource + " "
-
-			if runes.HasPrefix(nLine, []rune(search)) {
-				// FIXME: handle params to API here with = stuff
-				for _, arg := range api.Args {
-					opt := arg.Name + "="
-					newLine = append(newLine, []rune(opt))
-				}
-				if string(nLine[len(nLine)-1]) == "=" {
-					apiArg = true
-				}
-				offset = lineLen - len(verbFound) - len(resource) - 1
-			} else {
-				sLine, _ := doInternal(nLine, pos, len(nLine), []rune(search))
-				newLine = append(newLine, sLine...)
+	// Auto-complete api args
+	splitLine := strings.Split(string(line), " ")
+	line = trimSpaceLeft([]rune(splitLine[len(splitLine)-1]))
+	for _, arg := range apiFound.Args {
+		search := arg.Name + "="
+		if !runes.HasPrefix(line, []rune(search)) {
+			sLine, sOffset := doInternal(line, pos, len(line), []rune(search))
+			options = append(options, sLine...)
+			offset = sOffset
+		} else {
+			if arg.Type == "boolean" {
+				options = [][]rune{[]rune("true "), []rune("false ")}
+				offset = 0
+				return
 			}
+
+			var autocompleteApi *config.Api
+			var relatedNoun string
+			if arg.Name == "id" || arg.Name == "ids" {
+				relatedNoun = apiFound.Noun
+				if apiFound.Verb != "list" {
+					relatedNoun += "s"
+				}
+			} else if arg.Name == "account" {
+				relatedNoun = "accounts"
+			} else {
+				relatedNoun = strings.Replace(strings.Replace(arg.Name, "ids", "", -1), "id", "", -1) + "s"
+			}
+			for _, related := range apiMap["list"] {
+				if relatedNoun == related.Noun {
+					autocompleteApi = related
+					break
+				}
+			}
+
+			if autocompleteApi == nil {
+				return nil, 0
+			}
+
+			r := cmd.NewRequest(nil, config.NewConfig(), nil, nil)
+			autocompleteApiArgs := []string{"listall=true"}
+			if autocompleteApi.Noun == "templates" {
+				autocompleteApiArgs = append(autocompleteApiArgs, "templatefilter=all")
+			}
+			response, _ := cmd.NewAPIRequest(r, autocompleteApi.Name, autocompleteApiArgs)
+
+			var autocompleteOptions []SelectOption
+			for _, v := range response {
+				switch obj := v.(type) {
+				case []interface{}:
+					if obj == nil {
+						break
+					}
+					for _, item := range obj {
+						resource, ok := item.(map[string]interface{})
+						if !ok {
+							continue
+						}
+						opt := SelectOption{}
+						if resource["id"] != nil {
+							opt.Id = resource["id"].(string)
+						}
+						if resource["name"] != nil {
+							opt.Name = resource["name"].(string)
+						} else if resource["username"] != nil {
+							opt.Name = resource["username"].(string)
+						}
+						if resource["displaytext"] != nil {
+							opt.Detail = resource["displaytext"].(string)
+						}
+
+						autocompleteOptions = append(autocompleteOptions, opt)
+					}
+					break
+				}
+			}
+
+			var selected string
+			if len(autocompleteOptions) > 1 {
+				sort.Slice(autocompleteOptions, func(i, j int) bool {
+					return autocompleteOptions[i].Name < autocompleteOptions[j].Name
+				})
+				fmt.Println()
+				selectedOption := ShowSelector(autocompleteOptions)
+				if arg.Name == "account" {
+					selected = selectedOption.Name
+				} else {
+					selected = selectedOption.Id
+				}
+			} else {
+				if len(autocompleteOptions) == 1 {
+					selected = autocompleteOptions[0].Id
+				}
+			}
+			options = [][]rune{[]rune(selected + " ")}
+			offset = 0
 		}
 	}
 
-	// FIXME: pass selector uuid options
-	if apiArg {
-		fmt.Println()
-		option := ShowSelector()
-		// show only one option in autocompletion
-		newLine = [][]rune{[]rune(option)}
-		offset = 0
-	}
-
-	return newLine, offset
+	return options, offset
 }
 
 func NewCompleter(cfg *config.Config) *CliCompleter {

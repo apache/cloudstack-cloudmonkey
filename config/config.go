@@ -18,9 +18,23 @@
 package config
 
 import (
+	"fmt"
+	homedir "github.com/mitchellh/go-homedir"
 	"os"
 	"path"
 )
+
+var name = "cloudmonkey"
+var version = "6.0.0-alpha1"
+
+func getDefaultConfigDir() string {
+	home, err := homedir.Dir()
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+	return path.Join(home, ".cmk")
+}
 
 type OutputFormat string
 
@@ -97,4 +111,33 @@ func loadConfig() *Config {
 	LoadCache(cfg)
 
 	return cfg
+}
+
+func (c *Config) Name() string {
+	return name
+}
+
+func (c *Config) Version() string {
+	return version
+}
+
+func (c *Config) PrintHeader() {
+	fmt.Printf("Apache CloudStack 🐵 cloudmonkey %s.\n", version)
+	fmt.Printf("Type \"help\" for details, \"sync\" to update API cache or press tab to list commands.\n\n")
+}
+
+func (c *Config) GetPrompt() string {
+	return fmt.Sprintf("(%s) \033[34m🐵\033[0m > ", c.ActiveProfile.Name)
+}
+
+func (c *Config) UpdateGlobalConfig(key string, value string) {
+	c.UpdateConfig("", key, value)
+}
+
+func (c *Config) UpdateConfig(namespace string, key string, value string) {
+	fmt.Println("Updating for key", key, ", value=", value, ", in ns=", namespace)
+	if key == "profile" {
+		//FIXME
+		c.ActiveProfile.Name = value
+	}
 }

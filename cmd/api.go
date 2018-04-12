@@ -51,6 +51,35 @@ func init() {
 				return errors.New("unknown or unauthorized API: " + apiName)
 			}
 
+			if strings.Contains(strings.Join(apiArgs, " "), "-h") {
+				fmt.Println("=== Help docs ===")
+				fmt.Println(api.Name, ":", api.Description)
+				fmt.Println("Async:", api.Async)
+				fmt.Println("Required params:", strings.Join(api.RequiredArgs, ", "))
+				for _, arg := range api.Args {
+					fmt.Println(arg.Name, "(", arg.Type, ")", arg.Description)
+				}
+				return nil
+			}
+
+			var missingArgs []string
+			for _, required := range api.RequiredArgs {
+				provided := false
+				for _, arg := range apiArgs {
+					if strings.HasPrefix(arg, required+"=") {
+						provided = true
+					}
+				}
+				if !provided {
+					missingArgs = append(missingArgs, required)
+				}
+			}
+
+			if len(missingArgs) > 0 {
+				fmt.Println("Missing required arguments: ", strings.Join(missingArgs, ", "))
+				return nil
+			}
+
 			b, _ := NewAPIRequest(r, api.Name, apiArgs)
 			response, _ := json.MarshalIndent(b, "", "  ")
 

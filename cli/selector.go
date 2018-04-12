@@ -25,23 +25,38 @@ import (
 	"github.com/rhtyd/readline"
 )
 
-type SelectOptions struct {
-	Name   string
+type SelectOption struct {
 	Id     string
+	Name   string
 	Detail string
 }
 
-func ShowSelector() string {
-	options := []SelectOptions{
-		{Name: "Option1", Id: "some-uuid", Detail: "Some Detail"},
-		{Name: "Option2", Id: "some-uuid", Detail: "Some Detail"},
-		{Name: "Option3", Id: "some-uuid", Detail: "Some Detail"},
-		{Name: "Option4", Id: "some-uuid", Detail: "Some Detail"},
-		{Name: "Option5", Id: "some-uuid", Detail: "Some Detail"},
-		{Name: "Option6", Id: "some-uuid", Detail: "Some Detail"},
-		{Name: "Option7", Id: "some-uuid", Detail: "Some Detail"},
-		{Name: "Option8", Id: "some-uuid", Detail: "Some Detail"},
+type Selector struct {
+	InUse bool
+}
+
+var selector Selector
+
+func init() {
+	selector = Selector{
+		InUse: false,
 	}
+}
+
+func (s Selector) lock() {
+	s.InUse = true
+}
+
+func (s Selector) unlock() {
+	s.InUse = false
+}
+
+func ShowSelector(options []SelectOption) SelectOption {
+	if selector.InUse {
+		return SelectOption{}
+	}
+	selector.lock()
+	defer selector.unlock()
 
 	templates := &promptui.SelectTemplates{
 		Label:    "{{ . }}?",
@@ -50,9 +65,9 @@ func ShowSelector() string {
 		Selected: "Selected: {{ .Name | cyan }} ({{ .Id | red }})",
 		Details: `
 --------- Current Selection ----------
-{{ "Name:" | faint }} {{ .Name }}
 {{ "Id:" | faint }}  {{ .Id }}
-{{ "Detail:" | faint }}  {{ .Detail }}`,
+{{ "Name:" | faint }} {{ .Name }}
+{{ "Description:" | faint }}  {{ .Detail }}`,
 	}
 
 	searcher := func(input string, index int) bool {
@@ -83,8 +98,8 @@ func ShowSelector() string {
 
 	if err != nil {
 		fmt.Printf("Prompt failed %v\n", err)
-		return ""
+		return SelectOption{}
 	}
 
-	return options[i].Id
+	return options[i]
 }

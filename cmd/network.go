@@ -57,8 +57,6 @@ func encodeRequestParams(params url.Values) string {
 }
 
 func NewAPIRequest(r *Request, api string, args []string) (map[string]interface{}, error) {
-	fmt.Println("[debug] Running api:", api, args)
-
 	params := make(url.Values)
 	params.Add("command", api)
 	for _, arg := range args {
@@ -85,7 +83,7 @@ func NewAPIRequest(r *Request, api string, args []string) (map[string]interface{
 
 	apiUrl := fmt.Sprintf("%s?%s", r.Config.ActiveProfile.Url, encodedParams)
 
-	fmt.Println("[debug] Requesting: ", apiUrl)
+	//fmt.Println("[debug] Requesting: ", apiUrl)
 	response, err := http.Get(apiUrl)
 	if err != nil {
 		fmt.Println("Error:", err)
