@@ -52,16 +52,27 @@ func init() {
 			}
 
 			if strings.Contains(strings.Join(apiArgs, " "), "-h") {
-				fmt.Println("=== Help docs ===")
 				fmt.Printf("\033[34m%s\033[0m [async=%v] %s\n", api.Name, api.Async, api.Description)
 				if len(api.RequiredArgs) > 0 {
 					fmt.Println("Required params:", strings.Join(api.RequiredArgs, ", "))
 				}
 				if len(api.Args) > 0 {
-					fmt.Println("API params:")
+					fmt.Printf("%-24s %-8s %s\n", "API Params", "Type", "Description")
+					fmt.Printf("%-24s %-8s %s\n", "==========", "====", "===========")
 				}
 				for _, arg := range api.Args {
-					fmt.Printf("\033[35m%-24s\033[0m \033[36m%-12s\033[0m %s\n", arg.Name, arg.Type, arg.Description)
+					fmt.Printf("\033[35m%-24s\033[0m \033[36m%-8s\033[0m ", arg.Name, arg.Type)
+					info := []rune(arg.Description)
+					for i, r := range info {
+						fmt.Printf("%s", string(r))
+						if i > 0 && i%45 == 0 {
+							fmt.Println()
+							for i := 0; i < 34; i++ {
+								fmt.Printf(" ")
+							}
+						}
+					}
+					fmt.Println()
 				}
 				return nil
 			}

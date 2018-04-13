@@ -17,10 +17,6 @@
 
 package cmd
 
-import (
-	"fmt"
-)
-
 func init() {
 	AddCommand(&Command{
 		Name: "help",
@@ -30,8 +26,9 @@ func init() {
 				PrintUsage()
 				return nil
 			}
-			fmt.Println("FIXME: add cmd help docs")
-			return nil
+			//TODO: check it's not other commands?
+			r.Args = append(r.Args, "-h")
+			return apiCommand.Handle(r)
 		},
 	})
 }

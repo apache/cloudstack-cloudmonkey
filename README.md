@@ -1,4 +1,4 @@
-## CloudMonkey
+## CloudMonkey [![Build Status](https://travis-ci.org/apache/cloudstack-cloudmonkey.svg?branch=master)](https://travis-ci.org/apache/cloudstack-cloudmonkey)
 
 `cloudmonkey` :cloud::monkey_face: is a command line interface (CLI) for
 [Apache CloudStack](http://cloudstack.apache.org).
