@@ -26,7 +26,8 @@ import (
 	"unicode"
 )
 
-type ApiArg struct {
+// APIArg are the args passable to an API
+type APIArg struct {
 	Name        string
 	Type        string
 	Related     []string
@@ -35,11 +36,12 @@ type ApiArg struct {
 	Length      int
 }
 
-type Api struct {
+// API describes a CloudStack API
+type API struct {
 	Name         string
 	Verb         string
 	Noun         string
-	Args         []*ApiArg
+	Args         []*APIArg
 	RequiredArgs []string
 	Related      []string
 	Async        bool
@@ -47,14 +49,15 @@ type Api struct {
 	ResponseName string
 }
 
-var apiCache map[string]*Api
-var apiVerbMap map[string][]*Api
+var apiCache map[string]*API
+var apiVerbMap map[string][]*API
 
-func (c *Config) GetApiVerbMap() map[string][]*Api {
+// GetAPIVerbMap returns API cache by verb
+func (c *Config) GetAPIVerbMap() map[string][]*API {
 	if apiVerbMap != nil {
 		return apiVerbMap
 	}
-	apiSplitMap := make(map[string][]*Api)
+	apiSplitMap := make(map[string][]*API)
 	for api := range apiCache {
 		verb := apiCache[api].Verb
 		apiSplitMap[verb] = append(apiSplitMap[verb], apiCache[api])
@@ -62,14 +65,16 @@ func (c *Config) GetApiVerbMap() map[string][]*Api {
 	return apiSplitMap
 }
 
-func (c *Config) GetCache() map[string]*Api {
+// GetCache returns API cache by full API name
+func (c *Config) GetCache() map[string]*API {
 	if apiCache == nil {
 		// read from disk?
-		return make(map[string]*Api)
+		return make(map[string]*API)
 	}
 	return apiCache
 }
 
+// LoadCache loads cache using the default cache file
 func LoadCache(c *Config) {
 	cache, err := ioutil.ReadFile(c.CacheFile)
 	if err != nil {
@@ -81,13 +86,15 @@ func LoadCache(c *Config) {
 	c.UpdateCache(data)
 }
 
+// SaveCache saves received auto-discovery data to cache file
 func (c *Config) SaveCache(response map[string]interface{}) {
 	output, _ := json.Marshal(response)
 	ioutil.WriteFile(c.CacheFile, output, 0600)
 }
 
+// UpdateCache uses auto-discovery data to update internal API cache
 func (c *Config) UpdateCache(response map[string]interface{}) interface{} {
-	apiCache = make(map[string]*Api)
+	apiCache = make(map[string]*API)
 	apiVerbMap = nil
 
 	count := response["count"]
@@ -114,7 +121,7 @@ func (c *Config) UpdateCache(response map[string]interface{}) interface{} {
 		verb := apiName[:idx]
 		noun := strings.ToLower(apiName[idx:])
 
-		var apiArgs []*ApiArg
+		var apiArgs []*APIArg
 		for _, argNode := range api["params"].([]interface{}) {
 			apiArg, _ := argNode.(map[string]interface{})
 			related := []string{}
@@ -122,7 +129,7 @@ func (c *Config) UpdateCache(response map[string]interface{}) interface{} {
 				related = strings.Split(apiArg["related"].(string), ",")
 				sort.Strings(related)
 			}
-			apiArgs = append(apiArgs, &ApiArg{
+			apiArgs = append(apiArgs, &APIArg{
 				Name:        apiArg["name"].(string),
 				Type:        apiArg["type"].(string),
 				Required:    apiArg["required"].(bool),
@@ -142,7 +149,7 @@ func (c *Config) UpdateCache(response map[string]interface{}) interface{} {
 			}
 		}
 
-		apiCache[strings.ToLower(apiName)] = &Api{
+		apiCache[strings.ToLower(apiName)] = &API{
 			Name:         apiName,
 			Verb:         verb,
 			Noun:         noun,

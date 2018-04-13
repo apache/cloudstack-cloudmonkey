@@ -43,6 +43,7 @@ func promptMoji() string {
 	return emoji() // 🐒
 }
 
+// GetPrompt returns prompt that the CLI should use
 func (c *Config) GetPrompt() string {
 	return fmt.Sprintf("(%s) %s > ", c.Core.ProfileName, promptMoji())
 }

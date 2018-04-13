@@ -34,7 +34,7 @@ func init() {
 			}
 			subCommand := r.Args[0]
 			value := strings.Join(r.Args[1:], " ")
-			r.Config.UpdateGlobalConfig(subCommand, value)
+			r.Config.UpdateConfig(subCommand, value)
 
 			if subCommand == "profile" && r.Shell != nil {
 				r.Shell.SetPrompt(r.Config.GetPrompt())

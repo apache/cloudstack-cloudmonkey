@@ -56,6 +56,7 @@ func encodeRequestParams(params url.Values) string {
 	return buf.String()
 }
 
+// NewAPIRequest makes an API request to configured management server
 func NewAPIRequest(r *Request, api string, args []string) (map[string]interface{}, error) {
 	params := make(url.Values)
 	params.Add("command", api)
@@ -66,7 +67,7 @@ func NewAPIRequest(r *Request, api string, args []string) (map[string]interface{
 		}
 	}
 
-	apiKey := r.Config.Core.ActiveProfile.ApiKey
+	apiKey := r.Config.Core.ActiveProfile.APIKey
 	secretKey := r.Config.Core.ActiveProfile.SecretKey
 
 	if len(apiKey) > 0 {
@@ -81,10 +82,10 @@ func NewAPIRequest(r *Request, api string, args []string) (map[string]interface{
 	signature := base64.StdEncoding.EncodeToString(mac.Sum(nil))
 	encodedParams = encodedParams + fmt.Sprintf("&signature=%s", url.QueryEscape(signature))
 
-	apiUrl := fmt.Sprintf("%s?%s", r.Config.Core.ActiveProfile.Url, encodedParams)
+	apiURL := fmt.Sprintf("%s?%s", r.Config.Core.ActiveProfile.URL, encodedParams)
 
-	//fmt.Println("[debug] Requesting: ", apiUrl)
-	response, err := http.Get(apiUrl)
+	//fmt.Println("[debug] Requesting: ", apiURL)
+	response, err := http.Get(apiURL)
 	if err != nil {
 		fmt.Println("Error:", err)
 		return nil, err

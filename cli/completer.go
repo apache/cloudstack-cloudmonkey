@@ -29,29 +29,27 @@ import (
 	"github.com/chzyer/readline/runes"
 )
 
-type CliCompleter struct {
+type autoCompleter struct {
 	Config *config.Config
 }
 
-var completer *CliCompleter
-
-func buildApiCacheMap(apiMap map[string][]*config.Api) map[string][]*config.Api {
+func buildAPICacheMap(apiMap map[string][]*config.API) map[string][]*config.API {
 	for _, cmd := range cmd.AllCommands() {
 		verb := cmd.Name
 		if cmd.SubCommands != nil && len(cmd.SubCommands) > 0 {
 			for _, scmd := range cmd.SubCommands {
-				dummyApi := &config.Api{
+				dummyAPI := &config.API{
 					Name: scmd,
 					Verb: verb,
 				}
-				apiMap[verb] = append(apiMap[verb], dummyApi)
+				apiMap[verb] = append(apiMap[verb], dummyAPI)
 			}
 		} else {
-			dummyApi := &config.Api{
+			dummyAPI := &config.API{
 				Name: "",
 				Verb: verb,
 			}
-			apiMap[verb] = append(apiMap[verb], dummyApi)
+			apiMap[verb] = append(apiMap[verb], dummyAPI)
 		}
 	}
 	return apiMap
@@ -87,9 +85,9 @@ func doInternal(line []rune, pos int, lineLen int, argName []rune) (newLine [][]
 	return
 }
 
-func (t *CliCompleter) Do(line []rune, pos int) (options [][]rune, offset int) {
+func (t *autoCompleter) Do(line []rune, pos int) (options [][]rune, offset int) {
 
-	apiMap := buildApiCacheMap(t.Config.GetApiVerbMap())
+	apiMap := buildAPICacheMap(t.Config.GetAPIVerbMap())
 
 	var verbs []string
 	for verb := range apiMap {
@@ -138,7 +136,7 @@ func (t *CliCompleter) Do(line []rune, pos int) (options [][]rune, offset int) {
 	}
 
 	// Find API
-	var apiFound *config.Api
+	var apiFound *config.API
 	for _, api := range apiMap[verbFound] {
 		if api.Noun == nounFound {
 			apiFound = api
@@ -165,7 +163,7 @@ func (t *CliCompleter) Do(line []rune, pos int) (options [][]rune, offset int) {
 				return
 			}
 
-			var autocompleteApi *config.Api
+			var autocompleteAPI *config.API
 			var relatedNoun string
 			if arg.Name == "id" || arg.Name == "ids" {
 				relatedNoun = apiFound.Noun
@@ -179,23 +177,23 @@ func (t *CliCompleter) Do(line []rune, pos int) (options [][]rune, offset int) {
 			}
 			for _, related := range apiMap["list"] {
 				if relatedNoun == related.Noun {
-					autocompleteApi = related
+					autocompleteAPI = related
 					break
 				}
 			}
 
-			if autocompleteApi == nil {
+			if autocompleteAPI == nil {
 				return nil, 0
 			}
 
-			r := cmd.NewRequest(nil, shellConfig, nil, nil)
-			autocompleteApiArgs := []string{"listall=true"}
-			if autocompleteApi.Noun == "templates" {
-				autocompleteApiArgs = append(autocompleteApiArgs, "templatefilter=all")
+			r := cmd.NewRequest(nil, completer.Config, nil, nil)
+			autocompleteAPIArgs := []string{"listall=true"}
+			if autocompleteAPI.Noun == "templates" {
+				autocompleteAPIArgs = append(autocompleteAPIArgs, "templatefilter=all")
 			}
-			response, _ := cmd.NewAPIRequest(r, autocompleteApi.Name, autocompleteApiArgs)
+			response, _ := cmd.NewAPIRequest(r, autocompleteAPI.Name, autocompleteAPIArgs)
 
-			var autocompleteOptions []SelectOption
+			var autocompleteOptions []selectOption
 			for _, v := range response {
 				switch obj := v.(type) {
 				case []interface{}:
@@ -207,9 +205,9 @@ func (t *CliCompleter) Do(line []rune, pos int) (options [][]rune, offset int) {
 						if !ok {
 							continue
 						}
-						opt := SelectOption{}
+						opt := selectOption{}
 						if resource["id"] != nil {
-							opt.Id = resource["id"].(string)
+							opt.ID = resource["id"].(string)
 						}
 						if resource["name"] != nil {
 							opt.Name = resource["name"].(string)
@@ -232,15 +230,15 @@ func (t *CliCompleter) Do(line []rune, pos int) (options [][]rune, offset int) {
 					return autocompleteOptions[i].Name < autocompleteOptions[j].Name
 				})
 				fmt.Println()
-				selectedOption := ShowSelector(autocompleteOptions)
+				selectedOption := showSelector(autocompleteOptions)
 				if strings.HasSuffix(arg.Name, "id") || strings.HasSuffix(arg.Name, "ids") {
-					selected = selectedOption.Id
+					selected = selectedOption.ID
 				} else {
 					selected = selectedOption.Name
 				}
 			} else {
 				if len(autocompleteOptions) == 1 {
-					selected = autocompleteOptions[0].Id
+					selected = autocompleteOptions[0].ID
 				}
 			}
 			options = [][]rune{[]rune(selected + " ")}
@@ -249,11 +247,4 @@ func (t *CliCompleter) Do(line []rune, pos int) (options [][]rune, offset int) {
 	}
 
 	return options, offset
-}
-
-func NewCompleter(cfg *config.Config) *CliCompleter {
-	completer = &CliCompleter{
-		Config: cfg,
-	}
-	return completer
 }

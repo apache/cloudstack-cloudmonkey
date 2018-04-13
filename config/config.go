@@ -26,23 +26,26 @@ import (
 	"strconv"
 )
 
+// Output formats
 const (
-	Json  = "json"
-	Xml   = "xml"
-	Table = "table"
-	Text  = "text"
+	JSON  = "json"
+	XML   = "xml"
+	TABLE = "table"
+	TEXT  = "text"
 )
 
+// ServerProfile describes a management server
 type ServerProfile struct {
-	Url        string `ini:"url"`
+	URL        string `ini:"url"`
 	Username   string `ini:"username"`
 	Password   string `ini:"password"`
 	Domain     string `ini:"domain"`
-	ApiKey     string `ini:"apikey"`
+	APIKey     string `ini:"apikey"`
 	SecretKey  string `ini:"secretkey"`
 	VerifyCert bool   `ini:"verifycert"`
 }
 
+// Core block describes common options for the CLI
 type Core struct {
 	AsyncBlock    bool           `ini:"asyncblock"`
 	Timeout       int            `ini:"timeout"`
@@ -51,6 +54,7 @@ type Core struct {
 	ActiveProfile *ServerProfile `ini:"-"`
 }
 
+// Config describes CLI config file and default options
 type Config struct {
 	Dir         string
 	ConfigFile  string
@@ -80,14 +84,14 @@ func defaultConfig() *Config {
 		Core: &Core{
 			AsyncBlock:  false,
 			Timeout:     1800,
-			Output:      Json,
+			Output:      JSON,
 			ProfileName: "local",
 			ActiveProfile: &ServerProfile{
-				Url:        "http://localhost:8080/client/api",
+				URL:        "http://localhost:8080/client/api",
 				Username:   "admin",
 				Password:   "password",
 				Domain:     "/",
-				ApiKey:     "",
+				APIKey:     "",
 				SecretKey:  "",
 				VerifyCert: false,
 			},
@@ -154,11 +158,8 @@ func reloadConfig(cfg *Config) *Config {
 	return cfg
 }
 
-func (c *Config) UpdateGlobalConfig(key string, value string) {
-	c.UpdateConfig("", key, value)
-}
-
-func (c *Config) UpdateConfig(namespace string, key string, value string) {
+// UpdateConfig updates and saves config
+func (c *Config) UpdateConfig(key string, value string) {
 	switch key {
 	case "asyncblock":
 		c.Core.AsyncBlock = value == "true"
@@ -171,7 +172,7 @@ func (c *Config) UpdateConfig(namespace string, key string, value string) {
 		c.Core.ProfileName = value
 		c.Core.ActiveProfile = nil
 	case "url":
-		c.Core.ActiveProfile.Url = value
+		c.Core.ActiveProfile.URL = value
 	case "username":
 		c.Core.ActiveProfile.Username = value
 	case "password":
@@ -179,7 +180,7 @@ func (c *Config) UpdateConfig(namespace string, key string, value string) {
 	case "domain":
 		c.Core.ActiveProfile.Domain = value
 	case "apikey":
-		c.Core.ActiveProfile.ApiKey = value
+		c.Core.ActiveProfile.APIKey = value
 	case "secretkey":
 		c.Core.ActiveProfile.SecretKey = value
 	case "verifycert":
@@ -191,6 +192,7 @@ func (c *Config) UpdateConfig(namespace string, key string, value string) {
 	reloadConfig(c)
 }
 
+// NewConfig creates or reload config and loads API cache
 func NewConfig() *Config {
 	defaultConf := defaultConfig()
 	defaultConf.Core = nil

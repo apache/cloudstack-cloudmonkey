@@ -26,6 +26,7 @@ import (
 
 var apiCommand *Command
 
+// GetAPIHandler returns a catchall command handler
 func GetAPIHandler() *Command {
 	return apiCommand
 }

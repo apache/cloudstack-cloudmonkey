@@ -23,6 +23,7 @@ import (
 	"github.com/chzyer/readline"
 )
 
+// ExecCmd executes a single provided command
 func ExecCmd(cfg *config.Config, args []string, shell *readline.Instance) error {
 	if len(args) < 1 {
 		return nil

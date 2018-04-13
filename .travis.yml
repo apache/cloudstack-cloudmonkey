@@ -24,3 +24,4 @@ go:
 
 script:
   - make all
+  - make lint

@@ -19,14 +19,17 @@ package config
 
 import "fmt"
 
+// Name of the CLI
 func (c *Config) Name() string {
 	return "Apache CloudStack 🐵 cloudmonkey"
 }
 
+// Version of the CLI
 func (c *Config) Version() string {
 	return "6.0.0-alpha1"
 }
 
+// PrintHeader prints startup message in CLI mode
 func (c *Config) PrintHeader() {
 	fmt.Println(c.Name(), c.Version())
 	fmt.Println("Type \"help\" for details, \"sync\" to update API cache or press tab to list commands")

@@ -28,14 +28,18 @@ import (
 	"github.com/chzyer/readline"
 )
 
-var shellConfig *config.Config
+var completer *autoCompleter
 
+// ExecShell starts a shell
 func ExecShell(cfg *config.Config) {
-	shellConfig = cfg
+	completer = &autoCompleter{
+		Config: cfg,
+	}
+
 	shell, err := readline.NewEx(&readline.Config{
 		Prompt:            cfg.GetPrompt(),
 		HistoryFile:       cfg.HistoryFile,
-		AutoComplete:      NewCompleter(cfg),
+		AutoComplete:      completer,
 		InterruptPrompt:   "^C",
 		EOFPrompt:         "exit",
 		VimMode:           false,

@@ -22,6 +22,7 @@ import (
 	"github.com/chzyer/readline"
 )
 
+// Request describes a command request
 type Request struct {
 	Command *Command
 	Config  *config.Config
@@ -29,6 +30,7 @@ type Request struct {
 	Args    []string
 }
 
+// NewRequest creates a new request from a command
 func NewRequest(cmd *Command, cfg *config.Config, shell *readline.Instance, args []string) *Request {
 	return &Request{
 		Command: cmd,

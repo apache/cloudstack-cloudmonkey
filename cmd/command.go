@@ -21,6 +21,7 @@ import (
 	"fmt"
 )
 
+// Command describes a CLI command
 type Command struct {
 	Name            string
 	Help            string
@@ -32,14 +33,17 @@ type Command struct {
 var commands []*Command
 var commandMap map[string]*Command
 
+// FindCommand finds command handler for a command string
 func FindCommand(name string) *Command {
 	return commandMap[name]
 }
 
+// AllCommands returns all available commands
 func AllCommands() []*Command {
 	return commands
 }
 
+// AddCommand adds a command to internal list
 func AddCommand(cmd *Command) {
 	commands = append(commands, cmd)
 	if commandMap == nil {
@@ -48,6 +52,7 @@ func AddCommand(cmd *Command) {
 	commandMap[cmd.Name] = cmd
 }
 
+// PrintUsage prints help usage for a command
 func PrintUsage() {
 	commandHelp := ""
 	for _, cmd := range commands {

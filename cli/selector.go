@@ -25,47 +25,47 @@ import (
 	"github.com/manifoldco/promptui"
 )
 
-type SelectOption struct {
-	Id     string
+type selectOption struct {
+	ID     string
 	Name   string
 	Detail string
 }
 
-type Selector struct {
+type selector struct {
 	InUse bool
 }
 
-var selector Selector
+var optionSelector selector
 
 func init() {
-	selector = Selector{
+	optionSelector = selector{
 		InUse: false,
 	}
 }
 
-func (s Selector) lock() {
+func (s selector) lock() {
 	s.InUse = true
 }
 
-func (s Selector) unlock() {
+func (s selector) unlock() {
 	s.InUse = false
 }
 
-func ShowSelector(options []SelectOption) SelectOption {
-	if selector.InUse {
-		return SelectOption{}
+func showSelector(options []selectOption) selectOption {
+	if optionSelector.InUse {
+		return selectOption{}
 	}
-	selector.lock()
-	defer selector.unlock()
+	optionSelector.lock()
+	defer optionSelector.unlock()
 
 	templates := &promptui.SelectTemplates{
 		Label:    "{{ . }}",
-		Active:   "▶ {{ .Name | cyan }} ({{ .Id | red }})",
-		Inactive: "  {{ .Name | cyan }} ({{ .Id | red }})",
-		Selected: "👊Selected: {{ .Name | cyan }} ({{ .Id | red }})",
+		Active:   "▶ {{ .Name | cyan }} ({{ .ID | red }})",
+		Inactive: "  {{ .Name | cyan }} ({{ .ID | red }})",
+		Selected: "👊Selected: {{ .Name | cyan }} ({{ .ID | red }})",
 		Details: `
 --------- Current Selection ----------
-{{ "Id:" | faint }}  {{ .Id }}
+{{ "ID:" | faint }}  {{ .ID }}
 {{ "Name:" | faint }} {{ .Name }}
 {{ "Info:" | faint }}  {{ .Detail }}`,
 	}
@@ -98,7 +98,7 @@ func ShowSelector(options []SelectOption) SelectOption {
 
 	if err != nil {
 		fmt.Printf("Prompt failed %v\n", err)
-		return SelectOption{}
+		return selectOption{}
 	}
 
 	return options[i]
