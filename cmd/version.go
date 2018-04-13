@@ -24,7 +24,7 @@ func init() {
 		Name: "version",
 		Help: "Version info",
 		Handle: func(r *Request) error {
-			fmt.Println("Apache CloudStack 🐵 cloudmonkey", r.Config.Version())
+			fmt.Println(r.Config.Name(), r.Config.Version())
 			return nil
 		},
 	})
