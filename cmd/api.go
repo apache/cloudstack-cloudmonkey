@@ -48,16 +48,20 @@ func init() {
 
 			api := r.Config.GetCache()[apiName]
 			if api == nil {
-				return errors.New("unknown or unauthorized API: " + apiName)
+				return errors.New("unknown command or API requested")
 			}
 
 			if strings.Contains(strings.Join(apiArgs, " "), "-h") {
 				fmt.Println("=== Help docs ===")
-				fmt.Println(api.Name, ":", api.Description)
-				fmt.Println("Async:", api.Async)
-				fmt.Println("Required params:", strings.Join(api.RequiredArgs, ", "))
+				fmt.Printf("\033[34m%s\033[0m [async=%v] %s\n", api.Name, api.Async, api.Description)
+				if len(api.RequiredArgs) > 0 {
+					fmt.Println("Required params:", strings.Join(api.RequiredArgs, ", "))
+				}
+				if len(api.Args) > 0 {
+					fmt.Println("API params:")
+				}
 				for _, arg := range api.Args {
-					fmt.Println(arg.Name, "(", arg.Type, ")", arg.Description)
+					fmt.Printf("\033[35m%-24s\033[0m \033[36m%-12s\033[0m %s\n", arg.Name, arg.Type, arg.Description)
 				}
 				return nil
 			}
