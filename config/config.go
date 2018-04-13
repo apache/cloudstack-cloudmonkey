@@ -127,7 +127,7 @@ func (c *Config) PrintHeader() {
 }
 
 func (c *Config) GetPrompt() string {
-	return fmt.Sprintf("(%s) \033[34m🐵\033[0m > ", c.ActiveProfile.Name)
+	return fmt.Sprintf("(%s) 🐒 > ", c.ActiveProfile.Name)
 }
 
 func (c *Config) UpdateGlobalConfig(key string, value string) {
