@@ -76,7 +76,7 @@ func init() {
 			}
 
 			if len(missingArgs) > 0 {
-				fmt.Println("Missing required arguments: ", strings.Join(missingArgs, ", "))
+				fmt.Println("💩 Missing required arguments: ", strings.Join(missingArgs, ", "))
 				return nil
 			}
 

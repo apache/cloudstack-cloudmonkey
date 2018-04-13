@@ -233,10 +233,10 @@ func (t *CliCompleter) Do(line []rune, pos int) (options [][]rune, offset int) {
 				})
 				fmt.Println()
 				selectedOption := ShowSelector(autocompleteOptions)
-				if arg.Name == "account" {
-					selected = selectedOption.Name
-				} else {
+				if strings.HasSuffix(arg.Name, "id") || strings.HasSuffix(arg.Name, "ids") {
 					selected = selectedOption.Id
+				} else {
+					selected = selectedOption.Name
 				}
 			} else {
 				if len(autocompleteOptions) == 1 {

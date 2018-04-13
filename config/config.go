@@ -135,7 +135,7 @@ func (c *Config) UpdateGlobalConfig(key string, value string) {
 }
 
 func (c *Config) UpdateConfig(namespace string, key string, value string) {
-	fmt.Println("Updating for key", key, ", value=", value, ", in ns=", namespace)
+	fmt.Println("👌 Updating for key", key, ", value=", value, ", in ns=", namespace)
 	if key == "profile" {
 		//FIXME
 		c.ActiveProfile.Name = value
