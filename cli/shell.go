@@ -81,7 +81,7 @@ func ExecShell(cfg *config.Config) {
 
 		err = ExecCmd(cfg, args, shell)
 		if err != nil {
-			fmt.Println("Error:", err)
+			fmt.Println("🙈 Error:", err)
 		}
 	}
 }

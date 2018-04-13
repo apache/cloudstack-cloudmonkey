@@ -67,7 +67,7 @@ func ShowSelector(options []SelectOption) SelectOption {
 --------- Current Selection ----------
 {{ "Id:" | faint }}  {{ .Id }}
 {{ "Name:" | faint }} {{ .Name }}
-{{ "Description:" | faint }}  {{ .Detail }}`,
+{{ "Info:" | faint }}  {{ .Detail }}`,
 	}
 
 	searcher := func(input string, index int) bool {
@@ -79,7 +79,7 @@ func ShowSelector(options []SelectOption) SelectOption {
 	}
 
 	prompt := promptui.Select{
-		Label:             "Use the arrow keys to navigate: ↓ ↑ → ←. Press / to toggle 🔍search",
+		Label:             "Use the arrow keys to navigate: ↓ ↑ → ← press / to toggle 🔍search",
 		Items:             options,
 		Templates:         templates,
 		Size:              5,
