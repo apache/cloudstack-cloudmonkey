@@ -19,13 +19,46 @@ package config
 
 import (
 	"fmt"
-	homedir "github.com/mitchellh/go-homedir"
+	"github.com/mitchellh/go-homedir"
+	"gopkg.in/ini.v1"
 	"os"
 	"path"
+	"strconv"
 )
 
-var name = "cloudmonkey"
-var version = "6.0.0-alpha1"
+const (
+	Json  = "json"
+	Xml   = "xml"
+	Table = "table"
+	Text  = "text"
+)
+
+type ServerProfile struct {
+	Url        string `ini:"url"`
+	Username   string `ini:"username"`
+	Password   string `ini:"password"`
+	Domain     string `ini:"domain"`
+	ApiKey     string `ini:"apikey"`
+	SecretKey  string `ini:"secretkey"`
+	VerifyCert bool   `ini:"verifycert"`
+}
+
+type Core struct {
+	AsyncBlock    bool           `ini:"asyncblock"`
+	Timeout       int            `ini:"timeout"`
+	Output        string         `ini:"output"`
+	ProfileName   string         `ini:"profile"`
+	ActiveProfile *ServerProfile `ini:"-"`
+}
+
+type Config struct {
+	Dir         string
+	ConfigFile  string
+	HistoryFile string
+	CacheFile   string
+	LogFile     string
+	Core        *Core
+}
 
 func getDefaultConfigDir() string {
 	home, err := homedir.Dir()
@@ -36,98 +69,91 @@ func getDefaultConfigDir() string {
 	return path.Join(home, ".cmk")
 }
 
-type OutputFormat string
-
-const (
-	Json  OutputFormat = "json"
-	Xml   OutputFormat = "xml"
-	Table OutputFormat = "table"
-	Text  OutputFormat = "text"
-)
-
-type Profile struct {
-	Name       string
-	Url        string
-	VerifyCert bool
-	Username   string
-	Password   string
-	Domain     string
-	ApiKey     string
-	SecretKey  string
-}
-
-type Config struct {
-	Dir           string
-	ConfigFile    string
-	HistoryFile   string
-	CacheFile     string
-	LogFile       string
-	Output        OutputFormat
-	AsyncBlock    bool
-	ActiveProfile Profile
-}
-
-func NewConfig() *Config {
-	return loadConfig()
-}
-
 func defaultConfig() *Config {
 	configDir := getDefaultConfigDir()
 	return &Config{
 		Dir:         configDir,
 		ConfigFile:  path.Join(configDir, "config"),
-		HistoryFile: path.Join(configDir, "history"),
 		CacheFile:   path.Join(configDir, "cache"),
+		HistoryFile: path.Join(configDir, "history"),
 		LogFile:     path.Join(configDir, "log"),
-		Output:      Json,
-		AsyncBlock:  true,
-		ActiveProfile: Profile{
-			Name:       "local",
-			Url:        "http://192.168.1.10:8080/client/api",
-			VerifyCert: false,
-			Username:   "admin",
-			Password:   "password",
-			Domain:     "/",
-			// TODO: remove test data
-			ApiKey:    "IgrUOA_46IVoBNzAR_Th2JbdbgIs2lMW1kGe9A80F9X0uOnfGO0Su23IqOSqbdzZW3To95PNrcdWsk60ieXYBQ",
-			SecretKey: "E7NRSv5d_1VhqXUHJEqvAsm7htR_V_vtPJZsCPkgPKSgkiS3sh4SOrIqMm_eWhSFoL6RHRIlxtA_viQAt7EDVA",
+		Core: &Core{
+			AsyncBlock:  false,
+			Timeout:     1800,
+			Output:      Json,
+			ProfileName: "local",
+			ActiveProfile: &ServerProfile{
+				Url:        "http://localhost:8080/client/api",
+				Username:   "admin",
+				Password:   "password",
+				Domain:     "/",
+				ApiKey:     "",
+				SecretKey:  "",
+				VerifyCert: false,
+			},
 		},
 	}
 }
 
-func loadConfig() *Config {
-	cfg := defaultConfig()
+func reloadConfig(cfg *Config) *Config {
 
 	if _, err := os.Stat(cfg.Dir); err != nil {
 		os.Mkdir(cfg.Dir, 0700)
 	}
 
+	// Save on missing config
 	if _, err := os.Stat(cfg.ConfigFile); err != nil {
-		// FIXME: write default cfg
-	} else {
-		//load config?
+		defaultConf := defaultConfig()
+		conf := ini.Empty()
+		conf.Section(ini.DEFAULT_SECTION).ReflectFrom(defaultConf.Core)
+		conf.Section(cfg.Core.ProfileName).ReflectFrom(defaultConf.Core.ActiveProfile)
+		conf.SaveTo(cfg.ConfigFile)
 	}
 
-	LoadCache(cfg)
+	// Read config
+	conf, err := ini.LoadSources(ini.LoadOptions{
+		IgnoreInlineComment: true,
+	}, cfg.ConfigFile)
 
+	if err != nil {
+		fmt.Printf("Fail to read config file: %v", err)
+		os.Exit(1)
+	}
+
+	core, err := conf.GetSection(ini.DEFAULT_SECTION)
+	if core == nil {
+		section, _ := conf.NewSection(ini.DEFAULT_SECTION)
+		section.ReflectFrom(&defaultConfig().Core)
+	} else {
+		// Write
+		if cfg.Core != nil {
+			conf.Section(ini.DEFAULT_SECTION).ReflectFrom(&cfg.Core)
+		}
+		// Update
+		core := new(Core)
+		conf.Section(ini.DEFAULT_SECTION).MapTo(core)
+		cfg.Core = core
+	}
+
+	profile, err := conf.GetSection(cfg.Core.ProfileName)
+	if profile == nil {
+		section, _ := conf.NewSection(cfg.Core.ProfileName)
+		section.ReflectFrom(&defaultConfig().Core.ActiveProfile)
+	} else {
+		// Write
+		if cfg.Core.ActiveProfile != nil {
+			conf.Section(cfg.Core.ProfileName).ReflectFrom(&cfg.Core.ActiveProfile)
+		}
+		// Update
+		profile := new(ServerProfile)
+		conf.Section(cfg.Core.ProfileName).MapTo(profile)
+		cfg.Core.ActiveProfile = profile
+	}
+	// Save
+	conf.SaveTo(cfg.ConfigFile)
+
+	fmt.Println("Updating config to:", cfg.Core, cfg.Core.ActiveProfile)
 	return cfg
-}
-
-func (c *Config) Name() string {
-	return name
-}
-
-func (c *Config) Version() string {
-	return version
-}
-
-func (c *Config) PrintHeader() {
-	fmt.Printf("Apache CloudStack 🐵 cloudmonkey %s.\n", version)
-	fmt.Printf("Type \"help\" for details, \"sync\" to update API cache or press tab to list commands.\n\n")
-}
-
-func (c *Config) GetPrompt() string {
-	return fmt.Sprintf("(%s) 🐒 > ", c.ActiveProfile.Name)
 }
 
 func (c *Config) UpdateGlobalConfig(key string, value string) {
@@ -135,9 +161,42 @@ func (c *Config) UpdateGlobalConfig(key string, value string) {
 }
 
 func (c *Config) UpdateConfig(namespace string, key string, value string) {
-	fmt.Println("👌 Updating for key", key, ", value=", value, ", in ns=", namespace)
-	if key == "profile" {
-		//FIXME
-		c.ActiveProfile.Name = value
+	switch key {
+	case "asyncblock":
+		c.Core.AsyncBlock = value == "true"
+	case "output":
+		c.Core.Output = value
+	case "timeout":
+		intValue, _ := strconv.Atoi(value)
+		c.Core.Timeout = intValue
+	case "profile":
+		c.Core.ProfileName = value
+		c.Core.ActiveProfile = nil
+	case "url":
+		c.Core.ActiveProfile.Url = value
+	case "username":
+		c.Core.ActiveProfile.Username = value
+	case "password":
+		c.Core.ActiveProfile.Password = value
+	case "domain":
+		c.Core.ActiveProfile.Domain = value
+	case "apikey":
+		c.Core.ActiveProfile.ApiKey = value
+	case "secretkey":
+		c.Core.ActiveProfile.SecretKey = value
+	case "verifycert":
+		c.Core.ActiveProfile.VerifyCert = value == "true"
+	default:
+		return
 	}
+
+	reloadConfig(c)
+}
+
+func NewConfig() *Config {
+	defaultConf := defaultConfig()
+	defaultConf.Core = nil
+	cfg := reloadConfig(defaultConf)
+	LoadCache(cfg)
+	return cfg
 }

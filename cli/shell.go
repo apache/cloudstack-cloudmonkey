@@ -28,7 +28,10 @@ import (
 	"github.com/chzyer/readline"
 )
 
+var shellConfig *config.Config
+
 func ExecShell(cfg *config.Config) {
+	shellConfig = cfg
 	shell, err := readline.NewEx(&readline.Config{
 		Prompt:            cfg.GetPrompt(),
 		HistoryFile:       cfg.HistoryFile,

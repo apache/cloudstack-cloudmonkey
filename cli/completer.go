@@ -188,7 +188,7 @@ func (t *CliCompleter) Do(line []rune, pos int) (options [][]rune, offset int) {
 				return nil, 0
 			}
 
-			r := cmd.NewRequest(nil, config.NewConfig(), nil, nil)
+			r := cmd.NewRequest(nil, shellConfig, nil, nil)
 			autocompleteApiArgs := []string{"listall=true"}
 			if autocompleteApi.Noun == "templates" {
 				autocompleteApiArgs = append(autocompleteApiArgs, "templatefilter=all")

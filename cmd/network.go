@@ -66,8 +66,8 @@ func NewAPIRequest(r *Request, api string, args []string) (map[string]interface{
 		}
 	}
 
-	apiKey := r.Config.ActiveProfile.ApiKey
-	secretKey := r.Config.ActiveProfile.SecretKey
+	apiKey := r.Config.Core.ActiveProfile.ApiKey
+	secretKey := r.Config.Core.ActiveProfile.SecretKey
 
 	if len(apiKey) > 0 {
 		params.Add("apiKey", apiKey)
@@ -81,7 +81,7 @@ func NewAPIRequest(r *Request, api string, args []string) (map[string]interface{
 	signature := base64.StdEncoding.EncodeToString(mac.Sum(nil))
 	encodedParams = encodedParams + fmt.Sprintf("&signature=%s", url.QueryEscape(signature))
 
-	apiUrl := fmt.Sprintf("%s?%s", r.Config.ActiveProfile.Url, encodedParams)
+	apiUrl := fmt.Sprintf("%s?%s", r.Config.Core.ActiveProfile.Url, encodedParams)
 
 	//fmt.Println("[debug] Requesting: ", apiUrl)
 	response, err := http.Get(apiUrl)

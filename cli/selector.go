@@ -21,8 +21,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/manifoldco/promptui"
 	"github.com/chzyer/readline"
+	"github.com/manifoldco/promptui"
 )
 
 type SelectOption struct {
