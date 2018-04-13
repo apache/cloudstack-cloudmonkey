@@ -57,6 +57,7 @@ func ExecShell(cfg *config.Config) {
 	cfg.PrintHeader()
 
 	for {
+		shell.SetPrompt(cfg.GetPrompt())
 		line, err := shell.Readline()
 		if err == readline.ErrInterrupt {
 			continue

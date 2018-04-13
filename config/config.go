@@ -151,8 +151,6 @@ func reloadConfig(cfg *Config) *Config {
 	}
 	// Save
 	conf.SaveTo(cfg.ConfigFile)
-
-	fmt.Println("Updating config to:", cfg.Core, cfg.Core.ActiveProfile)
 	return cfg
 }
 
