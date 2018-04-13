@@ -25,7 +25,7 @@ import (
 	"cloudmonkey/config"
 	"github.com/mattn/go-shellwords"
 
-	"github.com/rhtyd/readline"
+	"github.com/chzyer/readline"
 )
 
 func ExecShell(cfg *config.Config) {

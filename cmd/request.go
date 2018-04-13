@@ -19,7 +19,7 @@ package cmd
 
 import (
 	"cloudmonkey/config"
-	"github.com/rhtyd/readline"
+	"github.com/chzyer/readline"
 )
 
 type Request struct {

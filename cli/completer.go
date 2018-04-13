@@ -26,7 +26,7 @@ import (
 	"cloudmonkey/cmd"
 	"cloudmonkey/config"
 
-	"github.com/rhtyd/readline/runes"
+	"github.com/chzyer/readline/runes"
 )
 
 type CliCompleter struct {

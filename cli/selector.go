@@ -22,7 +22,7 @@ import (
 	"strings"
 
 	"github.com/manifoldco/promptui"
-	"github.com/rhtyd/readline"
+	"github.com/chzyer/readline"
 )
 
 type SelectOption struct {

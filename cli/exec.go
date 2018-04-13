@@ -20,7 +20,7 @@ package cli
 import (
 	"cloudmonkey/cmd"
 	"cloudmonkey/config"
-	"github.com/rhtyd/readline"
+	"github.com/chzyer/readline"
 )
 
 func ExecCmd(cfg *config.Config, args []string, shell *readline.Instance) error {
