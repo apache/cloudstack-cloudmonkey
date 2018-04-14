@@ -17,18 +17,56 @@
 
 package cmd
 
+import (
+	"errors"
+	"fmt"
+	"strings"
+)
+
+var helpCommand *Command
+
 func init() {
-	AddCommand(&Command{
+	helpCommand = &Command{
 		Name: "help",
 		Help: "Help",
 		Handle: func(r *Request) error {
-			if len(r.Args) < 1 {
+			if len(r.Args) < 1 || r.Args[0] == "-h" {
 				PrintUsage()
 				return nil
 			}
-			//TODO: check it's not other commands?
-			r.Args = append(r.Args, "-h")
-			return apiCommand.Handle(r)
+
+			api := r.Config.GetCache()[strings.ToLower(r.Args[0])]
+			if api == nil {
+				return errors.New("unknown command or API requested")
+			}
+
+			fmt.Printf("\033[34m%s\033[0m: %s\n", api.Name, api.Description)
+			if api.Async {
+				fmt.Println("This API is \033[35masynchronous\033[0m.")
+			}
+			if len(api.RequiredArgs) > 0 {
+				fmt.Println("Required params:", strings.Join(api.RequiredArgs, ", "))
+			}
+			if len(api.Args) > 0 {
+				fmt.Printf("%-24s %-8s %s\n", "API Params", "Type", "Description")
+				fmt.Printf("%-24s %-8s %s\n", "==========", "====", "===========")
+			}
+			for _, arg := range api.Args {
+				fmt.Printf("\033[36m%-24s\033[0m \033[32m%-8s\033[0m ", arg.Name, arg.Type)
+				info := []rune(arg.Description)
+				for i, r := range info {
+					fmt.Printf("%s", string(r))
+					if i > 0 && i%40 == 0 {
+						fmt.Println()
+						for i := 0; i < 34; i++ {
+							fmt.Printf(" ")
+						}
+					}
+				}
+				fmt.Println()
+			}
+			return nil
 		},
-	})
+	}
+	AddCommand(helpCommand)
 }

@@ -78,7 +78,7 @@ func (c *Config) GetCache() map[string]*API {
 func LoadCache(c *Config) {
 	cache, err := ioutil.ReadFile(c.CacheFile)
 	if err != nil {
-		fmt.Println("Please run sync. Failed to read the cache file: " + c.CacheFile)
+		fmt.Println("Please run sync, failed to read the cache file: " + c.CacheFile)
 		return
 	}
 	var data map[string]interface{}

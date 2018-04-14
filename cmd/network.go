@@ -84,7 +84,6 @@ func NewAPIRequest(r *Request, api string, args []string) (map[string]interface{
 
 	apiURL := fmt.Sprintf("%s?%s", r.Config.Core.ActiveProfile.URL, encodedParams)
 
-	//fmt.Println("[debug] Requesting: ", apiURL)
 	response, err := http.Get(apiURL)
 	if err != nil {
 		fmt.Println("Error:", err)

@@ -59,10 +59,10 @@ func showSelector(options []selectOption) selectOption {
 	defer optionSelector.unlock()
 
 	templates := &promptui.SelectTemplates{
-		Label:    "{{ . }}",
-		Active:   "▶ {{ .Name | cyan }} ({{ .ID | red }})",
-		Inactive: "  {{ .Name | cyan }} ({{ .ID | red }})",
-		Selected: "👊Selected: {{ .Name | cyan }} ({{ .ID | red }})",
+		Label:    "{{ . | magenta }}",
+		Active:   "▶  {{ .Name | cyan }} ({{ .ID | green }})",
+		Inactive: "   {{ .Name }} ({{ .ID }})",
+		Selected: "Selected option: {{ .Name | cyan }} ({{ .ID | green }})",
 		Details: `
 --------- Current Selection ----------
 {{ "ID:" | faint }}  {{ .ID }}
@@ -79,7 +79,7 @@ func showSelector(options []selectOption) selectOption {
 	}
 
 	prompt := promptui.Select{
-		Label:             "Use the arrow keys to navigate: ↓ ↑ → ← press / to toggle 🔍search",
+		Label:             "Use the arrow keys to navigate: ↓ ↑ → ← press / to toggle 🔍 search",
 		Items:             options,
 		Templates:         templates,
 		Size:              5,
