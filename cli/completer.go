@@ -37,12 +37,23 @@ func buildAPICacheMap(apiMap map[string][]*config.API) map[string][]*config.API 
 	for _, cmd := range cmd.AllCommands() {
 		verb := cmd.Name
 		if cmd.SubCommands != nil && len(cmd.SubCommands) > 0 {
-			for _, scmd := range cmd.SubCommands {
-				dummyAPI := &config.API{
-					Name: scmd,
-					Verb: verb,
+			for command, opts := range cmd.SubCommands {
+				var args []*config.APIArg
+				options := opts
+				if command == "profile" {
+					options = config.GetProfiles()
 				}
-				apiMap[verb] = append(apiMap[verb], dummyAPI)
+				for _, opt := range options {
+					args = append(args, &config.APIArg{
+						Name: opt,
+					})
+				}
+				apiMap[verb] = append(apiMap[verb], &config.API{
+					Name: command,
+					Verb: verb,
+					Noun: command,
+					Args: args,
+				})
 			}
 		} else {
 			dummyAPI := &config.API{
@@ -151,7 +162,7 @@ func (t *autoCompleter) Do(line []rune, pos int) (options [][]rune, offset int) 
 	splitLine := strings.Split(string(line), " ")
 	line = trimSpaceLeft([]rune(splitLine[len(splitLine)-1]))
 	for _, arg := range apiFound.Args {
-		search := arg.Name + "="
+		search := arg.Name
 		if !runes.HasPrefix(line, []rune(search)) {
 			sLine, sOffset := doInternal(line, pos, len(line), []rune(search))
 			options = append(options, sLine...)
@@ -165,15 +176,15 @@ func (t *autoCompleter) Do(line []rune, pos int) (options [][]rune, offset int) 
 
 			var autocompleteAPI *config.API
 			var relatedNoun string
-			if arg.Name == "id" || arg.Name == "ids" {
+			if arg.Name == "id=" || arg.Name == "ids=" {
 				relatedNoun = apiFound.Noun
 				if apiFound.Verb != "list" {
 					relatedNoun += "s"
 				}
-			} else if arg.Name == "account" {
+			} else if arg.Name == "account=" {
 				relatedNoun = "accounts"
 			} else {
-				relatedNoun = strings.Replace(strings.Replace(arg.Name, "ids", "", -1), "id", "", -1) + "s"
+				relatedNoun = strings.Replace(strings.Replace(arg.Name, "ids=", "", -1), "id=", "", -1) + "s"
 			}
 			for _, related := range apiMap["list"] {
 				if relatedNoun == related.Noun {
@@ -231,7 +242,7 @@ func (t *autoCompleter) Do(line []rune, pos int) (options [][]rune, offset int) 
 				})
 				fmt.Println()
 				selectedOption := showSelector(autocompleteOptions)
-				if strings.HasSuffix(arg.Name, "id") || strings.HasSuffix(arg.Name, "ids") {
+				if strings.HasSuffix(arg.Name, "id=") || strings.HasSuffix(arg.Name, "ids=") {
 					selected = selectedOption.ID
 				} else {
 					selected = selectedOption.Name

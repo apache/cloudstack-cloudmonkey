@@ -99,6 +99,13 @@ func defaultConfig() *Config {
 	}
 }
 
+var profiles []string
+
+// GetProfiles returns list of available profiles
+func GetProfiles() []string {
+	return profiles
+}
+
 func reloadConfig(cfg *Config) *Config {
 
 	if _, err := os.Stat(cfg.Dir); err != nil {
@@ -155,6 +162,16 @@ func reloadConfig(cfg *Config) *Config {
 	}
 	// Save
 	conf.SaveTo(cfg.ConfigFile)
+
+	// Update available profiles list
+	profiles = []string{}
+	for _, profile := range conf.Sections() {
+		if profile.Name() == ini.DEFAULT_SECTION {
+			continue
+		}
+		profiles = append(profiles, profile.Name())
+	}
+
 	return cfg
 }
 

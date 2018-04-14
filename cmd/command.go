@@ -25,7 +25,7 @@ import (
 type Command struct {
 	Name            string
 	Help            string
-	SubCommands     []string
+	SubCommands     map[string][]string
 	CustomCompleter func(input string, position int)
 	Handle          func(*Request) error
 }

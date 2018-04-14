@@ -24,12 +24,24 @@ import (
 
 func init() {
 	AddCommand(&Command{
-		Name:        "set",
-		Help:        "Configures options for cmk",
-		SubCommands: []string{"block", "output", "profile"},
+		Name: "set",
+		Help: "Configures options for cmk",
+		SubCommands: map[string][]string{
+			"asyncblock": {"true", "false"},
+			"timeout":    {"600", "1800", "3600"},
+			"output":     {"json", "text", "table", "xml"},
+			"profile":    {},
+			"url":        {},
+			"username":   {},
+			"password":   {},
+			"domain":     {},
+			"apikey":     {},
+			"secretkey":  {},
+			"verifycert": {"true", "false"},
+		},
 		Handle: func(r *Request) error {
 			if len(r.Args) < 1 {
-				fmt.Println("Please select one of the sub-commands: ", strings.Join(r.Command.SubCommands, ", "))
+				fmt.Println("Please provide one of the sub-commands: ", r.Command.SubCommands)
 				return nil
 			}
 			subCommand := r.Args[0]

@@ -63,7 +63,7 @@ func init() {
 			for _, required := range api.RequiredArgs {
 				provided := false
 				for _, arg := range apiArgs {
-					if strings.HasPrefix(arg, required+"=") {
+					if strings.HasPrefix(arg, required) {
 						provided = true
 					}
 				}
