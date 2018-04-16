@@ -40,33 +40,52 @@ func init() {
 				return nil
 			}
 
+			// username
 			prompt := promptui.Prompt{
 				Label:    "Username",
 				Validate: validate,
 				Default:  "",
 			}
-
 			username, err := prompt.Run()
 			if err != nil {
 				fmt.Printf("Prompt failed %v\n", err)
 				return nil
 			}
 
+			//password
 			prompt = promptui.Prompt{
 				Label:    "Password",
 				Validate: validate,
 				Mask:     '*',
 			}
-
 			password, err := prompt.Run()
-
 			if err != nil {
 				fmt.Printf("Prompt failed %v\n", err)
 				return nil
 			}
 
-			// TODO: implement login based key setup workflow
-			fmt.Println("Trying to log in using", username, password)
+			// domain
+			prompt = promptui.Prompt{
+				Label:    "Domain",
+				Validate: validate,
+				Default:  "/",
+			}
+			domain, err := prompt.Run()
+			if err != nil {
+				fmt.Printf("Prompt failed %v\n", err)
+				return nil
+			}
+
+			r.Config.ActiveProfile.Username = username
+			r.Config.ActiveProfile.Password = password
+			r.Config.ActiveProfile.Domain = domain
+
+			client, _, err := Login(r)
+			if client == nil || err != nil {
+				fmt.Println("Failed to login, check credentials")
+			} else {
+				fmt.Println("Success!")
+			}
 
 			return nil
 		},

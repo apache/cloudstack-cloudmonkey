@@ -21,15 +21,18 @@ import (
 	"bytes"
 	"crypto/hmac"
 	"crypto/sha1"
+	"crypto/tls"
 	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"net/http/cookiejar"
 	"net/url"
 	"sort"
 	"strings"
+	"time"
 )
 
 func encodeRequestParams(params url.Values) string {
@@ -56,6 +59,42 @@ func encodeRequestParams(params url.Values) string {
 	return buf.String()
 }
 
+// Login logs in a user based on provided request and returns http client and session key
+func Login(r *Request) (*http.Client, string, error) {
+	params := make(url.Values)
+	params.Add("command", "login")
+	params.Add("username", r.Config.ActiveProfile.Username)
+	params.Add("password", r.Config.ActiveProfile.Password)
+	params.Add("domain", r.Config.ActiveProfile.Domain)
+	params.Add("response", "json")
+
+	jar, _ := cookiejar.New(nil)
+	client := &http.Client{
+		Jar: jar,
+		Transport: &http.Transport{
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: !r.Config.ActiveProfile.VerifyCert},
+		},
+	}
+
+	sessionKey := ""
+	resp, err := client.PostForm(r.Config.ActiveProfile.URL, params)
+	if resp.StatusCode != http.StatusOK {
+		e := errors.New("failed to log in")
+		if err != nil {
+			e = errors.New("failed to log in due to:" + err.Error())
+		}
+		return client, sessionKey, e
+	}
+
+	for _, cookie := range resp.Cookies() {
+		if cookie.Name == "sessionkey" {
+			sessionKey = cookie.Value
+			break
+		}
+	}
+	return client, sessionKey, nil
+}
+
 // NewAPIRequest makes an API request to configured management server
 func NewAPIRequest(r *Request, api string, args []string) (map[string]interface{}, error) {
 	params := make(url.Values)
@@ -66,25 +105,47 @@ func NewAPIRequest(r *Request, api string, args []string) (map[string]interface{
 			params.Add(parts[0], parts[1])
 		}
 	}
+	params.Add("response", "json")
 
-	apiKey := r.Config.Core.ActiveProfile.APIKey
-	secretKey := r.Config.Core.ActiveProfile.SecretKey
+	var client *http.Client
+	var encodedParams string
+	var err error
+	if len(r.Config.ActiveProfile.APIKey) > 0 && len(r.Config.ActiveProfile.SecretKey) > 0 {
+		apiKey := r.Config.ActiveProfile.APIKey
+		secretKey := r.Config.ActiveProfile.SecretKey
 
-	if len(apiKey) > 0 {
-		params.Add("apiKey", apiKey)
+		if len(apiKey) > 0 {
+			params.Add("apiKey", apiKey)
+		}
+
+		client = &http.Client{
+			Transport: &http.Transport{
+				TLSClientConfig: &tls.Config{InsecureSkipVerify: !r.Config.ActiveProfile.VerifyCert},
+			},
+		}
+		encodedParams = encodeRequestParams(params)
+
+		mac := hmac.New(sha1.New, []byte(secretKey))
+		mac.Write([]byte(strings.Replace(strings.ToLower(encodedParams), "+", "%20", -1)))
+		signature := base64.StdEncoding.EncodeToString(mac.Sum(nil))
+		encodedParams = encodedParams + fmt.Sprintf("&signature=%s", url.QueryEscape(signature))
+	} else if len(r.Config.ActiveProfile.Username) > 0 && len(r.Config.ActiveProfile.Password) > 0 {
+		var sessionKey string
+		client, sessionKey, err = Login(r)
+		if err != nil {
+			return nil, err
+		}
+		params.Add("sessionkey", sessionKey)
+		encodedParams = encodeRequestParams(params)
+	} else {
+		fmt.Println("Please provide either apikey/secretkey or username/password to make an API call")
+		return nil, errors.New("failed to authenticate to make API call")
 	}
 
-	params.Add("response", "json")
-	encodedParams := encodeRequestParams(params)
+	apiURL := fmt.Sprintf("%s?%s", r.Config.ActiveProfile.URL, encodedParams)
 
-	mac := hmac.New(sha1.New, []byte(secretKey))
-	mac.Write([]byte(strings.Replace(strings.ToLower(encodedParams), "+", "%20", -1)))
-	signature := base64.StdEncoding.EncodeToString(mac.Sum(nil))
-	encodedParams = encodedParams + fmt.Sprintf("&signature=%s", url.QueryEscape(signature))
-
-	apiURL := fmt.Sprintf("%s?%s", r.Config.Core.ActiveProfile.URL, encodedParams)
-
-	response, err := http.Get(apiURL)
+	client.Timeout = time.Duration(time.Duration(r.Config.Core.Timeout) * time.Second)
+	response, err := client.Get(apiURL)
 	if err != nil {
 		fmt.Println("Error:", err)
 		return nil, err

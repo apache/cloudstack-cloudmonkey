@@ -77,7 +77,11 @@ func init() {
 				return nil
 			}
 
-			b, _ := NewAPIRequest(r, api.Name, apiArgs)
+			b, err := NewAPIRequest(r, api.Name, apiArgs)
+			if err != nil {
+				return err
+			}
+
 			response, _ := json.MarshalIndent(b, "", "  ")
 
 			// Implement various output formats

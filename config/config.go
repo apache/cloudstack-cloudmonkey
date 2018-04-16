@@ -47,21 +47,21 @@ type ServerProfile struct {
 
 // Core block describes common options for the CLI
 type Core struct {
-	AsyncBlock    bool           `ini:"asyncblock"`
-	Timeout       int            `ini:"timeout"`
-	Output        string         `ini:"output"`
-	ProfileName   string         `ini:"profile"`
-	ActiveProfile *ServerProfile `ini:"-"`
+	AsyncBlock  bool   `ini:"asyncblock"`
+	Timeout     int    `ini:"timeout"`
+	Output      string `ini:"output"`
+	ProfileName string `ini:"profile"`
 }
 
 // Config describes CLI config file and default options
 type Config struct {
-	Dir         string
-	ConfigFile  string
-	HistoryFile string
-	CacheFile   string
-	LogFile     string
-	Core        *Core
+	Dir           string
+	ConfigFile    string
+	HistoryFile   string
+	CacheFile     string
+	LogFile       string
+	Core          *Core
+	ActiveProfile *ServerProfile
 }
 
 func getDefaultConfigDir() string {
@@ -86,15 +86,15 @@ func defaultConfig() *Config {
 			Timeout:     1800,
 			Output:      JSON,
 			ProfileName: "local",
-			ActiveProfile: &ServerProfile{
-				URL:        "http://localhost:8080/client/api",
-				Username:   "admin",
-				Password:   "password",
-				Domain:     "/",
-				APIKey:     "",
-				SecretKey:  "",
-				VerifyCert: false,
-			},
+		},
+		ActiveProfile: &ServerProfile{
+			URL:        "http://localhost:8080/client/api",
+			Username:   "admin",
+			Password:   "password",
+			Domain:     "/",
+			APIKey:     "",
+			SecretKey:  "",
+			VerifyCert: false,
 		},
 	}
 }
@@ -117,7 +117,7 @@ func reloadConfig(cfg *Config) *Config {
 		defaultConf := defaultConfig()
 		conf := ini.Empty()
 		conf.Section(ini.DEFAULT_SECTION).ReflectFrom(defaultConf.Core)
-		conf.Section(cfg.Core.ProfileName).ReflectFrom(defaultConf.Core.ActiveProfile)
+		conf.Section(cfg.Core.ProfileName).ReflectFrom(defaultConf.ActiveProfile)
 		conf.SaveTo(cfg.ConfigFile)
 	}
 
@@ -149,16 +149,16 @@ func reloadConfig(cfg *Config) *Config {
 	profile, err := conf.GetSection(cfg.Core.ProfileName)
 	if profile == nil {
 		section, _ := conf.NewSection(cfg.Core.ProfileName)
-		section.ReflectFrom(&defaultConfig().Core.ActiveProfile)
+		section.ReflectFrom(&defaultConfig().ActiveProfile)
 	} else {
 		// Write
-		if cfg.Core.ActiveProfile != nil {
-			conf.Section(cfg.Core.ProfileName).ReflectFrom(&cfg.Core.ActiveProfile)
+		if cfg.ActiveProfile != nil {
+			conf.Section(cfg.Core.ProfileName).ReflectFrom(&cfg.ActiveProfile)
 		}
 		// Update
 		profile := new(ServerProfile)
 		conf.Section(cfg.Core.ProfileName).MapTo(profile)
-		cfg.Core.ActiveProfile = profile
+		cfg.ActiveProfile = profile
 	}
 	// Save
 	conf.SaveTo(cfg.ConfigFile)
@@ -187,21 +187,21 @@ func (c *Config) UpdateConfig(key string, value string) {
 		c.Core.Timeout = intValue
 	case "profile":
 		c.Core.ProfileName = value
-		c.Core.ActiveProfile = nil
+		c.ActiveProfile = nil
 	case "url":
-		c.Core.ActiveProfile.URL = value
+		c.ActiveProfile.URL = value
 	case "username":
-		c.Core.ActiveProfile.Username = value
+		c.ActiveProfile.Username = value
 	case "password":
-		c.Core.ActiveProfile.Password = value
+		c.ActiveProfile.Password = value
 	case "domain":
-		c.Core.ActiveProfile.Domain = value
+		c.ActiveProfile.Domain = value
 	case "apikey":
-		c.Core.ActiveProfile.APIKey = value
+		c.ActiveProfile.APIKey = value
 	case "secretkey":
-		c.Core.ActiveProfile.SecretKey = value
+		c.ActiveProfile.SecretKey = value
 	case "verifycert":
-		c.Core.ActiveProfile.VerifyCert = value == "true"
+		c.ActiveProfile.VerifyCert = value == "true"
 	default:
 		return
 	}
@@ -213,6 +213,7 @@ func (c *Config) UpdateConfig(key string, value string) {
 func NewConfig() *Config {
 	defaultConf := defaultConfig()
 	defaultConf.Core = nil
+	defaultConf.ActiveProfile = nil
 	cfg := reloadConfig(defaultConf)
 	LoadCache(cfg)
 	return cfg
