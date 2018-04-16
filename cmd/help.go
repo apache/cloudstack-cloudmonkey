@@ -45,14 +45,18 @@ func init() {
 				fmt.Println("This API is \033[35masynchronous\033[0m.")
 			}
 			if len(api.RequiredArgs) > 0 {
-				fmt.Println("Required params:", strings.Join(api.RequiredArgs, ", "))
+				fmt.Printf("Required params: ")
+				for _, requiredArg := range api.RequiredArgs {
+					fmt.Printf("%s, ", strings.Replace(requiredArg, "=", "", -1))
+				}
+				fmt.Println()
 			}
 			if len(api.Args) > 0 {
 				fmt.Printf("%-24s %-8s %s\n", "API Params", "Type", "Description")
 				fmt.Printf("%-24s %-8s %s\n", "==========", "====", "===========")
 			}
 			for _, arg := range api.Args {
-				fmt.Printf("\033[36m%-24s\033[0m \033[32m%-8s\033[0m ", arg.Name, arg.Type)
+				fmt.Printf("\033[36m%-24s\033[0m \033[32m%-8s\033[0m ", strings.Replace(arg.Name, "=", "", -1), arg.Type)
 				info := []rune(arg.Description)
 				for i, r := range info {
 					fmt.Printf("%s", string(r))

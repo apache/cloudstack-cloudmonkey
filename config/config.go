@@ -73,29 +73,39 @@ func getDefaultConfigDir() string {
 	return path.Join(home, ".cmk")
 }
 
+func defaultCoreConfig() Core {
+	return Core{
+		AsyncBlock:  false,
+		Timeout:     1800,
+		Output:      JSON,
+		ProfileName: "local",
+	}
+}
+
+func defaultProfile() ServerProfile {
+	return ServerProfile{
+		URL:        "http://localhost:8080/client/api",
+		Username:   "admin",
+		Password:   "password",
+		Domain:     "/",
+		APIKey:     "",
+		SecretKey:  "",
+		VerifyCert: false,
+	}
+}
+
 func defaultConfig() *Config {
 	configDir := getDefaultConfigDir()
+	defaultCoreConfig := defaultCoreConfig()
+	defaultProfile := defaultProfile()
 	return &Config{
-		Dir:         configDir,
-		ConfigFile:  path.Join(configDir, "config"),
-		CacheFile:   path.Join(configDir, "cache"),
-		HistoryFile: path.Join(configDir, "history"),
-		LogFile:     path.Join(configDir, "log"),
-		Core: &Core{
-			AsyncBlock:  false,
-			Timeout:     1800,
-			Output:      JSON,
-			ProfileName: "local",
-		},
-		ActiveProfile: &ServerProfile{
-			URL:        "http://localhost:8080/client/api",
-			Username:   "admin",
-			Password:   "password",
-			Domain:     "/",
-			APIKey:     "",
-			SecretKey:  "",
-			VerifyCert: false,
-		},
+		Dir:           configDir,
+		ConfigFile:    path.Join(configDir, "config"),
+		CacheFile:     path.Join(configDir, "cache"),
+		HistoryFile:   path.Join(configDir, "history"),
+		LogFile:       path.Join(configDir, "log"),
+		Core:          &defaultCoreConfig,
+		ActiveProfile: &defaultProfile,
 	}
 }
 
@@ -114,10 +124,11 @@ func reloadConfig(cfg *Config) *Config {
 
 	// Save on missing config
 	if _, err := os.Stat(cfg.ConfigFile); err != nil {
-		defaultConf := defaultConfig()
+		defaultCoreConfig := defaultCoreConfig()
+		defaultProfile := defaultProfile()
 		conf := ini.Empty()
-		conf.Section(ini.DEFAULT_SECTION).ReflectFrom(defaultConf.Core)
-		conf.Section(cfg.Core.ProfileName).ReflectFrom(defaultConf.ActiveProfile)
+		conf.Section(ini.DEFAULT_SECTION).ReflectFrom(&defaultCoreConfig)
+		conf.Section(defaultCoreConfig.ProfileName).ReflectFrom(&defaultProfile)
 		conf.SaveTo(cfg.ConfigFile)
 	}
 
@@ -133,8 +144,10 @@ func reloadConfig(cfg *Config) *Config {
 
 	core, err := conf.GetSection(ini.DEFAULT_SECTION)
 	if core == nil {
+		defaultCore := defaultCoreConfig()
 		section, _ := conf.NewSection(ini.DEFAULT_SECTION)
-		section.ReflectFrom(&defaultConfig().Core)
+		section.ReflectFrom(&defaultCore)
+		cfg.Core = &defaultCore
 	} else {
 		// Write
 		if cfg.Core != nil {
@@ -148,8 +161,10 @@ func reloadConfig(cfg *Config) *Config {
 
 	profile, err := conf.GetSection(cfg.Core.ProfileName)
 	if profile == nil {
+		activeProfile := defaultProfile()
 		section, _ := conf.NewSection(cfg.Core.ProfileName)
-		section.ReflectFrom(&defaultConfig().ActiveProfile)
+		section.ReflectFrom(&activeProfile)
+		cfg.ActiveProfile = &activeProfile
 	} else {
 		// Write
 		if cfg.ActiveProfile != nil {

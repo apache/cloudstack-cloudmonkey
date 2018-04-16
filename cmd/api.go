@@ -68,7 +68,7 @@ func init() {
 					}
 				}
 				if !provided {
-					missingArgs = append(missingArgs, required)
+					missingArgs = append(missingArgs, strings.Replace(required, "=", "", -1))
 				}
 			}
 

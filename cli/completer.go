@@ -174,17 +174,18 @@ func (t *autoCompleter) Do(line []rune, pos int) (options [][]rune, offset int) 
 				return
 			}
 
+			argName := strings.Replace(arg.Name, "=", "", -1)
 			var autocompleteAPI *config.API
 			var relatedNoun string
-			if arg.Name == "id=" || arg.Name == "ids=" {
+			if argName == "id" || argName == "ids" {
 				relatedNoun = apiFound.Noun
 				if apiFound.Verb != "list" {
 					relatedNoun += "s"
 				}
-			} else if arg.Name == "account=" {
+			} else if argName == "account" {
 				relatedNoun = "accounts"
 			} else {
-				relatedNoun = strings.Replace(strings.Replace(arg.Name, "ids=", "", -1), "id=", "", -1) + "s"
+				relatedNoun = strings.Replace(strings.Replace(argName, "ids", "", -1), "id", "", -1) + "s"
 			}
 			for _, related := range apiMap["list"] {
 				if relatedNoun == related.Noun {
@@ -202,7 +203,9 @@ func (t *autoCompleter) Do(line []rune, pos int) (options [][]rune, offset int) 
 			if autocompleteAPI.Noun == "templates" {
 				autocompleteAPIArgs = append(autocompleteAPIArgs, "templatefilter=all")
 			}
+			fmt.Printf("\nFetching options, please wait...")
 			response, _ := cmd.NewAPIRequest(r, autocompleteAPI.Name, autocompleteAPIArgs)
+			fmt.Printf("\r")
 
 			var autocompleteOptions []selectOption
 			for _, v := range response {
@@ -240,7 +243,6 @@ func (t *autoCompleter) Do(line []rune, pos int) (options [][]rune, offset int) 
 				sort.Slice(autocompleteOptions, func(i, j int) bool {
 					return autocompleteOptions[i].Name < autocompleteOptions[j].Name
 				})
-				fmt.Println()
 				selectedOption := showSelector(autocompleteOptions)
 				if strings.HasSuffix(arg.Name, "id=") || strings.HasSuffix(arg.Name, "ids=") {
 					selected = selectedOption.ID

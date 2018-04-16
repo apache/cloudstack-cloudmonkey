@@ -110,6 +110,7 @@ func NewAPIRequest(r *Request, api string, args []string) (map[string]interface{
 	var client *http.Client
 	var encodedParams string
 	var err error
+
 	if len(r.Config.ActiveProfile.APIKey) > 0 && len(r.Config.ActiveProfile.SecretKey) > 0 {
 		apiKey := r.Config.ActiveProfile.APIKey
 		secretKey := r.Config.ActiveProfile.SecretKey
@@ -142,10 +143,8 @@ func NewAPIRequest(r *Request, api string, args []string) (map[string]interface{
 		return nil, errors.New("failed to authenticate to make API call")
 	}
 
-	apiURL := fmt.Sprintf("%s?%s", r.Config.ActiveProfile.URL, encodedParams)
-
 	client.Timeout = time.Duration(time.Duration(r.Config.Core.Timeout) * time.Second)
-	response, err := client.Get(apiURL)
+	response, err := client.Get(fmt.Sprintf("%s?%s", r.Config.ActiveProfile.URL, encodedParams))
 	if err != nil {
 		fmt.Println("Error:", err)
 		return nil, err
