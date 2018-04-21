@@ -28,6 +28,7 @@ import (
 
 // Output formats
 const (
+	CSV   = "csv"
 	JSON  = "json"
 	XML   = "xml"
 	TABLE = "table"
