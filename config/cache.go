@@ -26,6 +26,8 @@ import (
 	"unicode"
 )
 
+const FAKE = "fake"
+
 // APIArg are the args passable to an API
 type APIArg struct {
 	Name        string
@@ -46,7 +48,7 @@ type API struct {
 	Related      []string
 	Async        bool
 	Description  string
-	ResponseName string
+	ResponseKeys []string
 }
 
 var apiCache map[string]*API
@@ -138,9 +140,23 @@ func (c *Config) UpdateCache(response map[string]interface{}) interface{} {
 			})
 		}
 
+		// Add filter arg
+		apiArgs = append(apiArgs, &APIArg{
+			Name:        "filter=",
+			Type:        FAKE,
+			Description: "cloudmonkey specific response key filtering",
+		})
+
 		sort.Slice(apiArgs, func(i, j int) bool {
 			return apiArgs[i].Name < apiArgs[j].Name
 		})
+
+		var responseKeys []string
+		for _, respNode := range api["response"].([]interface{}) {
+			if resp, ok := respNode.(map[string]interface{}); ok {
+				responseKeys = append(responseKeys, fmt.Sprintf("%v,", resp["name"]))
+			}
+		}
 
 		var requiredArgs []string
 		for _, arg := range apiArgs {
@@ -157,6 +173,7 @@ func (c *Config) UpdateCache(response map[string]interface{}) interface{} {
 			RequiredArgs: requiredArgs,
 			Async:        isAsync,
 			Description:  description,
+			ResponseKeys: responseKeys,
 		}
 	}
 	return count
