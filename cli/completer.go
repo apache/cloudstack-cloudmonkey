@@ -173,6 +173,14 @@ func (t *autoCompleter) Do(line []rune, pos int) (options [][]rune, offset int) 
 				offset = 0
 				return
 			}
+			if arg.Type == config.FAKE && arg.Name == "filter=" {
+				options = [][]rune{}
+				offset = 0
+				for _, key := range apiFound.ResponseKeys {
+					options = append(options, []rune(key))
+				}
+				return
+			}
 
 			argName := strings.Replace(arg.Name, "=", "", -1)
 			var autocompleteAPI *config.API
