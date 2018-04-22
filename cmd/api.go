@@ -21,13 +21,13 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"strings"
-
-	"cloudmonkey/config"
 	"github.com/olekukonko/tablewriter"
 	"os"
 	"reflect"
 	"sort"
+	"strings"
+
+	"cloudmonkey/config"
 )
 
 var apiCommand *Command
@@ -56,6 +56,59 @@ func printText(itemMap map[string]interface{}) {
 		} else {
 			fmt.Printf("%s = %v\n", k, v)
 		}
+	}
+}
+
+func printResult(outputType string, response map[string]interface{}, filter []string) {
+	switch outputType {
+	case config.TABLE:
+		table := tablewriter.NewWriter(os.Stdout)
+		for k, v := range response {
+			valueType := reflect.TypeOf(v)
+			if valueType.Kind() == reflect.Slice {
+				items, ok := v.([]interface{})
+				if !ok {
+					continue
+				}
+				fmt.Printf("%s:\n", k)
+				var header []string
+				for _, item := range items {
+					row, ok := item.(map[string]interface{})
+					if !ok || len(row) < 1 {
+						continue
+					}
+
+					if len(header) == 0 {
+						for field, _ := range row {
+							if filter != nil && len(filter) > 0 {
+								for _, filterKey := range filter {
+									if filterKey == field {
+										header = append(header, field)
+									}
+								}
+								continue
+							}
+							header = append(header, field)
+						}
+						sort.Strings(header)
+						table.SetHeader(header)
+					}
+					var rowArray []string
+					for _, field := range header {
+						rowArray = append(rowArray, fmt.Sprintf("%v", row[field]))
+					}
+					table.Append(rowArray)
+				}
+			} else {
+				fmt.Printf("%s = %v\n", k, v)
+			}
+		}
+		table.Render()
+	case config.TEXT:
+		printText(response)
+	default:
+		jsonOutput, _ := json.MarshalIndent(response, "", "  ")
+		fmt.Println(string(jsonOutput))
 	}
 }
 
@@ -110,48 +163,14 @@ func init() {
 				return err
 			}
 
-			switch r.Config.Core.Output {
-			case config.TABLE:
-				table := tablewriter.NewWriter(os.Stdout)
-				for k, v := range response {
-					valueType := reflect.TypeOf(v)
-					if valueType.Kind() == reflect.Slice {
-						items, ok := v.([]interface{})
-						if !ok {
-							continue
-						}
-						fmt.Printf("%s:\n", k)
-						var header []string
-						for _, item := range items {
-							row, ok := item.(map[string]interface{})
-							if !ok || len(row) < 1 {
-								continue
-							}
-
-							if len(header) == 0 {
-								for field, _ := range row {
-									header = append(header, field)
-								}
-								sort.Strings(header)
-								table.SetHeader(header)
-							}
-							var rowArray []string
-							for _, field := range header {
-								rowArray = append(rowArray, fmt.Sprintf("%v", row[field]))
-							}
-							table.Append(rowArray)
-						}
-					} else {
-						fmt.Printf("%s = %v\n", k, v)
-					}
+			var filterKeys []string
+			for _, arg := range apiArgs {
+				if strings.HasPrefix(arg, "filter=") {
+					filterKeys = strings.Split(strings.Split(arg, "=")[1], ",")
 				}
-				table.Render()
-			case config.TEXT:
-				printText(response)
-			default:
-				jsonOutput, _ := json.MarshalIndent(response, "", "  ")
-				fmt.Println(string(jsonOutput))
 			}
+
+			printResult(r.Config.Core.Output, response, filterKeys)
 
 			return nil
 		},
