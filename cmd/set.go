@@ -49,6 +49,14 @@ func init() {
 			r.Config.UpdateConfig(subCommand, value)
 
 			if subCommand == "profile" && r.Shell != nil {
+				fmt.Println("Loaded server profile:", r.Config.Core.ProfileName)
+				fmt.Println("Url:        ", r.Config.ActiveProfile.URL)
+				fmt.Println("Username:   ", r.Config.ActiveProfile.Username)
+				fmt.Println("Domain:     ", r.Config.ActiveProfile.Domain)
+				fmt.Println("API Key:    ", r.Config.ActiveProfile.APIKey)
+				fmt.Println("Verify Cert:", r.Config.ActiveProfile.VerifyCert)
+				fmt.Println()
+
 				r.Shell.SetPrompt(r.Config.GetPrompt())
 			}
 			return nil
