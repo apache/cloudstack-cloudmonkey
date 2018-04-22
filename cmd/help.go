@@ -21,6 +21,8 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+
+	"cloudmonkey/config"
 )
 
 var helpCommand *Command
@@ -56,6 +58,9 @@ func init() {
 				fmt.Printf("%-24s %-8s %s\n", "==========", "====", "===========")
 			}
 			for _, arg := range api.Args {
+				if arg.Type == config.FAKE {
+					continue
+				}
 				fmt.Printf("\033[36m%-24s\033[0m \033[32m%-8s\033[0m ", strings.Replace(arg.Name, "=", "", -1), arg.Type)
 				info := []rune(arg.Description)
 				for i, r := range info {

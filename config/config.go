@@ -218,8 +218,6 @@ func (c *Config) UpdateConfig(key string, value string) {
 		c.ActiveProfile.SecretKey = value
 	case "verifycert":
 		c.ActiveProfile.VerifyCert = value == "true"
-	default:
-		return
 	}
 
 	reloadConfig(c)
