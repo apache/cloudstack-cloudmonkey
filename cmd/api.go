@@ -79,18 +79,20 @@ func printResult(outputType string, response map[string]interface{}, filter []st
 					}
 
 					if len(header) == 0 {
-						for field, _ := range row {
-							if filter != nil && len(filter) > 0 {
-								for _, filterKey := range filter {
+						if filter != nil && len(filter) > 0 {
+							for _, filterKey := range filter {
+								for field := range row {
 									if filterKey == field {
 										header = append(header, field)
 									}
 								}
-								continue
 							}
-							header = append(header, field)
+						} else {
+							for field := range row {
+								header = append(header, field)
+							}
+							sort.Strings(header)
 						}
-						sort.Strings(header)
 						table.SetHeader(header)
 					}
 					var rowArray []string
