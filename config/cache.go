@@ -26,6 +26,7 @@ import (
 	"unicode"
 )
 
+// FAKE is used for fake CLI only options like filter=
 const FAKE = "fake"
 
 // APIArg are the args passable to an API

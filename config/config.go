@@ -48,6 +48,7 @@ type ServerProfile struct {
 
 // Core block describes common options for the CLI
 type Core struct {
+	Prompt      string `ini:"prompt"`
 	AsyncBlock  bool   `ini:"asyncblock"`
 	Timeout     int    `ini:"timeout"`
 	Output      string `ini:"output"`
@@ -76,6 +77,7 @@ func getDefaultConfigDir() string {
 
 func defaultCoreConfig() Core {
 	return Core{
+		Prompt:      "🐵",
 		AsyncBlock:  false,
 		Timeout:     1800,
 		Output:      JSON,
@@ -194,6 +196,8 @@ func reloadConfig(cfg *Config) *Config {
 // UpdateConfig updates and saves config
 func (c *Config) UpdateConfig(key string, value string) {
 	switch key {
+	case "prompt":
+		c.Core.Prompt = value
 	case "asyncblock":
 		c.Core.AsyncBlock = value == "true"
 	case "output":

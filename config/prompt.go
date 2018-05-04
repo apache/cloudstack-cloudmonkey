@@ -36,14 +36,17 @@ func emoji() string {
 	return emojis[rand.Intn(len(emojis)-1)]
 }
 
-func promptMoji() string {
+func renderPrompt(prompt string) string {
 	if runtime.GOOS == "windows" {
 		return "cmk"
 	}
-	return emoji() // 🐒
+	if prompt == "random" {
+		return emoji()
+	}
+	return prompt
 }
 
 // GetPrompt returns prompt that the CLI should use
 func (c *Config) GetPrompt() string {
-	return fmt.Sprintf("(%s) %s > ", c.Core.ProfileName, promptMoji())
+	return fmt.Sprintf("(%s) %s > ", c.Core.ProfileName, renderPrompt(c.Core.Prompt))
 }
