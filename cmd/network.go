@@ -78,10 +78,13 @@ func Login(r *Request) (*http.Client, string, error) {
 
 	sessionKey := ""
 	resp, err := client.PostForm(r.Config.ActiveProfile.URL, params)
+	if err != nil {
+		return client, sessionKey, errors.New("failed to connect to management server, please check the URL: " + r.Config.ActiveProfile.URL)
+	}
 	if resp.StatusCode != http.StatusOK {
-		e := errors.New("failed to log in")
+		e := errors.New("failed to log in, please check the credentials")
 		if err != nil {
-			e = errors.New("failed to log in due to:" + err.Error())
+			e = errors.New("failed to log in due to " + err.Error())
 		}
 		return client, sessionKey, e
 	}
@@ -146,7 +149,6 @@ func NewAPIRequest(r *Request, api string, args []string) (map[string]interface{
 	client.Timeout = time.Duration(time.Duration(r.Config.Core.Timeout) * time.Second)
 	response, err := client.Get(fmt.Sprintf("%s?%s", r.Config.ActiveProfile.URL, encodedParams))
 	if err != nil {
-		fmt.Println("Error:", err)
 		return nil, err
 	}
 	body, _ := ioutil.ReadAll(response.Body)

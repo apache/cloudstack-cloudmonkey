@@ -32,6 +32,7 @@ func (c *Config) Version() string {
 // PrintHeader prints startup message in CLI mode
 func (c *Config) PrintHeader() {
 	fmt.Println(c.Name(), c.Version())
-	fmt.Println("Type \"help\" for details, \"sync\" to update API cache or press tab to list commands")
+	fmt.Println("Type \"help\" for details, \"sync\" to update API cache or press tab to list options")
+	fmt.Println("Report issue and features here: https://github.com/apache/cloudstack-cloudmonkey/issues")
 	fmt.Println()
 }

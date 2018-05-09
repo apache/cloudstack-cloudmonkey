@@ -82,9 +82,10 @@ func init() {
 
 			client, _, err := Login(r)
 			if client == nil || err != nil {
-				fmt.Println("Failed to login, check credentials")
+				fmt.Println("Failed to login, check credentials and try again.")
 			} else {
-				fmt.Println("Success!")
+				fmt.Println("Successfully logged in and saved credentials to the server profile.")
+				r.Config.UpdateConfig("", "")
 			}
 
 			return nil
