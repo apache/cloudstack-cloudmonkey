@@ -77,7 +77,7 @@ func getDefaultConfigDir() string {
 
 func defaultCoreConfig() Core {
 	return Core{
-		Prompt:      "🐵",
+		Prompt:      "🐱",
 		AsyncBlock:  false,
 		Timeout:     1800,
 		Output:      JSON,
