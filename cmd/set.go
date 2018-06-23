@@ -27,7 +27,7 @@ func init() {
 		Name: "set",
 		Help: "Configures options for cmk",
 		SubCommands: map[string][]string{
-			"prompt":     {"🐵", "random"},
+			"prompt":     {"🐵", "🐱", "random"},
 			"asyncblock": {"true", "false"},
 			"timeout":    {"600", "1800", "3600"},
 			"output":     {"json", "text", "table", "xml"},

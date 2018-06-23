@@ -26,7 +26,7 @@ func init() {
 		Name: "sync",
 		Help: "Discovers and updates APIs",
 		Handle: func(r *Request) error {
-			response, err := NewAPIRequest(r, "listApis", []string{"listall=true"})
+			response, err := NewAPIRequest(r, "listApis", []string{"listall=true"}, false)
 			if err != nil {
 				return err
 			}

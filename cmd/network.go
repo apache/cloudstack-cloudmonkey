@@ -26,14 +26,24 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/briandowns/spinner"
 	"io/ioutil"
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
+	"runtime"
 	"sort"
 	"strings"
 	"time"
 )
+
+var cursor = []string{"\r⣷ 😸", "\r⣯ 😹", "\r⣟ 😺", "\r⡿ 😻", "\r⢿ 😼", "\r⣻ 😽", "\r⣽ 😾", "\r⣾ 😻"}
+
+func init() {
+	if runtime.GOOS == "windows" {
+		cursor = []string{"|", "/", "-", "\\"}
+	}
+}
 
 func encodeRequestParams(params url.Values) string {
 	if params == nil {
@@ -98,8 +108,49 @@ func Login(r *Request) (*http.Client, string, error) {
 	return client, sessionKey, nil
 }
 
+func getResponseData(data map[string]interface{}) map[string]interface{} {
+	for k := range data {
+		if strings.HasSuffix(k, "response") {
+			return data[k].(map[string]interface{})
+		}
+	}
+	return nil
+}
+
+func pollAsyncJob(r *Request, jobId string) (map[string]interface{}, error) {
+	for timeout := float64(r.Config.Core.Timeout); timeout > 0.0; {
+		startTime := time.Now()
+		s := spinner.New(cursor, 200*time.Millisecond)
+		s.Color("blue", "bold")
+		s.Suffix = " polling for async API job result"
+		s.Start()
+		queryResult, queryError := NewAPIRequest(r, "queryAsyncJobResult", []string{"jobid=" + jobId}, false)
+		diff := time.Duration(1*time.Second).Nanoseconds() - time.Now().Sub(startTime).Nanoseconds()
+		if diff > 0 {
+			time.Sleep(time.Duration(diff) * time.Nanosecond)
+		}
+		s.Stop()
+		timeout = timeout - time.Now().Sub(startTime).Seconds()
+		if queryError != nil {
+			return queryResult, queryError
+		}
+		jobStatus := queryResult["jobstatus"].(float64)
+		if jobStatus == 0 {
+			continue
+		}
+		if jobStatus == 1 {
+			return queryResult["jobresult"].(map[string]interface{}), nil
+
+		}
+		if jobStatus == 2 {
+			return queryResult, errors.New("async API job failed")
+		}
+	}
+	return nil, errors.New("async API job query timed out")
+}
+
 // NewAPIRequest makes an API request to configured management server
-func NewAPIRequest(r *Request, api string, args []string) (map[string]interface{}, error) {
+func NewAPIRequest(r *Request, api string, args []string, isAsync bool) (map[string]interface{}, error) {
 	params := make(url.Values)
 	params.Add("command", api)
 	for _, arg := range args {
@@ -156,10 +207,16 @@ func NewAPIRequest(r *Request, api string, args []string) (map[string]interface{
 	var data map[string]interface{}
 	_ = json.Unmarshal([]byte(body), &data)
 
-	for k := range data {
-		if strings.HasSuffix(k, "response") {
-			return data[k].(map[string]interface{}), nil
+	if isAsync && r.Config.Core.AsyncBlock {
+		if jobResponse := getResponseData(data); jobResponse != nil && jobResponse["jobid"] != nil {
+			jobId := jobResponse["jobid"].(string)
+			return pollAsyncJob(r, jobId)
 		}
 	}
+
+	if apiResponse := getResponseData(data); apiResponse != nil {
+		return apiResponse, nil
+	}
+
 	return nil, errors.New("failed to decode response")
 }

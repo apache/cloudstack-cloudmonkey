@@ -160,7 +160,7 @@ func init() {
 				return nil
 			}
 
-			response, err := NewAPIRequest(r, api.Name, apiArgs)
+			response, err := NewAPIRequest(r, api.Name, apiArgs, api.Async)
 			if err != nil {
 				return err
 			}

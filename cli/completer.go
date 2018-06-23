@@ -212,7 +212,7 @@ func (t *autoCompleter) Do(line []rune, pos int) (options [][]rune, offset int) 
 				autocompleteAPIArgs = append(autocompleteAPIArgs, "templatefilter=all")
 			}
 			fmt.Printf("\nFetching options, please wait...")
-			response, _ := cmd.NewAPIRequest(r, autocompleteAPI.Name, autocompleteAPIArgs)
+			response, _ := cmd.NewAPIRequest(r, autocompleteAPI.Name, autocompleteAPIArgs, false)
 			fmt.Printf("\r")
 
 			var autocompleteOptions []selectOption
