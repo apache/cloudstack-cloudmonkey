@@ -143,7 +143,7 @@ func pollAsyncJob(r *Request, jobId string) (map[string]interface{}, error) {
 
 		}
 		if jobStatus == 2 {
-			return queryResult, errors.New("async API job failed")
+			return queryResult, errors.New("async API failed for job " + jobId)
 		}
 	}
 	return nil, errors.New("async API job query timed out")

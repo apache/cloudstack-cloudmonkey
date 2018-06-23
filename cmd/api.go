@@ -162,6 +162,9 @@ func init() {
 
 			response, err := NewAPIRequest(r, api.Name, apiArgs, api.Async)
 			if err != nil {
+				if response != nil {
+					printResult(r.Config.Core.Output, response, nil)
+				}
 				return err
 			}
 
