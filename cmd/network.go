@@ -117,14 +117,14 @@ func getResponseData(data map[string]interface{}) map[string]interface{} {
 	return nil
 }
 
-func pollAsyncJob(r *Request, jobId string) (map[string]interface{}, error) {
+func pollAsyncJob(r *Request, jobID string) (map[string]interface{}, error) {
 	for timeout := float64(r.Config.Core.Timeout); timeout > 0.0; {
 		startTime := time.Now()
 		s := spinner.New(cursor, 200*time.Millisecond)
 		s.Color("blue", "bold")
 		s.Suffix = " polling for async API job result"
 		s.Start()
-		queryResult, queryError := NewAPIRequest(r, "queryAsyncJobResult", []string{"jobid=" + jobId}, false)
+		queryResult, queryError := NewAPIRequest(r, "queryAsyncJobResult", []string{"jobid=" + jobID}, false)
 		diff := time.Duration(1*time.Second).Nanoseconds() - time.Now().Sub(startTime).Nanoseconds()
 		if diff > 0 {
 			time.Sleep(time.Duration(diff) * time.Nanosecond)
@@ -143,7 +143,7 @@ func pollAsyncJob(r *Request, jobId string) (map[string]interface{}, error) {
 
 		}
 		if jobStatus == 2 {
-			return queryResult, errors.New("async API failed for job " + jobId)
+			return queryResult, errors.New("async API failed for job " + jobID)
 		}
 	}
 	return nil, errors.New("async API job query timed out")
@@ -209,8 +209,8 @@ func NewAPIRequest(r *Request, api string, args []string, isAsync bool) (map[str
 
 	if isAsync && r.Config.Core.AsyncBlock {
 		if jobResponse := getResponseData(data); jobResponse != nil && jobResponse["jobid"] != nil {
-			jobId := jobResponse["jobid"].(string)
-			return pollAsyncJob(r, jobId)
+			jobID := jobResponse["jobid"].(string)
+			return pollAsyncJob(r, jobID)
 		}
 	}
 
