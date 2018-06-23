@@ -36,7 +36,7 @@ M = $(shell printf "\033[34;1m▶\033[0m ")
 
 .PHONY: all
 all: fmt vendor | $(BASE) ; $(info $(M) Building executable…) @ ## Build program binary
-	$Q cd $(BASE) && $(GO) build \
+	$Q cd $(BASE) && GOPATH=$(GOPATH) $(GO) build \
 		-tags release \
 		-ldflags '-s -w -X $(PACKAGE)/cmd.Version=$(VERSION) -X $(PACKAGE)/cmd.BuildDate=$(DATE)' \
 		-o bin/$(PACKAGE) cmk.go
