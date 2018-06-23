@@ -21,6 +21,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"os"
 	"sort"
 	"strings"
 	"unicode"
@@ -81,8 +82,8 @@ func (c *Config) GetCache() map[string]*API {
 func LoadCache(c *Config) {
 	cache, err := ioutil.ReadFile(c.CacheFile)
 	if err != nil {
-		fmt.Println("Please run sync, failed to read the cache file: " + c.CacheFile)
-		return
+		fmt.Fprintf(os.Stderr, "Loaded in-built API cache. Failed to read API cache, please run 'sync'.\n")
+		cache = []byte(preCache)
 	}
 	var data map[string]interface{}
 	_ = json.Unmarshal(cache, &data)

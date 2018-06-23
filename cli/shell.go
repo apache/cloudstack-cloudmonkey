@@ -27,12 +27,14 @@ import (
 	"github.com/mattn/go-shellwords"
 
 	"github.com/chzyer/readline"
+	"os"
 )
 
 var completer *autoCompleter
 
 // ExecShell starts a shell
-func ExecShell(cfg *config.Config) {
+func ExecShell(sysArgs []string) {
+	cfg := config.NewConfig()
 	completer = &autoCompleter{
 		Config: cfg,
 	}
@@ -58,6 +60,15 @@ func ExecShell(cfg *config.Config) {
 		panic(err)
 	}
 	defer shell.Close()
+
+	if len(sysArgs) > 0 {
+		err := ExecCmd(cfg, sysArgs, nil)
+		if err != nil {
+			fmt.Println("🙈 Error:", err)
+			os.Exit(1)
+		}
+		os.Exit(0)
+	}
 
 	cfg.PrintHeader()
 

@@ -18,23 +18,12 @@
 package main
 
 import (
-	"fmt"
 	"os"
 
 	"cloudmonkey/cli"
-	"cloudmonkey/config"
 )
 
 func main() {
 	args := os.Args[1:]
-	cfg := config.NewConfig()
-	if len(args) > 0 {
-		err := cli.ExecCmd(cfg, args, nil)
-		if err != nil {
-			fmt.Println("🙈 Error:", err)
-			os.Exit(1)
-		}
-	} else {
-		cli.ExecShell(cfg)
-	}
+	cli.ExecShell(args)
 }
