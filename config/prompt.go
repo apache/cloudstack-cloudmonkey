@@ -29,7 +29,7 @@ var emojis []string
 
 func init() {
 	rand.Seed(time.Now().Unix())
-	emojis = strings.Split("🐶 🐹 🐰 🐻 🐼 🐨 🐯 🦁 🐷 🐙 🙈 🙉 🙊 🐒 🐔 🐧 🐦 🐤 🐣 🐥 🐺 🐗 🐴 🦄 🐝 🐛 🐌 🐞 🐜 🕷 🦂 🦀 🐍 🐢 🐠 🐟 🐡 🐬 🐳 🐋 🐅 🐃 🐂 🐄 🐘 🐐 🐑 🐎 🐖 🐀 🐓 🦃 🕊 🐕 🐩 🐈 🐇 🐿  🐲 🌵 🦍 🦊 🦌 🦏 🦇 🦅 🦆 🦉 🦈 🦐 🦑 🦋 🌴 🍀 🍂 🍁 🍄 🌍 ⛅️", " ")
+	emojis = strings.Split("🐶 🐹 🐰 🐻 🐼 🐨 🐯 🦁 🐷 🐙 🙈 🙉 🙊 🐒 🐔 🐧 🐦 🐤 🐣 🐥 🐺 🐗 🐴 🦄 🐝 🐛 🐌 🐞 🐜 🕷 🦂 🦀 🐍 🐢 🐠 🐟 🐡 🐬 🐳 🐋 🐅 🐃 🐂 🐄 🐘 🐐 🐑 🐎 🐖 🐀 🐓 🦃 🕊 🐕 🐩 🐈 🐇 🐿 🐲 🌵 🦍 🦊 🦌 🦏 🦇 🦅 🦆 🦉 🦈 🦐 🦑 🦋 🌴 🍀 🍂 🍁 🍄 🌍 ⛅️", " ")
 }
 
 func emoji() string {

@@ -78,10 +78,10 @@ func getDefaultConfigDir() string {
 func defaultCoreConfig() Core {
 	return Core{
 		Prompt:      "🐱",
-		AsyncBlock:  false,
+		AsyncBlock:  true,
 		Timeout:     1800,
 		Output:      JSON,
-		ProfileName: "local",
+		ProfileName: "localcloud",
 	}
 }
 
