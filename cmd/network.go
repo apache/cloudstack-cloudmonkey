@@ -27,21 +27,20 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"net/http/cookiejar"
 	"net/url"
 	"sort"
 	"strings"
 	"time"
 )
 
-func findSessionCookie(cookies []*http.Cookie) string {
-	var sessionKey string = ""
+func findSessionCookie(cookies []*http.Cookie) *http.Cookie {
 	for _, cookie := range cookies {
 		if cookie.Name == "sessionkey" {
-			sessionKey = cookie.Value
-			break
+			return cookie
 		}
 	}
-	return sessionKey
+	return nil
 }
 
 // Login logs in a user based on provided request and returns http client and session key
@@ -54,8 +53,8 @@ func Login(r *Request) (string, error) {
 	params.Add("response", "json")
 
 	url, _ := url.Parse(r.Config.ActiveProfile.URL)
-	if sessionKey := findSessionCookie(r.Client().Jar.Cookies(url)); sessionKey != "" {
-		return sessionKey, nil
+	if sessionCookie := findSessionCookie(r.Client().Jar.Cookies(url)); sessionCookie != nil {
+		return sessionCookie.Value, nil
 	}
 
 	spinner := r.Config.StartSpinner("trying to log in...")
@@ -74,7 +73,22 @@ func Login(r *Request) (string, error) {
 		return "", e
 	}
 
-	return findSessionCookie(resp.Cookies()), nil
+	var sessionKey string
+	curTime := time.Now()
+	for _, cookie := range resp.Cookies() {
+		if cookie.Expires.After(curTime) {
+			expiryDuration := cookie.Expires.Sub(curTime)
+			go func() {
+				time.Sleep(expiryDuration)
+				r.Client().Jar, _ = cookiejar.New(nil)
+			}()
+		}
+		if cookie.Name == "sessionkey" {
+			sessionKey = cookie.Value
+		}
+	}
+
+	return sessionKey, nil
 }
 
 func encodeRequestParams(params url.Values) string {
