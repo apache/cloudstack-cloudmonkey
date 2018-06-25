@@ -49,15 +49,13 @@ func init() {
 			value := strings.Join(r.Args[1:], " ")
 			r.Config.UpdateConfig(subCommand, value)
 
-			if subCommand == "profile" && r.Shell != nil {
+			if subCommand == "profile" && r.Config.HasShell {
 				fmt.Println("Loaded server profile:", r.Config.Core.ProfileName)
 				fmt.Println("Url:        ", r.Config.ActiveProfile.URL)
 				fmt.Println("Username:   ", r.Config.ActiveProfile.Username)
 				fmt.Println("Domain:     ", r.Config.ActiveProfile.Domain)
 				fmt.Println("API Key:    ", r.Config.ActiveProfile.APIKey)
 				fmt.Println()
-
-				r.Shell.SetPrompt(r.Config.GetPrompt())
 			}
 			return nil
 		},

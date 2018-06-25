@@ -97,7 +97,6 @@ func doInternal(line []rune, pos int, lineLen int, argName []rune) (newLine [][]
 }
 
 func (t *autoCompleter) Do(line []rune, pos int) (options [][]rune, offset int) {
-
 	apiMap := buildAPICacheMap(t.Config.GetAPIVerbMap())
 
 	var verbs []string
@@ -206,14 +205,16 @@ func (t *autoCompleter) Do(line []rune, pos int) (options [][]rune, offset int) 
 				return nil, 0
 			}
 
-			r := cmd.NewRequest(nil, completer.Config, nil, nil)
+			r := cmd.NewRequest(nil, completer.Config, nil)
 			autocompleteAPIArgs := []string{"listall=true"}
 			if autocompleteAPI.Noun == "templates" {
-				autocompleteAPIArgs = append(autocompleteAPIArgs, "templatefilter=all")
+				autocompleteAPIArgs = append(autocompleteAPIArgs, "templatefilter=executable")
 			}
-			fmt.Printf("\nFetching options, please wait...")
+
+			fmt.Println("")
+			spinner := t.Config.StartSpinner("fetching options, please wait...")
 			response, _ := cmd.NewAPIRequest(r, autocompleteAPI.Name, autocompleteAPIArgs, false)
-			fmt.Printf("\r")
+			t.Config.StopSpinner(spinner)
 
 			var autocompleteOptions []selectOption
 			for _, v := range response {

@@ -18,12 +18,16 @@
 package config
 
 import (
+	"crypto/tls"
 	"fmt"
 	"github.com/mitchellh/go-homedir"
 	"gopkg.in/ini.v1"
+	"net/http"
+	"net/http/cookiejar"
 	"os"
 	"path"
 	"strconv"
+	"time"
 )
 
 // Output formats
@@ -46,6 +50,7 @@ type ServerProfile struct {
 	Domain    string `ini:"domain"`
 	APIKey    string `ini:"apikey"`
 	SecretKey string `ini:"secretkey"`
+	Client    *http.Client
 }
 
 // Core block describes common options for the CLI
@@ -65,6 +70,7 @@ type Config struct {
 	HistoryFile   string
 	CacheFile     string
 	LogFile       string
+	HasShell      bool
 	Core          *Core
 	ActiveProfile *ServerProfile
 }
@@ -110,6 +116,7 @@ func defaultConfig() *Config {
 		CacheFile:     path.Join(configDir, "cache"),
 		HistoryFile:   path.Join(configDir, "history"),
 		LogFile:       path.Join(configDir, "log"),
+		HasShell:      false,
 		Core:          &defaultCoreConfig,
 		ActiveProfile: &defaultProfile,
 	}
@@ -122,8 +129,19 @@ func GetProfiles() []string {
 	return profiles
 }
 
-func reloadConfig(cfg *Config) *Config {
+func newHttpClient(cfg *Config) *http.Client {
+	jar, _ := cookiejar.New(nil)
+	client := &http.Client{
+		Jar: jar,
+		Transport: &http.Transport{
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: !cfg.Core.VerifyCert},
+		},
+	}
+	client.Timeout = time.Duration(time.Duration(cfg.Core.Timeout) * time.Second)
+	return client
+}
 
+func reloadConfig(cfg *Config) *Config {
 	if _, err := os.Stat(cfg.Dir); err != nil {
 		os.Mkdir(cfg.Dir, 0700)
 	}
@@ -193,6 +211,7 @@ func reloadConfig(cfg *Config) *Config {
 		profiles = append(profiles, profile.Name())
 	}
 
+	cfg.ActiveProfile.Client = newHttpClient(cfg)
 	return cfg
 }
 
@@ -203,8 +222,9 @@ func (c *Config) UpdateConfig(key string, value string) {
 		c.Core.Prompt = value
 	case "asyncblock":
 		c.Core.AsyncBlock = value == "true"
-	case "output":
 	case "display":
+		fallthrough
+	case "output":
 		c.Core.Output = value
 	case "timeout":
 		intValue, _ := strconv.Atoi(value)

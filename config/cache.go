@@ -107,7 +107,7 @@ func (c *Config) UpdateCache(response map[string]interface{}) interface{} {
 	for _, node := range apiList {
 		api, valid := node.(map[string]interface{})
 		if !valid {
-			fmt.Println("Errro, moving on 🍌")
+			fmt.Println("Error, moving on...")
 			continue
 		}
 		apiName := api["name"].(string)

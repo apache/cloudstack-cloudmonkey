@@ -15,29 +15,36 @@
 // specific language governing permissions and limitations
 // under the License.
 
-package cmd
+package config
 
 import (
-	"cloudmonkey/config"
-	"net/http"
+	"github.com/briandowns/spinner"
+	"runtime"
+	"time"
 )
 
-// Request describes a command request
-type Request struct {
-	Command *Command
-	Config  *config.Config
-	Args    []string
+var cursor = []string{"\r⣷ 😸", "\r⣯ 😹", "\r⣟ 😺", "\r⡿ 😻", "\r⢿ 😼", "\r⣻ 😽", "\r⣽ 😾", "\r⣾ 😻"}
+
+func init() {
+	if runtime.GOOS == "windows" {
+		cursor = []string{"|", "/", "-", "\\"}
+	}
 }
 
-func (r *Request) Client() *http.Client {
-	return r.Config.ActiveProfile.Client
+// StartSpinner starts and returns a waiting cursor that the CLI can use
+func (c *Config) StartSpinner(suffix string) *spinner.Spinner {
+	if !c.HasShell {
+		return nil
+	}
+	waiter := spinner.New(cursor, 200*time.Millisecond)
+	waiter.Color("blue", "bold")
+	waiter.Suffix = " " + suffix
+	waiter.Start()
+	return waiter
 }
 
-// NewRequest creates a new request from a command
-func NewRequest(cmd *Command, cfg *config.Config, args []string) *Request {
-	return &Request{
-		Command: cmd,
-		Config:  cfg,
-		Args:    args,
+func (c *Config) StopSpinner(waiter *spinner.Spinner) {
+	if waiter != nil {
+		waiter.Stop()
 	}
 }

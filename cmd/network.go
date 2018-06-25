@@ -21,28 +21,60 @@ import (
 	"bytes"
 	"crypto/hmac"
 	"crypto/sha1"
-	"crypto/tls"
 	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/briandowns/spinner"
 	"io/ioutil"
 	"net/http"
-	"net/http/cookiejar"
 	"net/url"
-	"runtime"
 	"sort"
 	"strings"
 	"time"
 )
 
-var cursor = []string{"\r⣷ 😸", "\r⣯ 😹", "\r⣟ 😺", "\r⡿ 😻", "\r⢿ 😼", "\r⣻ 😽", "\r⣽ 😾", "\r⣾ 😻"}
-
-func init() {
-	if runtime.GOOS == "windows" {
-		cursor = []string{"|", "/", "-", "\\"}
+func findSessionCookie(cookies []*http.Cookie) string {
+	var sessionKey string = ""
+	for _, cookie := range cookies {
+		if cookie.Name == "sessionkey" {
+			sessionKey = cookie.Value
+			break
+		}
 	}
+	return sessionKey
+}
+
+// Login logs in a user based on provided request and returns http client and session key
+func Login(r *Request) (string, error) {
+	params := make(url.Values)
+	params.Add("command", "login")
+	params.Add("username", r.Config.ActiveProfile.Username)
+	params.Add("password", r.Config.ActiveProfile.Password)
+	params.Add("domain", r.Config.ActiveProfile.Domain)
+	params.Add("response", "json")
+
+	url, _ := url.Parse(r.Config.ActiveProfile.URL)
+	if sessionKey := findSessionCookie(r.Client().Jar.Cookies(url)); sessionKey != "" {
+		return sessionKey, nil
+	}
+
+	spinner := r.Config.StartSpinner("trying to log in...")
+	resp, err := r.Client().PostForm(url.String(), params)
+	r.Config.StopSpinner(spinner)
+
+	if err != nil {
+		return "", errors.New("failed to authenticate with the CloudStack server, please check the settings: " + err.Error())
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		e := errors.New("failed to authenticate, please check the credentials")
+		if err != nil {
+			e = errors.New("failed to authenticate due to " + err.Error())
+		}
+		return "", e
+	}
+
+	return findSessionCookie(resp.Cookies()), nil
 }
 
 func encodeRequestParams(params url.Values) string {
@@ -69,45 +101,6 @@ func encodeRequestParams(params url.Values) string {
 	return buf.String()
 }
 
-// Login logs in a user based on provided request and returns http client and session key
-func Login(r *Request) (*http.Client, string, error) {
-	params := make(url.Values)
-	params.Add("command", "login")
-	params.Add("username", r.Config.ActiveProfile.Username)
-	params.Add("password", r.Config.ActiveProfile.Password)
-	params.Add("domain", r.Config.ActiveProfile.Domain)
-	params.Add("response", "json")
-
-	jar, _ := cookiejar.New(nil)
-	client := &http.Client{
-		Jar: jar,
-		Transport: &http.Transport{
-			TLSClientConfig: &tls.Config{InsecureSkipVerify: !r.Config.Core.VerifyCert},
-		},
-	}
-
-	sessionKey := ""
-	resp, err := client.PostForm(r.Config.ActiveProfile.URL, params)
-	if err != nil {
-		return client, sessionKey, errors.New("failed to authenticate with the CloudStack server, please check the settings: " + err.Error())
-	}
-	if resp.StatusCode != http.StatusOK {
-		e := errors.New("failed to authenticate, please check the credentials")
-		if err != nil {
-			e = errors.New("failed to authenticate due to " + err.Error())
-		}
-		return client, sessionKey, e
-	}
-
-	for _, cookie := range resp.Cookies() {
-		if cookie.Name == "sessionkey" {
-			sessionKey = cookie.Value
-			break
-		}
-	}
-	return client, sessionKey, nil
-}
-
 func getResponseData(data map[string]interface{}) map[string]interface{} {
 	for k := range data {
 		if strings.HasSuffix(k, "response") {
@@ -120,17 +113,14 @@ func getResponseData(data map[string]interface{}) map[string]interface{} {
 func pollAsyncJob(r *Request, jobID string) (map[string]interface{}, error) {
 	for timeout := float64(r.Config.Core.Timeout); timeout > 0.0; {
 		startTime := time.Now()
-		s := spinner.New(cursor, 200*time.Millisecond)
-		s.Color("blue", "bold")
-		s.Suffix = " polling for async API job result"
-		s.Start()
+		spinner := r.Config.StartSpinner("polling for async API result")
 		queryResult, queryError := NewAPIRequest(r, "queryAsyncJobResult", []string{"jobid=" + jobID}, false)
 		diff := time.Duration(1*time.Second).Nanoseconds() - time.Now().Sub(startTime).Nanoseconds()
 		if diff > 0 {
 			time.Sleep(time.Duration(diff) * time.Nanosecond)
 		}
-		s.Stop()
 		timeout = timeout - time.Now().Sub(startTime).Seconds()
+		r.Config.StopSpinner(spinner)
 		if queryError != nil {
 			return queryResult, queryError
 		}
@@ -161,7 +151,6 @@ func NewAPIRequest(r *Request, api string, args []string, isAsync bool) (map[str
 	}
 	params.Add("response", "json")
 
-	var client *http.Client
 	var encodedParams string
 	var err error
 
@@ -172,12 +161,6 @@ func NewAPIRequest(r *Request, api string, args []string, isAsync bool) (map[str
 		if len(apiKey) > 0 {
 			params.Add("apiKey", apiKey)
 		}
-
-		client = &http.Client{
-			Transport: &http.Transport{
-				TLSClientConfig: &tls.Config{InsecureSkipVerify: !r.Config.Core.VerifyCert},
-			},
-		}
 		encodedParams = encodeRequestParams(params)
 
 		mac := hmac.New(sha1.New, []byte(secretKey))
@@ -185,8 +168,7 @@ func NewAPIRequest(r *Request, api string, args []string, isAsync bool) (map[str
 		signature := base64.StdEncoding.EncodeToString(mac.Sum(nil))
 		encodedParams = encodedParams + fmt.Sprintf("&signature=%s", url.QueryEscape(signature))
 	} else if len(r.Config.ActiveProfile.Username) > 0 && len(r.Config.ActiveProfile.Password) > 0 {
-		var sessionKey string
-		client, sessionKey, err = Login(r)
+		sessionKey, err := Login(r)
 		if err != nil {
 			return nil, err
 		}
@@ -197,8 +179,7 @@ func NewAPIRequest(r *Request, api string, args []string, isAsync bool) (map[str
 		return nil, errors.New("failed to authenticate to make API call")
 	}
 
-	client.Timeout = time.Duration(time.Duration(r.Config.Core.Timeout) * time.Second)
-	response, err := client.Get(fmt.Sprintf("%s?%s", r.Config.ActiveProfile.URL, encodedParams))
+	response, err := r.Client().Get(fmt.Sprintf("%s?%s", r.Config.ActiveProfile.URL, encodedParams))
 	if err != nil {
 		return nil, err
 	}

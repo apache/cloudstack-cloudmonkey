@@ -80,8 +80,7 @@ func init() {
 			r.Config.ActiveProfile.Password = password
 			r.Config.ActiveProfile.Domain = domain
 
-			client, _, err := Login(r)
-			if client == nil || err != nil {
+			if sessionKey, err := Login(r); err != nil || sessionKey == "" {
 				fmt.Println("Failed to login, check credentials and try again.")
 			} else {
 				fmt.Println("Successfully logged in and saved credentials to the server profile.")

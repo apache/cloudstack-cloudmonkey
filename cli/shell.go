@@ -31,12 +31,22 @@ import (
 )
 
 var completer *autoCompleter
+var shell *readline.Instance
 
 // ExecShell starts a shell
 func ExecShell(sysArgs []string) {
 	cfg := config.NewConfig()
 	completer = &autoCompleter{
 		Config: cfg,
+	}
+
+	if len(sysArgs) > 0 {
+		err := ExecCmd(cfg, sysArgs)
+		if err != nil {
+			fmt.Println("🙈 Error:", err)
+			os.Exit(1)
+		}
+		os.Exit(0)
 	}
 
 	shell, err := readline.NewEx(&readline.Config{
@@ -61,15 +71,7 @@ func ExecShell(sysArgs []string) {
 	}
 	defer shell.Close()
 
-	if len(sysArgs) > 0 {
-		err := ExecCmd(cfg, sysArgs, nil)
-		if err != nil {
-			fmt.Println("🙈 Error:", err)
-			os.Exit(1)
-		}
-		os.Exit(0)
-	}
-
+	cfg.HasShell = true
 	cfg.PrintHeader()
 
 	for {
@@ -99,7 +101,7 @@ func ExecShell(sysArgs []string) {
 			args = strings.Split(line, " ")
 		}
 
-		err = ExecCmd(cfg, args, shell)
+		err = ExecCmd(cfg, args)
 		if err != nil {
 			fmt.Println("🙈 Error:", err)
 		}

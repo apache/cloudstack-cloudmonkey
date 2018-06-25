@@ -26,7 +26,9 @@ func init() {
 		Name: "sync",
 		Help: "Discovers and updates APIs",
 		Handle: func(r *Request) error {
+			spinner := r.Config.StartSpinner("discovering APIs, please wait...")
 			response, err := NewAPIRequest(r, "listApis", []string{"listall=true"}, false)
+			r.Config.StopSpinner(spinner)
 			if err != nil {
 				return err
 			}

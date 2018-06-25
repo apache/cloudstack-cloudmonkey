@@ -20,20 +20,19 @@ package cli
 import (
 	"cloudmonkey/cmd"
 	"cloudmonkey/config"
-	"github.com/chzyer/readline"
 )
 
 // ExecCmd executes a single provided command
-func ExecCmd(cfg *config.Config, args []string, shell *readline.Instance) error {
+func ExecCmd(cfg *config.Config, args []string) error {
 	if len(args) < 1 {
 		return nil
 	}
 
 	command := cmd.FindCommand(args[0])
 	if command != nil {
-		return command.Handle(cmd.NewRequest(command, cfg, shell, args[1:]))
+		return command.Handle(cmd.NewRequest(command, cfg, args[1:]))
 	}
 
 	catchAllHandler := cmd.GetAPIHandler()
-	return catchAllHandler.Handle(cmd.NewRequest(catchAllHandler, cfg, shell, args))
+	return catchAllHandler.Handle(cmd.NewRequest(catchAllHandler, cfg, args))
 }
