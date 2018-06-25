@@ -107,7 +107,11 @@ func printResult(outputType string, response map[string]interface{}, filter []st
 		}
 		table.Render()
 	case config.TEXT:
+	case config.DEFAULT:
 		printText(response)
+	case config.CSV:
+		fmt.Println("FIXME: implement CSV output")
+		fmt.Println(response)
 	default:
 		jsonOutput, _ := json.MarshalIndent(response, "", "  ")
 		fmt.Println(string(jsonOutput))

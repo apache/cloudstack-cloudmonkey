@@ -30,7 +30,7 @@ func init() {
 			"prompt":     {"🐵", "🐱", "random"},
 			"asyncblock": {"true", "false"},
 			"timeout":    {"600", "1800", "3600"},
-			"output":     {"json", "text", "table", "xml"},
+			"output":     {"json", "text", "table", "csv", "xml"},
 			"profile":    {},
 			"url":        {},
 			"username":   {},
@@ -55,7 +55,6 @@ func init() {
 				fmt.Println("Username:   ", r.Config.ActiveProfile.Username)
 				fmt.Println("Domain:     ", r.Config.ActiveProfile.Domain)
 				fmt.Println("API Key:    ", r.Config.ActiveProfile.APIKey)
-				fmt.Println("Verify Cert:", r.Config.ActiveProfile.VerifyCert)
 				fmt.Println()
 
 				r.Shell.SetPrompt(r.Config.GetPrompt())

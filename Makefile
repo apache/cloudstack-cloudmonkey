@@ -49,8 +49,8 @@ $(BASE): ; $(info $(M) Setting GOPATH…)
 run: all
 	./bin/cloudmonkey
 
-debug: all
-	$(GO) build -gcflags='-N -l' -o cmk cmk.go &&  dlv --listen=:2345 --headless=true --api-version=2 exec ./bin/cloudmonkey
+debug:
+	$(GO) build -gcflags='-N -l' -o cmk cmk.go &&  dlv --listen=:2345 --headless=true --api-version=2 exec ./cmk
 
 dist:
 	cd $(BASE)

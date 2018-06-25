@@ -82,19 +82,19 @@ func Login(r *Request) (*http.Client, string, error) {
 	client := &http.Client{
 		Jar: jar,
 		Transport: &http.Transport{
-			TLSClientConfig: &tls.Config{InsecureSkipVerify: !r.Config.ActiveProfile.VerifyCert},
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: !r.Config.Core.VerifyCert},
 		},
 	}
 
 	sessionKey := ""
 	resp, err := client.PostForm(r.Config.ActiveProfile.URL, params)
 	if err != nil {
-		return client, sessionKey, errors.New("failed to connect to management server, please check the URL: " + r.Config.ActiveProfile.URL)
+		return client, sessionKey, errors.New("failed to authenticate with the CloudStack server, please check the settings: " + err.Error())
 	}
 	if resp.StatusCode != http.StatusOK {
-		e := errors.New("failed to log in, please check the credentials")
+		e := errors.New("failed to authenticate, please check the credentials")
 		if err != nil {
-			e = errors.New("failed to log in due to " + err.Error())
+			e = errors.New("failed to authenticate due to " + err.Error())
 		}
 		return client, sessionKey, e
 	}
@@ -175,7 +175,7 @@ func NewAPIRequest(r *Request, api string, args []string, isAsync bool) (map[str
 
 		client = &http.Client{
 			Transport: &http.Transport{
-				TLSClientConfig: &tls.Config{InsecureSkipVerify: !r.Config.ActiveProfile.VerifyCert},
+				TLSClientConfig: &tls.Config{InsecureSkipVerify: !r.Config.Core.VerifyCert},
 			},
 		}
 		encodedParams = encodeRequestParams(params)
@@ -215,6 +215,9 @@ func NewAPIRequest(r *Request, api string, args []string, isAsync bool) (map[str
 	}
 
 	if apiResponse := getResponseData(data); apiResponse != nil {
+		if _, ok := apiResponse["errorcode"]; ok {
+			return nil, fmt.Errorf("(HTTP %v, error code %v) %v", apiResponse["errorcode"], apiResponse["cserrorcode"], apiResponse["errortext"])
+		}
 		return apiResponse, nil
 	}
 

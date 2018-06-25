@@ -30,20 +30,22 @@ import (
 const (
 	CSV   = "csv"
 	JSON  = "json"
-	XML   = "xml"
 	TABLE = "table"
 	TEXT  = "text"
+
+	// Old formats existing for some backward compatibilities
+	DEFAULT = "default" // This is same as 'text'
+	XML     = "xml"
 )
 
 // ServerProfile describes a management server
 type ServerProfile struct {
-	URL        string `ini:"url"`
-	Username   string `ini:"username"`
-	Password   string `ini:"password"`
-	Domain     string `ini:"domain"`
-	APIKey     string `ini:"apikey"`
-	SecretKey  string `ini:"secretkey"`
-	VerifyCert bool   `ini:"verifycert"`
+	URL       string `ini:"url"`
+	Username  string `ini:"username"`
+	Password  string `ini:"password"`
+	Domain    string `ini:"domain"`
+	APIKey    string `ini:"apikey"`
+	SecretKey string `ini:"secretkey"`
 }
 
 // Core block describes common options for the CLI
@@ -52,6 +54,7 @@ type Core struct {
 	AsyncBlock  bool   `ini:"asyncblock"`
 	Timeout     int    `ini:"timeout"`
 	Output      string `ini:"output"`
+	VerifyCert  bool   `ini:"verifycert"`
 	ProfileName string `ini:"profile"`
 }
 
@@ -81,19 +84,19 @@ func defaultCoreConfig() Core {
 		AsyncBlock:  true,
 		Timeout:     1800,
 		Output:      JSON,
+		VerifyCert:  true,
 		ProfileName: "localcloud",
 	}
 }
 
 func defaultProfile() ServerProfile {
 	return ServerProfile{
-		URL:        "http://localhost:8080/client/api",
-		Username:   "admin",
-		Password:   "password",
-		Domain:     "/",
-		APIKey:     "",
-		SecretKey:  "",
-		VerifyCert: false,
+		URL:       "http://localhost:8080/client/api",
+		Username:  "admin",
+		Password:  "password",
+		Domain:    "/",
+		APIKey:    "",
+		SecretKey: "",
 	}
 }
 
@@ -201,6 +204,7 @@ func (c *Config) UpdateConfig(key string, value string) {
 	case "asyncblock":
 		c.Core.AsyncBlock = value == "true"
 	case "output":
+	case "display":
 		c.Core.Output = value
 	case "timeout":
 		intValue, _ := strconv.Atoi(value)
@@ -221,7 +225,7 @@ func (c *Config) UpdateConfig(key string, value string) {
 	case "secretkey":
 		c.ActiveProfile.SecretKey = value
 	case "verifycert":
-		c.ActiveProfile.VerifyCert = value == "true"
+		c.Core.VerifyCert = value == "true"
 	}
 
 	reloadConfig(c)
