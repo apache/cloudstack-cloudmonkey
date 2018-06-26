@@ -56,14 +56,10 @@ dist:
 	cd $(BASE)
 	rm -fr dist
 	mkdir -p dist
-	GOOS=linux   GOARCH=amd64 $(GO) build -ldflags='-s -w' -o dist/cmk-linux-amd64 cmk.go
-	GOOS=linux   GOARCH=386   $(GO) build -ldflags='-s -w' -o dist/cmk-linux-i386 cmk.go
-	GOOS=linux   GOARCH=arm64 $(GO) build -ldflags='-s -w' -o dist/cmk-linux-arm64 cmk.go
-	GOOS=linux   GOARCH=arm   $(GO) build -ldflags='-s -w' -o dist/cmk-linux-arm cmk.go
-	GOOS=windows GOARCH=amd64 $(GO) build -ldflags='-s -w' -o dist/cmk-x64.exe cmk.go
-	GOOS=windows GOARCH=386   $(GO) build -ldflags='-s -w' -o dist/cmk-x32.exe cmk.go
-	GOOS=darwin  GOARCH=amd64 $(GO) build -ldflags='-s -w' -o dist/cmk-mac64.bin cmk.go
-	GOOS=darwin  GOARCH=386   $(GO) build -ldflags='-s -w' -o dist/cmk-mac32.bin cmk.go
+	GOOS=linux   GOARCH=amd64 $(GO) build -ldflags='-s -w' -o dist/cmk.linux.amd64 cmk.go
+	GOOS=linux   GOARCH=arm64 $(GO) build -ldflags='-s -w' -o dist/cmk.linux.arm64 cmk.go
+	GOOS=windows GOARCH=amd64 $(GO) build -ldflags='-s -w' -o dist/cmk.exe cmk.go
+	GOOS=darwin  GOARCH=amd64 $(GO) build -ldflags='-s -w' -o dist/cmk.darwin.amd64 cmk.go
 
 # Tools
 

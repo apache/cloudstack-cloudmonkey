@@ -18,9 +18,10 @@
 package config
 
 import (
-	"github.com/briandowns/spinner"
 	"runtime"
 	"time"
+
+	"github.com/briandowns/spinner"
 )
 
 var cursor = []string{"\r⣷ 😸", "\r⣯ 😹", "\r⣟ 😺", "\r⡿ 😻", "\r⢿ 😼", "\r⣻ 😽", "\r⣽ 😾", "\r⣾ 😻"}
@@ -37,12 +38,12 @@ func (c *Config) StartSpinner(suffix string) *spinner.Spinner {
 		return nil
 	}
 	waiter := spinner.New(cursor, 200*time.Millisecond)
-	waiter.Color("blue", "bold")
 	waiter.Suffix = " " + suffix
 	waiter.Start()
 	return waiter
 }
 
+// StopSpinner stops the provided spinner if it is valid
 func (c *Config) StopSpinner(waiter *spinner.Spinner) {
 	if waiter != nil {
 		waiter.Stop()

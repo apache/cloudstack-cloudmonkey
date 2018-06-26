@@ -29,6 +29,7 @@ type Request struct {
 	Args    []string
 }
 
+// Client method returns the http Client for the current server profile
 func (r *Request) Client() *http.Client {
 	return r.Config.ActiveProfile.Client
 }

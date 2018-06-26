@@ -44,13 +44,13 @@ const (
 
 // ServerProfile describes a management server
 type ServerProfile struct {
-	URL       string `ini:"url"`
-	Username  string `ini:"username"`
-	Password  string `ini:"password"`
-	Domain    string `ini:"domain"`
-	APIKey    string `ini:"apikey"`
-	SecretKey string `ini:"secretkey"`
-	Client    *http.Client
+	URL       string       `ini:"url"`
+	Username  string       `ini:"username"`
+	Password  string       `ini:"password"`
+	Domain    string       `ini:"domain"`
+	APIKey    string       `ini:"apikey"`
+	SecretKey string       `ini:"secretkey"`
+	Client    *http.Client `ini:"-"`
 }
 
 // Core block describes common options for the CLI
@@ -129,7 +129,7 @@ func GetProfiles() []string {
 	return profiles
 }
 
-func newHttpClient(cfg *Config) *http.Client {
+func newHTTPClient(cfg *Config) *http.Client {
 	jar, _ := cookiejar.New(nil)
 	client := &http.Client{
 		Jar: jar,
@@ -211,7 +211,7 @@ func reloadConfig(cfg *Config) *Config {
 		profiles = append(profiles, profile.Name())
 	}
 
-	cfg.ActiveProfile.Client = newHttpClient(cfg)
+	cfg.ActiveProfile.Client = newHTTPClient(cfg)
 	return cfg
 }
 
