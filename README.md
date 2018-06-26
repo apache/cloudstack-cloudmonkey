@@ -9,34 +9,26 @@ The modern cloudmonkey is a re-written and simplified port in Go and can be used
 with Apache CloudStack 4.9 and above. The legacy cloudmonkey written in Python
 can be used with Apache CloudStack 4.0-incubating and above.
 
-### Usage
-
-Work in progress: 6.0.0-alpha1 (TO BE UPDATED soon)
-
-For modern cloudmonkey usage, please see the [usage page](https://github.com/apache/cloudstack-cloudmonkey/wiki/Usage).
-
-Legacy cloudmonkey can be installed using `pip install cloudmonkey`.
-For legacy cloudmonkey, please see the [cwiki usage page](https://cwiki.apache.org/confluence/display/CLOUDSTACK/CloudStack+cloudmonkey+CLI).
+For documentation, kindly see the [wiki](https://github.com/apache/cloudstack-cloudmonkey/wiki).
 
 ### Development
 
-The following are various make targets you can run:
+For development the pre-requisites are Go 10 or latest and a unix-like
+environment. You can use the following targets for building:
 
     $ make help
 
-      all               Build program binary
-      run               Builds and runs cloudmonkey
-      dist              Builds release for various targets
-      clean             Cleans build artifacts
-      lint              Run golint
-      fmt               Run gofmt on all source files
-      check test tests  Run tests
-      test-bench        Run benchmarks
-      test-short        Run only short tests
-      test-verbose      Run tests in verbose mode with coverage reporting
-      test-race         Run tests with race detector
-      test-xml          Run tests with xUnit output
-      test-coverage     Run coverage tests
+      all             Build program binary
+      test-bench      Run benchmarks
+      test-short      Run only short tests
+      test-verbose    Run tests in verbose mode with coverage reporting
+      test-race       Run tests with race detector
+      check tests     Run tests
+      test-xml        Run tests with xUnit output
+      test-coverage   Run coverage tests
+      debug           Runs a debuggable binary using dlv
+      lint            Run golint
+      fmt             Run gofmt on all source files
 
 Build and run:
 
@@ -45,7 +37,7 @@ Build and run:
 Build and run manually:
 
     $ make all
-    $ ./bin/cloudmonkey
+    $ ./bin/cmk
 
 ### Community
 
@@ -69,14 +61,15 @@ Report issue(s) on the `user` mailing list and/or open a Github [issue](https://
 
 ### History
 
-`cloudmonkey` was originally written in Python and contributed to Apache CloudStack
-project by [Rohit Yadav](http://rohityadav.cloud) on 31 Oct 2012 under the Apache
-License 2.0. The original tool is also referred to as legacy cloudmonkey can
-be installed using `pip install cloudmonkey`.
+The original `cloudmonkey` was written in Python and contributed to Apache
+CloudStack project by [Rohit Yadav](http://rohityadav.cloud) on 31 Oct 2012
+under the Apache License 2.0. The Python-based original CLI is now referred to
+as the legacy cloudmonkey and can be installed using `pip install cloudmonkey`.
 
-Starting version 6.0.0, referred to as the modern cloudmonkey, is a simplified
-Go port of the original tool and ships as a standalone executable for several
-targets such as Linux, Mac and Windows.
+Starting version 6.0.0, the modern cloudmonkey `cmk` is a fast and simplified
+Go-port of the original tool with some backward incompatibilities and reduced
+feature set. It ships as a standalone 64-bit executable binary for several
+platforms such as Linux, Mac and Windows.
 
 ### License
 

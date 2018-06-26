@@ -16,7 +16,7 @@
 # under the License.
 
 # Makefile referenced from github.com/vincentbernat/hellogopher
-PACKAGE  = cloudmonkey
+PACKAGE  = cmk
 DATE    ?= $(shell date +%FT%T%z)
 VERSION ?= $(shell git describe --tags --always --dirty --match=v* 2> /dev/null || \
 			cat $(CURDIR)/.version 2> /dev/null || echo v0)
@@ -47,7 +47,7 @@ $(BASE): ; $(info $(M) Setting GOPATH…)
 	@ln -sf $(CURDIR) $@
 
 run: all
-	./bin/cloudmonkey
+	./bin/cmk
 
 debug:
 	$(GO) build -gcflags='-N -l' -o cmk cmk.go &&  dlv --listen=:2345 --headless=true --api-version=2 exec ./cmk

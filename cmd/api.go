@@ -27,7 +27,7 @@ import (
 	"sort"
 	"strings"
 
-	"cloudmonkey/config"
+	"cmk/config"
 )
 
 var apiCommand *Command

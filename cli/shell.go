@@ -22,7 +22,7 @@ import (
 	"io"
 	"strings"
 
-	"cloudmonkey/config"
+	"cmk/config"
 
 	"github.com/mattn/go-shellwords"
 

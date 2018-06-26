@@ -18,7 +18,7 @@
 package cmd
 
 import (
-	"cloudmonkey/config"
+	"cmk/config"
 	"net/http"
 )
 
