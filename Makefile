@@ -52,7 +52,7 @@ run: all
 debug:
 	$(GO) build -gcflags='-N -l' -o cmk cmk.go &&  dlv --listen=:2345 --headless=true --api-version=2 exec ./cmk
 
-dist:
+dist: all
 	cd $(BASE)
 	rm -fr dist
 	mkdir -p dist

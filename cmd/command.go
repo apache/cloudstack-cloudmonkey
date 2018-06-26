@@ -58,12 +58,12 @@ func PrintUsage() {
 	for _, cmd := range commands {
 		commandHelp += fmt.Sprintf("%s\t\t%s\n", cmd.Name, cmd.Help)
 	}
-	fmt.Printf(`usage: cmk [options] [commands]
+	fmt.Printf(`Usage: cmk [options] [commands]
 
-Command Line Interface for Apache CloudStack
+CloudMonkey (cmk) 🐵 is a command line interface for Apache CloudStack.
 
-default commands:
+Default commands:
 %s
-
-Try cmk [help]`, commandHelp)
+Try cmk [help] or cmk [action api] -h
+`, commandHelp)
 }

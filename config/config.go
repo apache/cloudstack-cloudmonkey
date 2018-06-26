@@ -36,10 +36,7 @@ const (
 	JSON  = "json"
 	TABLE = "table"
 	TEXT  = "text"
-
-	// Old formats existing for some backward compatibilities
-	DEFAULT = "default" // This is same as 'text'
-	XML     = "xml"
+	XML   = "xml"
 )
 
 // ServerProfile describes a management server

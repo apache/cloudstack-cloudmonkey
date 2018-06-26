@@ -82,7 +82,9 @@ func (c *Config) GetCache() map[string]*API {
 func LoadCache(c *Config) {
 	cache, err := ioutil.ReadFile(c.CacheFile)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Loaded in-built API cache. Failed to read API cache, please run 'sync'.\n")
+		if c.HasShell {
+			fmt.Fprintf(os.Stderr, "Loaded in-built API cache. Failed to read API cache, please run 'sync'.\n")
+		}
 		cache = []byte(preCache)
 	}
 	var data map[string]interface{}
@@ -156,6 +158,9 @@ func (c *Config) UpdateCache(response map[string]interface{}) interface{} {
 		var responseKeys []string
 		for _, respNode := range api["response"].([]interface{}) {
 			if resp, ok := respNode.(map[string]interface{}); ok {
+				if resp == nil || resp["name"] == nil {
+					continue
+				}
 				responseKeys = append(responseKeys, fmt.Sprintf("%v,", resp["name"]))
 			}
 		}
