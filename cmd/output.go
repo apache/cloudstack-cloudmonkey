@@ -28,7 +28,7 @@ import (
 	"strings"
 )
 
-func printJson(response map[string]interface{}) {
+func printJSON(response map[string]interface{}) {
 	jsonOutput, err := json.MarshalIndent(response, "", "  ")
 	if err != nil {
 		fmt.Println("Error during json marshalling:", err.Error())
@@ -113,7 +113,7 @@ func printCsv(response map[string]interface{}) {
 				}
 
 				if idx == 0 {
-					for rk, _ := range row {
+					for rk := range row {
 						header = append(header, rk)
 					}
 					sort.Strings(header)
@@ -172,7 +172,7 @@ func printResult(outputType string, response map[string]interface{}, filter []st
 	response = filterResponse(response, filter)
 	switch outputType {
 	case config.JSON:
-		printJson(response)
+		printJSON(response)
 	case config.TABLE:
 		printTable(response)
 	case config.TEXT:
