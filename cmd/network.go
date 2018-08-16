@@ -158,7 +158,7 @@ func NewAPIRequest(r *Request, api string, args []string, isAsync bool) (map[str
 	params := make(url.Values)
 	params.Add("command", api)
 	for _, arg := range args {
-		parts := strings.Split(arg, "=")
+		parts := strings.SplitN(arg, "=", 2)
 		if len(parts) == 2 {
 			params.Add(parts[0], parts[1])
 		}
