@@ -35,6 +35,9 @@ import (
 )
 
 func findSessionCookie(cookies []*http.Cookie) *http.Cookie {
+	if cookies == nil {
+		return nil
+	}
 	for _, cookie := range cookies {
 		if cookie.Name == "sessionkey" {
 			return cookie
@@ -52,13 +55,13 @@ func Login(r *Request) (string, error) {
 	params.Add("domain", r.Config.ActiveProfile.Domain)
 	params.Add("response", "json")
 
-	url, _ := url.Parse(r.Config.ActiveProfile.URL)
-	if sessionCookie := findSessionCookie(r.Client().Jar.Cookies(url)); sessionCookie != nil {
+	msUrl, _ := url.Parse(r.Config.ActiveProfile.URL)
+	if sessionCookie := findSessionCookie(r.Client().Jar.Cookies(msUrl)); sessionCookie != nil {
 		return sessionCookie.Value, nil
 	}
 
 	spinner := r.Config.StartSpinner("trying to log in...")
-	resp, err := r.Client().PostForm(url.String(), params)
+	resp, err := r.Client().PostForm(msUrl.String(), params)
 	r.Config.StopSpinner(spinner)
 
 	if err != nil {
@@ -75,18 +78,19 @@ func Login(r *Request) (string, error) {
 
 	var sessionKey string
 	curTime := time.Now()
+	expiryDuration := 15 * time.Minute
 	for _, cookie := range resp.Cookies() {
 		if cookie.Expires.After(curTime) {
-			expiryDuration := cookie.Expires.Sub(curTime)
-			go func() {
-				time.Sleep(expiryDuration)
-				r.Client().Jar, _ = cookiejar.New(nil)
-			}()
+			expiryDuration = cookie.Expires.Sub(curTime)
 		}
 		if cookie.Name == "sessionkey" {
 			sessionKey = cookie.Value
 		}
 	}
+	go func() {
+		time.Sleep(expiryDuration)
+		r.Client().Jar, _ = cookiejar.New(nil)
+	}()
 
 	return sessionKey, nil
 }
@@ -197,6 +201,21 @@ func NewAPIRequest(r *Request, api string, args []string, isAsync bool) (map[str
 	if err != nil {
 		return nil, err
 	}
+
+	if response != nil && response.StatusCode == http.StatusUnauthorized {
+		r.Client().Jar, _ = cookiejar.New(nil)
+		sessionKey, err := Login(r)
+		if err != nil {
+			return nil, err
+		}
+		params.Del("sessionkey")
+		params.Add("sessionkey", sessionKey)
+		response, err = r.Client().Get(fmt.Sprintf("%s?%s", r.Config.ActiveProfile.URL, encodeRequestParams(params)))
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	body, _ := ioutil.ReadAll(response.Body)
 
 	var data map[string]interface{}
