@@ -1,6 +1,11 @@
 Apache CloudStack CloudMonkey Changelog
 ---------------------------------------
 
+Version 5.3.4
+=============
+This release includes
+- Allow ssl version to be negotiated automatically
+
 Version 5.3.3
 =============
 This release includes

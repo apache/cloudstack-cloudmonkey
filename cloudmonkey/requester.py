@@ -70,7 +70,7 @@ def login(url, username, password, domain="/", verifysslcert=False):
 
     sessionkey = ''
     session = requests.Session()
-    session.mount('https://', SSLAdapter(ssl.PROTOCOL_TLSv1))
+    session.mount('https://', SSLAdapter())
 
     try:
         resp = session.post(url, params=args, verify=verifysslcert)
@@ -217,7 +217,7 @@ def make_request(command, args, logger, url, credentials, expires,
     args["signature"] = sign_request(args, credentials['secretkey'])
 
     session = requests.Session()
-    session.mount('https://', SSLAdapter(ssl.PROTOCOL_TLSv1))
+    session.mount('https://', SSLAdapter())
 
     try:
         response = session.get(url, params=args, verify=verifysslcert)
