@@ -22,7 +22,7 @@ MAINTAINER "Apache CloudStack" <dev@cloudstack.apache.org>
 LABEL Description="Apache CloudStack CloudMonkey; Python based CloudStack command line interface"
 LABEL Vendor="Apache.org"
 LABEL License=ApacheV2
-LABEL Version=5.3.3
+LABEL Version=5.3.4
 
 COPY . /cloudstack-cloudmonkey
 RUN pip install requests
