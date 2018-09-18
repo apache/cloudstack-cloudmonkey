@@ -55,13 +55,13 @@ func Login(r *Request) (string, error) {
 	params.Add("domain", r.Config.ActiveProfile.Domain)
 	params.Add("response", "json")
 
-	msUrl, _ := url.Parse(r.Config.ActiveProfile.URL)
-	if sessionCookie := findSessionCookie(r.Client().Jar.Cookies(msUrl)); sessionCookie != nil {
+	msURL, _ := url.Parse(r.Config.ActiveProfile.URL)
+	if sessionCookie := findSessionCookie(r.Client().Jar.Cookies(msURL)); sessionCookie != nil {
 		return sessionCookie.Value, nil
 	}
 
 	spinner := r.Config.StartSpinner("trying to log in...")
-	resp, err := r.Client().PostForm(msUrl.String(), params)
+	resp, err := r.Client().PostForm(msURL.String(), params)
 	r.Config.StopSpinner(spinner)
 
 	if err != nil {
