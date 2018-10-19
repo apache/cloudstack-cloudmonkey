@@ -20,7 +20,7 @@ package main
 import (
 	"os"
 
-	"cmk/cli"
+	"github.com/apache/cloudstack-cloudmonkey/cli"
 )
 
 func main() {

@@ -18,8 +18,8 @@
 package cli
 
 import (
-	"cmk/cmd"
-	"cmk/config"
+	"github.com/apache/cloudstack-cloudmonkey/cmd"
+	"github.com/apache/cloudstack-cloudmonkey/config"
 )
 
 // ExecCmd executes a single provided command

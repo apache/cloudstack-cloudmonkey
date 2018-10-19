@@ -20,14 +20,12 @@ package cli
 import (
 	"fmt"
 	"io"
+	"os"
 	"strings"
 
-	"cmk/config"
-
-	"github.com/mattn/go-shellwords"
-
+	"github.com/apache/cloudstack-cloudmonkey/config"
 	"github.com/chzyer/readline"
-	"os"
+	"github.com/mattn/go-shellwords"
 )
 
 var completer *autoCompleter

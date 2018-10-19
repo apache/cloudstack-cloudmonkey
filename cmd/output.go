@@ -18,9 +18,9 @@
 package cmd
 
 import (
-	"cmk/config"
 	"encoding/json"
 	"fmt"
+	"github.com/apache/cloudstack-cloudmonkey/config"
 	"github.com/olekukonko/tablewriter"
 	"os"
 	"reflect"

@@ -22,7 +22,7 @@ import (
 	"fmt"
 	"strings"
 
-	"cmk/config"
+	"github.com/apache/cloudstack-cloudmonkey/config"
 )
 
 var helpCommand *Command

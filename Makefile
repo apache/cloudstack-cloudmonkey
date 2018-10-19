@@ -20,11 +20,10 @@ PACKAGE  = cmk
 DATE    ?= $(shell date +%FT%T%z)
 VERSION ?= $(shell git describe --tags --always --dirty --match=v* 2> /dev/null || \
 			cat $(CURDIR)/.version 2> /dev/null || echo v0)
-GOPATH   = $(CURDIR)/.gopath
-BIN      = $(GOPATH)/bin
-BASE     = $(GOPATH)/src/$(PACKAGE)
-PKGS     = $(or $(PKG),$(shell cd $(BASE) && env GOPATH=$(GOPATH) $(GO) list ./... | grep -v "^$(PACKAGE)/vendor/"))
-TESTPKGS = $(shell env GOPATH=$(GOPATH) $(GO) list -f '{{ if or .TestGoFiles .XTestGoFiles }}{{ .ImportPath }}{{ end }}' $(PKGS))
+BIN      = $(CURDIR)/bin
+BASE     = $(CURDIR)
+PKGS     = $(or $(PKG),$(shell $(GO) list ./... | grep -v "^$(PACKAGE)/vendor/"))
+TESTPKGS = $(shell $(GO) list -f '{{ if or .TestGoFiles .XTestGoFiles }}{{ .ImportPath }}{{ end }}' $(PKGS))
 
 GO      = go
 GODOC   = godoc
@@ -35,25 +34,20 @@ Q = $(if $(filter 1,$V),,@)
 M = $(shell printf "\033[34;1m▶\033[0m ")
 
 .PHONY: all
-all: fmt vendor | $(BASE) ; $(info $(M) Building executable…) @ ## Build program binary
-	$Q cd $(BASE) && GOPATH=$(GOPATH) $(GO) build \
+all: fmt ; $(info $(M) Building executable…) @ ## Build program binary
+	$Q $(GO) build \
 		-tags release \
 		-ldflags '-s -w -X $(PACKAGE)/cmd.Version=$(VERSION) -X $(PACKAGE)/cmd.BuildDate=$(DATE)' \
 		-o bin/$(PACKAGE) cmk.go
 	$(info $(M) Done!) @
 
-$(BASE): ; $(info $(M) Setting GOPATH…)
-	@mkdir -p $(dir $@)
-	@ln -sf $(CURDIR) $@
-
 run: all
 	./bin/cmk
 
 debug:
-	$(GO) build -gcflags='-N -l' -o cmk cmk.go &&  dlv --listen=:2345 --headless=true --api-version=2 exec ./cmk
+	$(GO) build -gcflags='-N -l' -o cmk &&  dlv --listen=:2345 --headless=true --api-version=2 exec ./cmk
 
 dist: all
-	cd $(BASE)
 	rm -fr dist
 	mkdir -p dist
 	GOOS=linux   GOARCH=amd64 $(GO) build -ldflags='-s -w' -o dist/cmk.linux.amd64 cmk.go
@@ -64,7 +58,7 @@ dist: all
 # Tools
 
 GOLINT = $(BIN)/golint
-$(BIN)/golint: | $(BASE) ; $(info $(M) Building golint…)
+$(BIN)/golint:  $(BASE) ; $(info $(M) Building golint…)
 	$Q go get github.com/golang/lint/golint
 
 GOCOVMERGE = $(BIN)/gocovmerge
@@ -137,7 +131,6 @@ fmt: ; $(info $(M) Running gofmt…) @ ## Run gofmt on all source files
 
 .PHONY: clean
 clean: ; $(info $(M) Cleaning…)	@
-	@rm -rf $(GOPATH)
 	@rm -rf bin dist
 	@rm -rf test/tests.* test/coverage.*
 

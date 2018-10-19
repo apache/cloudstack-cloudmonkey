@@ -18,7 +18,7 @@
 package cmd
 
 import (
-	"cmk/config"
+	"github.com/apache/cloudstack-cloudmonkey/config"
 	"net/http"
 )
 

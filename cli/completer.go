@@ -23,8 +23,8 @@ import (
 	"strings"
 	"unicode"
 
-	"cmk/cmd"
-	"cmk/config"
+	"github.com/apache/cloudstack-cloudmonkey/cmd"
+	"github.com/apache/cloudstack-cloudmonkey/config"
 
 	"github.com/chzyer/readline/runes"
 )
