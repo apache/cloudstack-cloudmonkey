@@ -44,7 +44,7 @@ func NewParser() *Parser {
 func (p *Parser) Parse(line string) ([]string, error) {
 	args := []string{}
 	buf := ""
-	var escaped, doubleQuoted, singleQuoted, backQuote, dollarQuote bool
+	var escaped, doubleQuoted, singleQuoted, backQuote bool
 	backtick := ""
 
 	pos := -1
@@ -68,7 +68,7 @@ loop:
 		}
 
 		if isSpace(r) {
-			if singleQuoted || doubleQuoted || backQuote || dollarQuote {
+			if singleQuoted || doubleQuoted || backQuote {
 				buf += string(r)
 				backtick += string(r)
 			} else if got {
@@ -84,7 +84,7 @@ loop:
 
 		switch r {
 		case '`':
-			if !singleQuoted && !doubleQuoted && !dollarQuote {
+			if !singleQuoted && !doubleQuoted {
 				if p.ParseBacktick {
 					if backQuote {
 						out, err := shellRun(backtick)
@@ -100,51 +100,18 @@ loop:
 				backtick = ""
 				backQuote = !backQuote
 			}
-		case ')':
-			if !singleQuoted && !doubleQuoted && !backQuote {
-				if p.ParseBacktick {
-					if dollarQuote {
-						out, err := shellRun(backtick)
-						if err != nil {
-							return nil, err
-						}
-						buf = out
-					}
-					backtick = ""
-					dollarQuote = !dollarQuote
-					continue
-				}
-				backtick = ""
-				dollarQuote = !dollarQuote
-			}
-		case '(':
-			if !singleQuoted && !doubleQuoted && !backQuote {
-				if !dollarQuote && len(buf) > 0 && buf == "$" {
-					dollarQuote = true
-					buf += "("
-					continue
-				} else {
-					return nil, errors.New("invalid command line string")
-				}
-			}
 		case '"':
-			if !singleQuoted && !dollarQuote {
+			if !singleQuoted {
 				doubleQuoted = !doubleQuoted
 				continue
 			}
 		case '\'':
-			if !doubleQuoted && !dollarQuote {
+			if !doubleQuoted {
 				singleQuoted = !singleQuoted
 				continue
 			}
 		case ';', '&', '|', '<', '>':
 			if !(escaped || singleQuoted || doubleQuoted || backQuote) {
-				if r == '>' {
-					if c := buf[0]; '0' <= c && c <= '9' {
-						i -= 1
-						got = false
-					}
-				}
 				pos = i
 				break loop
 			}
@@ -152,7 +119,7 @@ loop:
 
 		got = true
 		buf += string(r)
-		if backQuote || dollarQuote {
+		if backQuote {
 			backtick += string(r)
 		}
 	}
@@ -164,7 +131,7 @@ loop:
 		args = append(args, buf)
 	}
 
-	if escaped || singleQuoted || doubleQuoted || backQuote || dollarQuote {
+	if escaped || singleQuoted || doubleQuoted || backQuote {
 		return nil, errors.New("invalid command line string")
 	}
 

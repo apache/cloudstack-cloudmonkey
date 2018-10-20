@@ -14,9 +14,12 @@
 package spinner
 
 import (
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"io"
+	"os"
+	"runtime"
 	"strconv"
 	"sync"
 	"time"
@@ -183,8 +186,8 @@ type Spinner struct {
 }
 
 // New provides a pointer to an instance of Spinner with the supplied options
-func New(cs []string, d time.Duration) *Spinner {
-	return &Spinner{
+func New(cs []string, d time.Duration, options ...Option) *Spinner {
+	s:= &Spinner{
 		Delay:    d,
 		chars:    cs,
 		color:    color.New(color.FgWhite).SprintFunc(),
@@ -192,6 +195,38 @@ func New(cs []string, d time.Duration) *Spinner {
 		Writer:   color.Output,
 		active:   false,
 		stopChan: make(chan struct{}, 1),
+	}
+
+	for _, option := range options {
+		option(s)
+	}
+
+	return s
+}
+
+type Option func(*Spinner)
+
+type Options struct {
+	Color string
+	Suffix string
+	FinalMSG string
+}
+
+func WithColor(color string) Option {
+	return func(s *Spinner) {
+		s.Color(color)
+	}
+}
+
+func WithSuffix(suffix string) Option {
+	return func(s *Spinner) {
+		s.Suffix = suffix
+	}
+}
+
+func WithFinalMSG(finalMsg string) Option {
+	return func(s *Spinner) {
+		s.FinalMSG = finalMsg
 	}
 }
 
@@ -216,7 +251,16 @@ func (s *Spinner) Start() {
 				default:
 					s.lock.Lock()
 					s.erase()
-					outColor := fmt.Sprintf("%s%s%s ", s.Prefix, s.color(s.chars[i]), s.Suffix)
+					var outColor string
+					if runtime.GOOS == "windows" {
+						if s.Writer == os.Stderr {
+							outColor = fmt.Sprintf("\r%s%s%s ", s.Prefix, s.chars[i], s.Suffix)
+						} else {
+							outColor = fmt.Sprintf("\r%s%s%s ", s.Prefix, s.color(s.chars[i]), s.Suffix)
+						}
+					} else {
+						outColor = fmt.Sprintf("%s%s%s ", s.Prefix, s.color(s.chars[i]), s.Suffix)
+					}
 					outPlain := fmt.Sprintf("%s%s%s ", s.Prefix, s.chars[i], s.Suffix)
 					fmt.Fprint(s.Writer, outColor)
 					s.lastOutput = outPlain
@@ -297,7 +341,21 @@ func (s *Spinner) UpdateCharSet(cs []string) {
 // Caller must already hold s.lock.
 func (s *Spinner) erase() {
 	n := utf8.RuneCountInString(s.lastOutput)
-	for _, c := range []string{"\b", " ", "\b"} {
+	if runtime.GOOS == "windows" {
+		clearString := "\r"
+		for i := 0; i < n; i++ {
+			clearString += " "
+		}
+		fmt.Fprintf(s.Writer, clearString)
+		return
+	}
+	del, _ := hex.DecodeString("7f")
+	for _, c := range []string{
+		"\b",
+		string(del),
+		"\b",
+		"\033[K", // for macOS Terminal
+	} {
 		for i := 0; i < n; i++ {
 			fmt.Fprintf(s.Writer, c)
 		}
