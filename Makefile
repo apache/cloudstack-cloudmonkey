@@ -35,7 +35,7 @@ M = $(shell printf "\033[34;1m▶\033[0m ")
 
 .PHONY: all
 all: fmt ; $(info $(M) Building executable…) @ ## Build program binary
-	$Q $(GO) build \
+	$Q $(GO) build -mod=vendor \
 		-tags release \
 		-ldflags '-s -w -X $(PACKAGE)/cmd.Version=$(VERSION) -X $(PACKAGE)/cmd.BuildDate=$(DATE)' \
 		-o bin/$(PACKAGE) cmk.go
@@ -45,15 +45,15 @@ run: all
 	./bin/cmk
 
 debug:
-	$(GO) build -gcflags='-N -l' -o cmk &&  dlv --listen=:2345 --headless=true --api-version=2 exec ./cmk
+	$(GO) build -mod=vendor -gcflags='-N -l' -o cmk &&  dlv --listen=:2345 --headless=true --api-version=2 exec ./cmk
 
 dist: all
 	rm -fr dist
 	mkdir -p dist
-	GOOS=linux   GOARCH=amd64 $(GO) build -ldflags='-s -w' -o dist/cmk.linux.amd64 cmk.go
-	GOOS=linux   GOARCH=arm64 $(GO) build -ldflags='-s -w' -o dist/cmk.linux.arm64 cmk.go
-	GOOS=windows GOARCH=amd64 $(GO) build -ldflags='-s -w' -o dist/cmk.exe cmk.go
-	GOOS=darwin  GOARCH=amd64 $(GO) build -ldflags='-s -w' -o dist/cmk.darwin.amd64 cmk.go
+	GOOS=linux   GOARCH=amd64 $(GO) build -mod=vendor -ldflags='-s -w' -o dist/cmk.linux.amd64 cmk.go
+	GOOS=linux   GOARCH=arm64 $(GO) build -mod=vendor -ldflags='-s -w' -o dist/cmk.linux.arm64 cmk.go
+	GOOS=windows GOARCH=amd64 $(GO) build -mod=vendor -ldflags='-s -w' -o dist/cmk.exe cmk.go
+	GOOS=darwin  GOARCH=amd64 $(GO) build -mod=vendor -ldflags='-s -w' -o dist/cmk.darwin.amd64 cmk.go
 
 # Tools
 
@@ -123,7 +123,7 @@ lint: vendor | $(BASE) $(GOLINT) ; $(info $(M) Running golint…) @ ## Run golin
 
 .PHONY: fmt
 fmt: ; $(info $(M) Running gofmt…) @ ## Run gofmt on all source files
-	@ret=0 && for d in $$($(GO) list -f '{{.Dir}}' ./... | grep -v /vendor/); do \
+	@ret=0 && for d in $$($(GO) list -mod=vendor -f '{{.Dir}}' ./... | grep -v /vendor/); do \
 		$(GOFMT) -l -w $$d/*.go || ret=$$? ; \
 	 done ; exit $$ret
 
