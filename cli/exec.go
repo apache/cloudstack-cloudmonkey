@@ -18,12 +18,32 @@
 package cli
 
 import (
+	"fmt"
+	"strings"
+
 	"github.com/apache/cloudstack-cloudmonkey/cmd"
-	"github.com/apache/cloudstack-cloudmonkey/config"
+	"github.com/mattn/go-shellwords"
 )
 
+func ExecLine(line string) error {
+	shellwords.ParseEnv = true
+	parser := shellwords.NewParser()
+	args, err := parser.Parse(line)
+	if err != nil {
+		fmt.Println("🙈 Failed to parse line:", err)
+		return err
+	}
+
+	if parser.Position > 0 {
+		line = fmt.Sprintf("shell %s %v", cfg.Name(), line)
+		args = strings.Split(line, " ")
+	}
+
+	return ExecCmd(args)
+}
+
 // ExecCmd executes a single provided command
-func ExecCmd(cfg *config.Config, args []string) error {
+func ExecCmd(args []string) error {
 	if len(args) < 1 {
 		return nil
 	}

@@ -24,8 +24,7 @@ func init() {
 		Name: "version",
 		Help: "Version info",
 		Handle: func(r *Request) error {
-			fmt.Println(r.Config.Name(), r.Config.Version())
-			fmt.Println("Copyright 2018 The Apache Software Foundation (http://www.apache.org/)")
+			fmt.Println(r.Config.About())
 			return nil
 		},
 	})

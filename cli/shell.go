@@ -19,27 +19,30 @@ package cli
 
 import (
 	"fmt"
-	"io"
 	"os"
-	"strings"
 
 	"github.com/apache/cloudstack-cloudmonkey/config"
-	"github.com/chzyer/readline"
-	"github.com/mattn/go-shellwords"
+	"github.com/c-bata/go-prompt"
 )
 
-var completer *autoCompleter
-var shell *readline.Instance
+var cfg *config.Config
+
+func executor(in string) {
+	if err := ExecLine(in); err != nil {
+		fmt.Println("🙈 Error:", err)
+	}
+}
+
+func prefix() (string, bool) {
+	return cfg.GetPrompt(), true
+}
 
 // ExecShell starts a shell
 func ExecShell(sysArgs []string) {
-	cfg := config.NewConfig()
-	completer = &autoCompleter{
-		Config: cfg,
-	}
+	cfg = config.NewConfig()
 
 	if len(sysArgs) > 0 {
-		err := ExecCmd(cfg, sysArgs)
+		err := ExecCmd(sysArgs)
 		if err != nil {
 			fmt.Println("🙈 Error:", err)
 			os.Exit(1)
@@ -47,61 +50,31 @@ func ExecShell(sysArgs []string) {
 		os.Exit(0)
 	}
 
-	shell, err := readline.NewEx(&readline.Config{
-		Prompt:            cfg.GetPrompt(),
-		HistoryFile:       cfg.HistoryFile,
-		AutoComplete:      completer,
-		InterruptPrompt:   "^C",
-		EOFPrompt:         "exit",
-		VimMode:           false,
-		HistorySearchFold: true,
-		FuncFilterInputRune: func(r rune) (rune, bool) {
-			switch r {
-			case readline.CharCtrlZ:
-				return r, false
-			}
-			return r, true
-		},
-	})
-
-	if err != nil {
-		panic(err)
-	}
-	defer shell.Close()
-
 	cfg.HasShell = true
 	cfg.PrintHeader()
 
-	for {
-		shell.SetPrompt(cfg.GetPrompt())
-		line, err := shell.Readline()
-		if err == readline.ErrInterrupt {
-			continue
-		} else if err == io.EOF {
-			break
-		}
+	lines, _ := readLines(cfg.HistoryFile)
 
-		line = strings.TrimSpace(line)
-		if len(line) < 1 {
-			continue
-		}
-
-		shellwords.ParseEnv = true
-		parser := shellwords.NewParser()
-		args, err := parser.Parse(line)
-		if err != nil {
-			fmt.Println("Failed to parse line:", err)
-			continue
-		}
-
-		if parser.Position > 0 {
-			line = fmt.Sprintf("shell %s %v", cfg.Name(), line)
-			args = strings.Split(line, " ")
-		}
-
-		err = ExecCmd(cfg, args)
-		if err != nil {
-			fmt.Println("🙈 Error:", err)
-		}
-	}
+	shell := prompt.New(
+		executor,
+		completer,
+		prompt.OptionTitle("cloudmonkey"),
+		prompt.OptionPrefix(cfg.GetPrompt()),
+		prompt.OptionLivePrefix(prefix),
+		prompt.OptionMaxSuggestion(8),
+		prompt.OptionHistory(lines),
+		prompt.OptionPrefixTextColor(prompt.DefaultColor),
+		prompt.OptionPreviewSuggestionTextColor(prompt.DarkBlue),
+		prompt.OptionSelectedSuggestionTextColor(prompt.White),
+		prompt.OptionSelectedSuggestionBGColor(prompt.DarkBlue),
+		prompt.OptionSelectedDescriptionTextColor(prompt.White),
+		prompt.OptionSelectedDescriptionBGColor(prompt.DarkGray),
+		prompt.OptionSuggestionTextColor(prompt.Black),
+		prompt.OptionSuggestionBGColor(prompt.White),
+		prompt.OptionDescriptionTextColor(prompt.Black),
+		prompt.OptionDescriptionBGColor(prompt.LightGray),
+		prompt.OptionScrollbarThumbColor(prompt.DarkBlue),
+		prompt.OptionScrollbarBGColor(prompt.LightGray),
+	)
+	shell.Run()
 }

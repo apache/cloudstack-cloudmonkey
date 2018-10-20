@@ -21,17 +21,11 @@ import (
 	"fmt"
 	"sort"
 	"strings"
-	"unicode"
 
 	"github.com/apache/cloudstack-cloudmonkey/cmd"
 	"github.com/apache/cloudstack-cloudmonkey/config"
-
-	"github.com/chzyer/readline/runes"
+	prompt "github.com/c-bata/go-prompt"
 )
-
-type autoCompleter struct {
-	Config *config.Config
-}
 
 func buildAPICacheMap(apiMap map[string][]*config.API) map[string][]*config.API {
 	for _, cmd := range cmd.AllCommands() {
@@ -66,207 +60,170 @@ func buildAPICacheMap(apiMap map[string][]*config.API) map[string][]*config.API 
 	return apiMap
 }
 
-func trimSpaceLeft(in []rune) []rune {
-	firstIndex := len(in)
-	for i, r := range in {
-		if unicode.IsSpace(r) == false {
-			firstIndex = i
-			break
+func inArray(s string, array []string) bool {
+	for _, item := range array {
+		if s == item {
+			return true
 		}
 	}
-	return in[firstIndex:]
+	return false
 }
 
-func doInternal(line []rune, pos int, lineLen int, argName []rune) (newLine [][]rune, offset int) {
-	offset = lineLen
-	if lineLen >= len(argName) {
-		if runes.HasPrefix(line, argName) {
-			if lineLen == len(argName) {
-				newLine = append(newLine, []rune{' '})
-			} else {
-				newLine = append(newLine, argName)
-			}
-			offset = offset - len(argName) - 1
+var cachedResponse map[string]interface{}
+
+func completer(in prompt.Document) []prompt.Suggest {
+	if in.TextBeforeCursor() == "" {
+		return []prompt.Suggest{}
+	}
+	args := strings.Split(strings.TrimLeft(in.TextBeforeCursor(), " "), " ")
+
+	for i := range args {
+		if args[i] == "|" {
+			return []prompt.Suggest{}
+		}
+	}
+
+	w := in.GetWordBeforeCursor()
+	s := []prompt.Suggest{}
+	apiMap := buildAPICacheMap(cfg.GetAPIVerbMap())
+
+	if len(args) <= 1 {
+		for verb := range apiMap {
+			s = append(s, prompt.Suggest{
+				Text: verb,
+			})
+		}
+	} else if len(args) == 2 {
+		for _, api := range apiMap[args[0]] {
+			s = append(s, prompt.Suggest{
+				Text:        api.Noun,
+				Description: api.Description,
+			})
 		}
 	} else {
-		if runes.HasPrefix(argName, line) {
-			newLine = append(newLine, argName[offset:])
+		var apiFound *config.API
+		for _, api := range apiMap[args[0]] {
+			if api.Noun == args[1] {
+				apiFound = api
+				break
+			}
 		}
-	}
-	return
-}
-
-func (t *autoCompleter) Do(line []rune, pos int) (options [][]rune, offset int) {
-	apiMap := buildAPICacheMap(t.Config.GetAPIVerbMap())
-
-	var verbs []string
-	for verb := range apiMap {
-		verbs = append(verbs, verb)
-		sort.Slice(apiMap[verb], func(i, j int) bool {
-			return apiMap[verb][i].Name < apiMap[verb][j].Name
-		})
-	}
-	sort.Strings(verbs)
-
-	line = trimSpaceLeft(line[:pos])
-
-	// Auto-complete verb
-	var verbFound string
-	for _, verb := range verbs {
-		search := verb + " "
-		if !runes.HasPrefix(line, []rune(search)) {
-			sLine, sOffset := doInternal(line, pos, len(line), []rune(search))
-			options = append(options, sLine...)
-			offset = sOffset
-		} else {
-			verbFound = verb
-			break
+		opts := []string{}
+		for _, arg := range args[2:] {
+			if strings.Contains(arg, "=") {
+				opts = append(opts, strings.Split(arg, "=")[0])
+			}
 		}
-	}
-	if len(verbFound) == 0 {
-		return
-	}
-
-	// Auto-complete noun
-	var nounFound string
-	line = trimSpaceLeft(line[len(verbFound):])
-	for _, api := range apiMap[verbFound] {
-		search := api.Noun + " "
-		if !runes.HasPrefix(line, []rune(search)) {
-			sLine, sOffset := doInternal(line, pos, len(line), []rune(search))
-			options = append(options, sLine...)
-			offset = sOffset
-		} else {
-			nounFound = api.Noun
-			break
-		}
-	}
-	if len(nounFound) == 0 {
-		return
-	}
-
-	// Find API
-	var apiFound *config.API
-	for _, api := range apiMap[verbFound] {
-		if api.Noun == nounFound {
-			apiFound = api
-			break
-		}
-	}
-	if apiFound == nil {
-		return
-	}
-
-	// Auto-complete api args
-	splitLine := strings.Split(string(line), " ")
-	line = trimSpaceLeft([]rune(splitLine[len(splitLine)-1]))
-	for _, arg := range apiFound.Args {
-		search := arg.Name
-		if !runes.HasPrefix(line, []rune(search)) {
-			sLine, sOffset := doInternal(line, pos, len(line), []rune(search))
-			options = append(options, sLine...)
-			offset = sOffset
-		} else {
-			if arg.Type == "boolean" {
-				options = [][]rune{[]rune("true "), []rune("false ")}
-				offset = 0
-				return
-			}
-			if arg.Type == config.FAKE && arg.Name == "filter=" {
-				options = [][]rune{}
-				offset = 0
-				for _, key := range apiFound.ResponseKeys {
-					options = append(options, []rune(key))
-				}
-				return
-			}
-
-			argName := strings.Replace(arg.Name, "=", "", -1)
-			var autocompleteAPI *config.API
-			var relatedNoun string
-			if argName == "id" || argName == "ids" {
-				relatedNoun = apiFound.Noun
-				if apiFound.Verb != "list" {
-					relatedNoun += "s"
-				}
-			} else if argName == "account" {
-				relatedNoun = "accounts"
-			} else {
-				relatedNoun = strings.Replace(strings.Replace(argName, "ids", "", -1), "id", "", -1) + "s"
-			}
-			for _, related := range apiMap["list"] {
-				if relatedNoun == related.Noun {
-					autocompleteAPI = related
-					break
-				}
-			}
-
-			if autocompleteAPI == nil {
-				return nil, 0
-			}
-
-			r := cmd.NewRequest(nil, completer.Config, nil)
-			autocompleteAPIArgs := []string{"listall=true"}
-			if autocompleteAPI.Noun == "templates" {
-				autocompleteAPIArgs = append(autocompleteAPIArgs, "templatefilter=executable")
-			}
-
-			fmt.Println("")
-			spinner := t.Config.StartSpinner("fetching options, please wait...")
-			response, _ := cmd.NewAPIRequest(r, autocompleteAPI.Name, autocompleteAPIArgs, false)
-			t.Config.StopSpinner(spinner)
-
-			var autocompleteOptions []selectOption
-			for _, v := range response {
-				switch obj := v.(type) {
-				case []interface{}:
-					if obj == nil {
+		if apiFound != nil {
+			if strings.HasSuffix(w, "=") {
+				var argFound *config.APIArg
+				for _, arg := range apiFound.Args {
+					if arg.Name+"=" == w {
+						argFound = arg
 						break
 					}
-					for _, item := range obj {
-						resource, ok := item.(map[string]interface{})
-						if !ok {
-							continue
-						}
-						opt := selectOption{}
-						if resource["id"] != nil {
-							opt.ID = resource["id"].(string)
-						}
-						if resource["name"] != nil {
-							opt.Name = resource["name"].(string)
-						} else if resource["username"] != nil {
-							opt.Name = resource["username"].(string)
-						}
-						if resource["displaytext"] != nil {
-							opt.Detail = resource["displaytext"].(string)
+				}
+				if argFound != nil {
+					switch argFound.Type {
+					case "boolean":
+						s = append(s, prompt.Suggest{
+							Text: "true",
+						})
+						s = append(s, prompt.Suggest{
+							Text: "false",
+						})
+					case config.FAKE:
+						// No suggestions for filter
+					default:
+						argName := argFound.Name
+						var optionsAPI *config.API
+						var relatedNoun string
+						if argName == "id" || argName == "ids" {
+							relatedNoun = apiFound.Noun
+							if apiFound.Verb != "list" {
+								relatedNoun += "s"
+							}
+						} else if argName == "account" {
+							relatedNoun = "accounts"
+						} else {
+							relatedNoun = strings.Replace(strings.Replace(argName, "ids", "", -1), "id", "", -1) + "s"
 						}
 
-						autocompleteOptions = append(autocompleteOptions, opt)
+						for _, related := range apiMap["list"] {
+							if relatedNoun == related.Noun {
+								optionsAPI = related
+								break
+							}
+						}
+						if optionsAPI != nil {
+							r := cmd.NewRequest(nil, cfg, nil)
+							optionsArgs := []string{"listall=true"}
+							if optionsAPI.Noun == "templates" {
+								optionsArgs = append(optionsArgs, "templatefilter=executable")
+							}
+
+							if cachedResponse == nil {
+								fmt.Println("")
+								spinner := cfg.StartSpinner("fetching options, please wait...")
+								cachedResponse, _ = cmd.NewAPIRequest(r, optionsAPI.Name, optionsArgs, false)
+								cfg.StopSpinner(spinner)
+							}
+
+							for _, v := range cachedResponse {
+								switch obj := v.(type) {
+								case []interface{}:
+									if obj == nil {
+										break
+									}
+									for _, item := range obj {
+										resource, ok := item.(map[string]interface{})
+										if !ok {
+											continue
+										}
+										opt := prompt.Suggest{}
+										if resource["id"] != nil {
+											opt.Text = resource["id"].(string)
+										}
+										if resource["name"] != nil {
+											opt.Description = resource["name"].(string)
+										} else if resource["username"] != nil {
+											opt.Description = resource["username"].(string)
+										}
+										if opt.Text == "" {
+											opt.Text = opt.Description
+										}
+										s = append(s, opt)
+									}
+									break
+								}
+							}
+
+						}
 					}
-					break
+					for idx, es := range s {
+						s[idx].Text = w + es.Text
+					}
+					return s
 				}
-			}
 
-			var selected string
-			if len(autocompleteOptions) > 1 {
-				sort.Slice(autocompleteOptions, func(i, j int) bool {
-					return autocompleteOptions[i].Name < autocompleteOptions[j].Name
-				})
-				selectedOption := showSelector(autocompleteOptions)
-				if strings.HasSuffix(arg.Name, "id=") || strings.HasSuffix(arg.Name, "ids=") {
-					selected = selectedOption.ID
-				} else {
-					selected = selectedOption.Name
-				}
 			} else {
-				if len(autocompleteOptions) == 1 {
-					selected = autocompleteOptions[0].ID
+				for _, arg := range apiFound.Args {
+					if inArray(arg.Name, opts) {
+						continue
+					}
+					s = append(s, prompt.Suggest{
+						Text:        arg.Name,
+						Description: arg.Description,
+					})
 				}
+				cachedResponse = nil
 			}
-			options = [][]rune{[]rune(selected + " ")}
-			offset = 0
 		}
 	}
 
-	return options, offset
+	sort.Slice(s, func(i, j int) bool {
+		return s[i].Text < s[j].Text
+	})
+
+	return prompt.FilterHasPrefix(s, w, true)
 }
