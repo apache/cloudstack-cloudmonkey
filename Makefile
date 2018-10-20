@@ -131,7 +131,7 @@ fmt: ; $(info $(M) Running gofmt…) @ ## Run gofmt on all source files
 
 .PHONY: clean
 clean: ; $(info $(M) Cleaning…)	@
-	@rm -rf bin dist
+	@rm -rf bin dist cloudstack-cloudmonkey
 	@rm -rf test/tests.* test/coverage.*
 
 .PHONY: help

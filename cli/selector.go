@@ -84,7 +84,7 @@ func showSelector(options []selectOption) selectOption {
 		Templates:         templates,
 		Size:              5,
 		Searcher:          searcher,
-		StartInSearchMode: true,
+		StartInSearchMode: false,
 		Keys: &promptui.SelectKeys{
 			Prev:     promptui.Key{Code: readline.CharPrev, Display: "↑"},
 			Next:     promptui.Key{Code: readline.CharNext, Display: "↓"},
