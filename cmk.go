@@ -18,16 +18,44 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"os"
 
 	"github.com/apache/cloudstack-cloudmonkey/cli"
+	"github.com/apache/cloudstack-cloudmonkey/cmd"
 	"github.com/apache/cloudstack-cloudmonkey/config"
 )
 
+func init() {
+	flag.Usage = func() {
+		cmd.PrintUsage()
+	}
+}
+
 func main() {
-	args := os.Args[1:]
-	cli.SetConfig(config.NewConfig())
+	outputFormat := flag.String("o", "", "output format: json, text, table, column, csv")
+	showVersion := flag.Bool("v", false, "show version")
+	profile := flag.String("p", "", "server profile")
+	flag.Parse()
+
+	cfg := config.NewConfig()
+
+	if *showVersion {
+		fmt.Println(cfg.Name(), cfg.Version())
+		os.Exit(0)
+	}
+
+	if *outputFormat != "" {
+		cfg.UpdateConfig("output", *outputFormat, false)
+	}
+
+	if *profile != "" {
+		cfg.UpdateConfig("profile", *profile, false)
+	}
+
+	cli.SetConfig(cfg)
+	args := flag.Args()
 	if len(args) > 0 {
 		if err := cli.ExecCmd(args); err != nil {
 			fmt.Println("🙈 Error:", err)

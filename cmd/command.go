@@ -56,14 +56,19 @@ func AddCommand(cmd *Command) {
 func PrintUsage() {
 	commandHelp := ""
 	for _, cmd := range commands {
-		commandHelp += fmt.Sprintf("%s\t\t%s\n", cmd.Name, cmd.Help)
+		commandHelp += fmt.Sprintf("  %-8s  %s\n", cmd.Name, cmd.Help)
 	}
-	fmt.Printf(`Usage: cmk [options] [commands]
+	fmt.Printf(`usage: cmk [flags] [commands|apis] [-h]
 
 CloudMonkey (cmk) 🐵 is a command line interface for Apache CloudStack.
 
+Allowed flags:
+  -h        Show this help message or API doc when specified after an API
+  -v        Print version
+  -o        API response output format: json, text, table, column, csv
+  -p        Server profile
+
 Default commands:
 %s
-Try cmk [help] or cmk [action api] -h
 `, commandHelp)
 }

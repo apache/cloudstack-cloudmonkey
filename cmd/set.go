@@ -47,7 +47,7 @@ func init() {
 			}
 			subCommand := r.Args[0]
 			value := strings.Join(r.Args[1:], " ")
-			r.Config.UpdateConfig(subCommand, value)
+			r.Config.UpdateConfig(subCommand, value, true)
 
 			if subCommand == "profile" && r.Config.HasShell {
 				fmt.Println("Loaded server profile:", r.Config.Core.ProfileName)
