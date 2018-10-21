@@ -21,6 +21,7 @@ require (
 	github.com/briandowns/spinner v0.0.0-20181018151057-dd69c579ff20
 	github.com/c-bata/go-prompt v0.2.2
 	github.com/fatih/color v1.7.0 // indirect
+	github.com/gofrs/flock v0.7.0
 	github.com/google/shlex v0.0.0-20150127133951-6f45313302b9
 	github.com/gopherjs/gopherjs v0.0.0-20181017120253-0766667cb4d1 // indirect
 	github.com/jtolds/gls v4.2.1+incompatible // indirect

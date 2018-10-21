@@ -27,6 +27,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/gofrs/flock"
 	"github.com/mitchellh/go-homedir"
 	"gopkg.in/ini.v1"
 )
@@ -140,6 +141,18 @@ func newHTTPClient(cfg *Config) *http.Client {
 }
 
 func reloadConfig(cfg *Config) *Config {
+	fileLock := flock.New(path.Join(getDefaultConfigDir(), "lock"))
+	err := fileLock.Lock()
+	if err != nil {
+		fmt.Println("Failed to grab config file lock, please try again")
+		return cfg
+	}
+	cfg = saveConfig(cfg)
+	fileLock.Unlock()
+	return cfg
+}
+
+func saveConfig(cfg *Config) *Config {
 	if _, err := os.Stat(cfg.Dir); err != nil {
 		os.Mkdir(cfg.Dir, 0700)
 	}
@@ -214,7 +227,7 @@ func reloadConfig(cfg *Config) *Config {
 }
 
 // UpdateConfig updates and saves config
-func (c *Config) UpdateConfig(key string, value string) {
+func (c *Config) UpdateConfig(key string, value string, update bool) {
 	switch key {
 	case "prompt":
 		c.Core.Prompt = value
@@ -246,7 +259,9 @@ func (c *Config) UpdateConfig(key string, value string) {
 		c.Core.VerifyCert = value == "true"
 	}
 
-	reloadConfig(c)
+	if update {
+		reloadConfig(c)
+	}
 }
 
 // NewConfig creates or reload config and loads API cache

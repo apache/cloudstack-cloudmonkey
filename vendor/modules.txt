@@ -4,6 +4,8 @@ github.com/briandowns/spinner
 github.com/c-bata/go-prompt
 # github.com/fatih/color v1.7.0
 github.com/fatih/color
+# github.com/gofrs/flock v0.7.0
+github.com/gofrs/flock
 # github.com/google/shlex v0.0.0-20150127133951-6f45313302b9
 github.com/google/shlex
 # github.com/mattn/go-colorable v0.0.9
