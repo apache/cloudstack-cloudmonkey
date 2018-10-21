@@ -19,6 +19,7 @@ package cli
 
 import (
 	"fmt"
+	"os"
 	"os/exec"
 	"runtime"
 
@@ -36,10 +37,9 @@ func ExecLine(line string) error {
 	if runtime.GOOS != "windows" {
 		for _, arg := range args {
 			if arg == "|" {
-				if result, err := exec.Command("bash", "-c", "cmk", line).Output(); err == nil {
-					fmt.Println(string(result))
-					return nil
-				}
+				result, err := exec.Command("bash", "-c", fmt.Sprintf("%s %v", os.Args[0], line)).Output()
+				fmt.Print(string(result))
+				return err
 			}
 		}
 	}
