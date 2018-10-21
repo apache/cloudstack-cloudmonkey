@@ -30,7 +30,7 @@ func init() {
 			"prompt":     {"🐵", "🐱", "random"},
 			"asyncblock": {"true", "false"},
 			"timeout":    {"600", "1800", "3600"},
-			"output":     {"json", "text", "table", "csv", "xml"},
+			"output":     {"json", "text", "table", "column", "csv"},
 			"profile":    {},
 			"url":        {},
 			"username":   {},

@@ -19,49 +19,39 @@ package cli
 
 import (
 	"fmt"
-	"os"
 
 	"github.com/apache/cloudstack-cloudmonkey/config"
 	"github.com/c-bata/go-prompt"
 )
 
+// CLI config instance
 var cfg *config.Config
 
-func executor(in string) {
-	if err := ExecLine(in); err != nil {
-		fmt.Println("🙈 Error:", err)
-	}
+// SetConfig allows to set a config.Config object to cli
+func SetConfig(c *config.Config) {
+	cfg = c
 }
 
-func prefix() (string, bool) {
-	return cfg.GetPrompt(), true
-}
-
-// ExecShell starts a shell
-func ExecShell(sysArgs []string) {
-	cfg = config.NewConfig()
-
-	if len(sysArgs) > 0 {
-		err := ExecCmd(sysArgs)
-		if err != nil {
-			fmt.Println("🙈 Error:", err)
-			os.Exit(1)
-		}
-		os.Exit(0)
-	}
-
+// ExecPrompt starts a CLI prompt
+func ExecPrompt() {
 	cfg.HasShell = true
 	cfg.PrintHeader()
 
 	lines, _ := readLines(cfg.HistoryFile)
 
 	shell := prompt.New(
-		executor,
+		func(in string) {
+			if err := ExecLine(in); err != nil {
+				fmt.Println("🙈 Error:", err)
+			}
+		},
 		completer,
 		prompt.OptionTitle("cloudmonkey"),
 		prompt.OptionPrefix(cfg.GetPrompt()),
-		prompt.OptionLivePrefix(prefix),
-		prompt.OptionMaxSuggestion(8),
+		prompt.OptionLivePrefix(func() (string, bool) {
+			return cfg.GetPrompt(), true
+		}),
+		prompt.OptionMaxSuggestion(5),
 		prompt.OptionHistory(lines),
 		prompt.OptionPrefixTextColor(prompt.DefaultColor),
 		prompt.OptionPreviewSuggestionTextColor(prompt.DarkBlue),

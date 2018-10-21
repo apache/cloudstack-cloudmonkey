@@ -4,14 +4,14 @@ github.com/briandowns/spinner
 github.com/c-bata/go-prompt
 # github.com/fatih/color v1.7.0
 github.com/fatih/color
+# github.com/google/shlex v0.0.0-20150127133951-6f45313302b9
+github.com/google/shlex
 # github.com/mattn/go-colorable v0.0.9
 github.com/mattn/go-colorable
 # github.com/mattn/go-isatty v0.0.4
 github.com/mattn/go-isatty
 # github.com/mattn/go-runewidth v0.0.3
 github.com/mattn/go-runewidth
-# github.com/mattn/go-shellwords v1.0.3
-github.com/mattn/go-shellwords
 # github.com/mattn/go-tty v0.0.0-20180907095812-13ff1204f104
 github.com/mattn/go-tty
 # github.com/mitchellh/go-homedir v1.0.0

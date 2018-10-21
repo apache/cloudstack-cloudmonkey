@@ -21,16 +21,17 @@ import "fmt"
 
 // Name of the CLI
 func (c *Config) Name() string {
-	return "cmk"
+	return "Apache CloudStack 🐵 CloudMonkey"
 }
 
-// About CLI
-func (c *Config) About() string {
-	return "Apache CloudStack 🐵 CloudMonkey 6.0.0-beta1"
+// Version CLI
+func (c *Config) Version() string {
+	return "6.0.0-beta1"
 }
 
 // PrintHeader prints startup message in CLI mode
 func (c *Config) PrintHeader() {
-	fmt.Println(c.About())
+	fmt.Println(c.Name(), c.Version())
 	fmt.Println("Report issues: https://github.com/apache/cloudstack-cloudmonkey/issues")
+	fmt.Println()
 }

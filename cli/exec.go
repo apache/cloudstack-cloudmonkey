@@ -19,24 +19,29 @@ package cli
 
 import (
 	"fmt"
-	"strings"
+	"os/exec"
+	"runtime"
 
 	"github.com/apache/cloudstack-cloudmonkey/cmd"
-	"github.com/mattn/go-shellwords"
+	"github.com/google/shlex"
 )
 
+// ExecLine executes a line of command
 func ExecLine(line string) error {
-	shellwords.ParseEnv = true
-	parser := shellwords.NewParser()
-	args, err := parser.Parse(line)
+	args, err := shlex.Split(line)
 	if err != nil {
-		fmt.Println("🙈 Failed to parse line:", err)
 		return err
 	}
 
-	if parser.Position > 0 {
-		line = fmt.Sprintf("shell %s %v", cfg.Name(), line)
-		args = strings.Split(line, " ")
+	if runtime.GOOS != "windows" {
+		for _, arg := range args {
+			if arg == "|" {
+				if result, err := exec.Command("bash", "-c", "cmk", line).Output(); err == nil {
+					fmt.Println(string(result))
+					return nil
+				}
+			}
+		}
 	}
 
 	return ExecCmd(args)

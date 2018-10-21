@@ -24,7 +24,7 @@ func init() {
 		Name: "version",
 		Help: "Version info",
 		Handle: func(r *Request) error {
-			fmt.Println(r.Config.About())
+			fmt.Println(r.Config.Name(), r.Config.Version())
 			return nil
 		},
 	})

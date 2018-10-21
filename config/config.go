@@ -20,23 +20,24 @@ package config
 import (
 	"crypto/tls"
 	"fmt"
-	"github.com/mitchellh/go-homedir"
-	"gopkg.in/ini.v1"
 	"net/http"
 	"net/http/cookiejar"
 	"os"
 	"path"
 	"strconv"
 	"time"
+
+	"github.com/mitchellh/go-homedir"
+	"gopkg.in/ini.v1"
 )
 
 // Output formats
 const (
-	CSV   = "csv"
-	JSON  = "json"
-	TABLE = "table"
-	TEXT  = "text"
-	XML   = "xml"
+	COLUMN = "column"
+	CSV    = "csv"
+	JSON   = "json"
+	TABLE  = "table"
+	TEXT   = "text"
 )
 
 // ServerProfile describes a management server

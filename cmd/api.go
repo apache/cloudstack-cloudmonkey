@@ -91,7 +91,9 @@ func init() {
 				}
 			}
 
-			printResult(r.Config.Core.Output, response, filterKeys)
+			if len(response) > 0 {
+				printResult(r.Config.Core.Output, response, filterKeys)
+			}
 
 			return nil
 		},

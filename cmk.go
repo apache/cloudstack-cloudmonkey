@@ -18,12 +18,22 @@
 package main
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/apache/cloudstack-cloudmonkey/cli"
+	"github.com/apache/cloudstack-cloudmonkey/config"
 )
 
 func main() {
 	args := os.Args[1:]
-	cli.ExecShell(args)
+	cli.SetConfig(config.NewConfig())
+	if len(args) > 0 {
+		if err := cli.ExecCmd(args); err != nil {
+			fmt.Println("🙈 Error:", err)
+			os.Exit(1)
+		}
+		os.Exit(0)
+	}
+	cli.ExecPrompt()
 }

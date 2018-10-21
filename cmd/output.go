@@ -20,12 +20,14 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/apache/cloudstack-cloudmonkey/config"
-	"github.com/olekukonko/tablewriter"
 	"os"
 	"reflect"
 	"sort"
 	"strings"
+	"text/tabwriter"
+
+	"github.com/apache/cloudstack-cloudmonkey/config"
+	"github.com/olekukonko/tablewriter"
 )
 
 func printJSON(response map[string]interface{}) {
@@ -95,6 +97,40 @@ func printText(response map[string]interface{}) {
 			fmt.Printf("%s = %v\n", k, v)
 		}
 	}
+}
+
+func printColumn(response map[string]interface{}) {
+	w := tabwriter.NewWriter(os.Stdout, 0, 0, 3, ' ', tabwriter.DiscardEmptyColumns)
+	for _, v := range response {
+		valueType := reflect.TypeOf(v)
+		if valueType.Kind() == reflect.Slice || valueType.Kind() == reflect.Map {
+			items, ok := v.([]interface{})
+			if !ok {
+				continue
+			}
+			var header []string
+			for idx, item := range items {
+				row, ok := item.(map[string]interface{})
+				if !ok || len(row) < 1 {
+					continue
+				}
+
+				if idx == 0 {
+					for rk := range row {
+						header = append(header, strings.ToUpper(rk))
+					}
+					sort.Strings(header)
+					fmt.Fprintln(w, strings.Join(header, "\t"))
+				}
+				var values []string
+				for _, key := range header {
+					values = append(values, fmt.Sprintf("%v", row[strings.ToLower(key)]))
+				}
+				fmt.Fprintln(w, strings.Join(values, "\t"))
+			}
+		}
+	}
+	w.Flush()
 }
 
 func printCsv(response map[string]interface{}) {
@@ -177,10 +213,10 @@ func printResult(outputType string, response map[string]interface{}, filter []st
 		printTable(response)
 	case config.TEXT:
 		printText(response)
+	case config.COLUMN:
+		printColumn(response)
 	case config.CSV:
 		printCsv(response)
-	case config.XML:
-		fmt.Println("Unfinished output format: xml, use something else")
 	default:
 		fmt.Println("Invalid output type configured, please fix that!")
 	}
