@@ -22,3 +22,6 @@ go:
 
 script:
   - make all
+
+env:
+  - GO111MODULE=on
