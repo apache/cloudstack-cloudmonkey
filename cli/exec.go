@@ -29,6 +29,7 @@ import (
 
 // ExecLine executes a line of command
 func ExecLine(line string) error {
+	writeHistory(line)
 	args, err := shlex.Split(line)
 	if err != nil {
 		return err

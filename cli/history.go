@@ -18,13 +18,22 @@ package cli
 
 import (
 	"bufio"
+	"fmt"
 	"os"
 )
 
-func readLines(path string) ([]string, error) {
-	file, err := os.Open(path)
+func initHistory() {
+	if _, err := os.Stat(cfg.HistoryFile); os.IsNotExist(err) {
+		os.OpenFile(cfg.HistoryFile, os.O_RDONLY|os.O_CREATE, 0600)
+	}
+}
+
+func readHistory() []string {
+	initHistory()
+	file, err := os.Open(cfg.HistoryFile)
 	if err != nil {
-		return nil, err
+		fmt.Println("Failed to open history file:", err)
+		return nil
 	}
 	defer file.Close()
 
@@ -33,5 +42,20 @@ func readLines(path string) ([]string, error) {
 	for scanner.Scan() {
 		lines = append(lines, scanner.Text())
 	}
-	return lines, scanner.Err()
+	if scanner.Err() != nil {
+		fmt.Println("Failed to read history:", scanner.Err())
+	}
+	return lines
+}
+
+func writeHistory(in string) {
+	file, err := os.OpenFile(cfg.HistoryFile, os.O_APPEND|os.O_WRONLY, 0600)
+	if err != nil {
+		fmt.Println("Failed to open history file:", err)
+	}
+	defer file.Close()
+
+	if _, err = file.WriteString(in + "\n"); err != nil {
+		fmt.Println("Failed to write history:", err)
+	}
 }

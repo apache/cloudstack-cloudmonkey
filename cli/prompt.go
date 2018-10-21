@@ -36,9 +36,6 @@ func SetConfig(c *config.Config) {
 func ExecPrompt() {
 	cfg.HasShell = true
 	cfg.PrintHeader()
-
-	lines, _ := readLines(cfg.HistoryFile)
-
 	shell := prompt.New(
 		func(in string) {
 			if err := ExecLine(in); err != nil {
@@ -46,13 +43,13 @@ func ExecPrompt() {
 			}
 		},
 		completer,
+		prompt.OptionHistory(readHistory()),
 		prompt.OptionTitle("cloudmonkey"),
 		prompt.OptionPrefix(cfg.GetPrompt()),
 		prompt.OptionLivePrefix(func() (string, bool) {
 			return cfg.GetPrompt(), true
 		}),
 		prompt.OptionMaxSuggestion(5),
-		prompt.OptionHistory(lines),
 		prompt.OptionPrefixTextColor(prompt.DefaultColor),
 		prompt.OptionPreviewSuggestionTextColor(prompt.DarkBlue),
 		prompt.OptionSelectedSuggestionTextColor(prompt.White),
