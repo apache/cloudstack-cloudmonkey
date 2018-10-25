@@ -18,7 +18,6 @@
 package cli
 
 import (
-	"fmt"
 	"sort"
 	"strings"
 
@@ -152,6 +151,22 @@ func completer(in prompt.Document) []prompt.Suggest {
 								break
 							}
 						}
+						if optionsAPI == nil {
+							if len(argFound.Related) > 0 {
+								apiCache := cfg.GetCache()
+								relatedAPIName := strings.ToLower(argFound.Related[0])
+								if apiCache[relatedAPIName] != nil {
+									optionsAPI = apiCache[relatedAPIName]
+								}
+							} else {
+								for _, related := range apiMap["list"] {
+									if strings.Contains(related.Noun, relatedNoun) {
+										optionsAPI = related
+										break
+									}
+								}
+							}
+						}
 						if optionsAPI != nil {
 							r := cmd.NewRequest(nil, cfg, nil)
 							optionsArgs := []string{"listall=true"}
@@ -160,7 +175,6 @@ func completer(in prompt.Document) []prompt.Suggest {
 							}
 
 							if cachedResponse == nil {
-								fmt.Println("")
 								spinner := cfg.StartSpinner("fetching options, please wait...")
 								cachedResponse, _ = cmd.NewAPIRequest(r, optionsAPI.Name, optionsArgs, false)
 								cfg.StopSpinner(spinner)
@@ -186,7 +200,7 @@ func completer(in prompt.Document) []prompt.Suggest {
 										} else if resource["username"] != nil {
 											opt.Description = resource["username"].(string)
 										}
-										if opt.Text == "" {
+										if argFound.Type == "string" {
 											opt.Text = opt.Description
 										}
 										s = append(s, opt)
