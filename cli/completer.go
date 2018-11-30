@@ -71,6 +71,12 @@ func inArray(s string, array []string) bool {
 var cachedResponse map[string]interface{}
 
 func completer(in prompt.Document) []prompt.Suggest {
+	if !cfg.Core.ParamCompletion {
+		return []prompt.Suggest{}
+	}
+	if in.TextBeforeCursor() == "" || len(strings.TrimRight(in.TextAfterCursor(), " ")) > 0 {
+		return []prompt.Suggest{}
+	}
 	args := strings.Split(strings.TrimLeft(in.TextBeforeCursor(), " "), " ")
 
 	for i := range args {

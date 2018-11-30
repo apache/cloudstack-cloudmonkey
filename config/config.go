@@ -54,12 +54,13 @@ type ServerProfile struct {
 
 // Core block describes common options for the CLI
 type Core struct {
-	Prompt      string `ini:"prompt"`
-	AsyncBlock  bool   `ini:"asyncblock"`
-	Timeout     int    `ini:"timeout"`
-	Output      string `ini:"output"`
-	VerifyCert  bool   `ini:"verifycert"`
-	ProfileName string `ini:"profile"`
+	Prompt          string `ini:"prompt"`
+	AsyncBlock      bool   `ini:"asyncblock"`
+	Timeout         int    `ini:"timeout"`
+	Output          string `ini:"output"`
+	ParamCompletion bool   `ini:"paramcompletion"`
+	VerifyCert      bool   `ini:"verifycert"`
+	ProfileName     string `ini:"profile"`
 }
 
 // Config describes CLI config file and default options
@@ -93,12 +94,13 @@ func getDefaultConfigDir() string {
 
 func defaultCoreConfig() Core {
 	return Core{
-		Prompt:      "🐱",
-		AsyncBlock:  true,
-		Timeout:     1800,
-		Output:      JSON,
-		VerifyCert:  true,
-		ProfileName: "localcloud",
+		Prompt:          "🐱",
+		AsyncBlock:      true,
+		Timeout:         1800,
+		Output:          JSON,
+		ParamCompletion: true,
+		VerifyCert:      true,
+		ProfileName:     "localcloud",
 	}
 }
 
@@ -263,6 +265,8 @@ func (c *Config) UpdateConfig(key string, value string, update bool) {
 		c.ActiveProfile.APIKey = value
 	case "secretkey":
 		c.ActiveProfile.SecretKey = value
+	case "paramcompletion":
+		c.Core.ParamCompletion = value == "true"
 	case "verifycert":
 		c.Core.VerifyCert = value == "true"
 	case "debug":
