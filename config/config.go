@@ -265,7 +265,15 @@ func (c *Config) UpdateConfig(key string, value string, update bool) {
 		c.ActiveProfile.SecretKey = value
 	case "verifycert":
 		c.Core.VerifyCert = value == "true"
+	case "debug":
+		if value == "true" {
+			EnableDebugging()
+		} else {
+			DisableDebugging()
+		}
 	}
+
+	Debug("UpdateConfig key:", key, " value:", value, " update:", update)
 
 	if update {
 		reloadConfig(c)

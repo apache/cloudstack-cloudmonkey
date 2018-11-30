@@ -67,6 +67,7 @@ Allowed flags:
   -v        Print version
   -o        API response output format: json, text, table, column, csv
   -p        Server profile
+  -d        Enable debug mode
 
 Default commands:
 %s

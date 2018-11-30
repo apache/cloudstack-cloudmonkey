@@ -36,6 +36,7 @@ func init() {
 func main() {
 	outputFormat := flag.String("o", "", "output format: json, text, table, column, csv")
 	showVersion := flag.Bool("v", false, "show version")
+	debug := flag.Bool("d", false, "enable debug mode")
 	profile := flag.String("p", "", "server profile")
 	flag.Parse()
 
@@ -44,6 +45,10 @@ func main() {
 	if *showVersion {
 		fmt.Println(cfg.Name(), cfg.Version())
 		os.Exit(0)
+	}
+
+	if *debug {
+		config.EnableDebugging()
 	}
 
 	if *outputFormat != "" {
@@ -56,6 +61,7 @@ func main() {
 
 	cli.SetConfig(cfg)
 	args := flag.Args()
+	config.Debug("cmdline args:", os.Args)
 	if len(args) > 0 {
 		if err := cli.ExecCmd(args); err != nil {
 			fmt.Println("🙈 Error:", err)

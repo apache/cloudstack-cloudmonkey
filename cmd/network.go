@@ -32,6 +32,8 @@ import (
 	"sort"
 	"strings"
 	"time"
+
+	"github.com/apache/cloudstack-cloudmonkey/config"
 )
 
 func findSessionCookie(cookies []*http.Cookie) *http.Cookie {
@@ -60,9 +62,11 @@ func Login(r *Request) (string, error) {
 		return sessionCookie.Value, nil
 	}
 
+	config.Debug("Login POST URL:", msURL, params)
 	spinner := r.Config.StartSpinner("trying to log in...")
 	resp, err := r.Client().PostForm(msURL.String(), params)
 	r.Config.StopSpinner(spinner)
+	config.Debug("Login POST response status code:", resp.StatusCode)
 
 	if err != nil {
 		return "", errors.New("failed to authenticate with the CloudStack server, please check the settings: " + err.Error())
@@ -92,6 +96,7 @@ func Login(r *Request) (string, error) {
 		r.Client().Jar, _ = cookiejar.New(nil)
 	}()
 
+	config.Debug("Login sessionkey:", sessionKey)
 	return sessionKey, nil
 }
 
@@ -197,10 +202,14 @@ func NewAPIRequest(r *Request, api string, args []string, isAsync bool) (map[str
 		return nil, errors.New("failed to authenticate to make API call")
 	}
 
-	response, err := r.Client().Get(fmt.Sprintf("%s?%s", r.Config.ActiveProfile.URL, encodedParams))
+	requestURL := fmt.Sprintf("%s?%s", r.Config.ActiveProfile.URL, encodedParams)
+	config.Debug("NewAPIRequest API request URL:", requestURL)
+
+	response, err := r.Client().Get(requestURL)
 	if err != nil {
 		return nil, err
 	}
+	config.Debug("NewAPIRequest response status code:", response.StatusCode)
 
 	if response != nil && response.StatusCode == http.StatusUnauthorized {
 		r.Client().Jar, _ = cookiejar.New(nil)
@@ -210,13 +219,16 @@ func NewAPIRequest(r *Request, api string, args []string, isAsync bool) (map[str
 		}
 		params.Del("sessionkey")
 		params.Add("sessionkey", sessionKey)
-		response, err = r.Client().Get(fmt.Sprintf("%s?%s", r.Config.ActiveProfile.URL, encodeRequestParams(params)))
+		requestURL = fmt.Sprintf("%s?%s", r.Config.ActiveProfile.URL, encodeRequestParams(params))
+		config.Debug("NewAPIRequest API request URL:", requestURL)
+		response, err = r.Client().Get(requestURL)
 		if err != nil {
 			return nil, err
 		}
 	}
 
 	body, _ := ioutil.ReadAll(response.Body)
+	config.Debug("NewAPIRequest response body:", string(body))
 
 	var data map[string]interface{}
 	_ = json.Unmarshal([]byte(body), &data)

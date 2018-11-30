@@ -22,13 +22,16 @@ import (
 	"os"
 	"os/exec"
 	"runtime"
+	"strings"
 
 	"github.com/apache/cloudstack-cloudmonkey/cmd"
+	"github.com/apache/cloudstack-cloudmonkey/config"
 	"github.com/google/shlex"
 )
 
 // ExecLine executes a line of command
 func ExecLine(line string) error {
+	config.Debug("ExecLine line:", line)
 	writeHistory(line)
 	args, err := shlex.Split(line)
 	if err != nil {
@@ -50,6 +53,7 @@ func ExecLine(line string) error {
 
 // ExecCmd executes a single provided command
 func ExecCmd(args []string) error {
+	config.Debug("ExecCmd args: ", strings.Join(args, ", "))
 	if len(args) < 1 {
 		return nil
 	}
