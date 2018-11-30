@@ -62,6 +62,10 @@ func ExecPrompt() {
 		prompt.OptionDescriptionBGColor(prompt.LightGray),
 		prompt.OptionScrollbarThumbColor(prompt.DarkBlue),
 		prompt.OptionScrollbarBGColor(prompt.LightGray),
+		prompt.OptionAddKeyBind(prompt.KeyBind{
+			Key: prompt.Tab,
+			Fn:  tabHandler,
+		}),
 	)
 	shell.Run()
 }

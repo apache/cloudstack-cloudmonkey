@@ -70,13 +70,19 @@ func inArray(s string, array []string) bool {
 
 var cachedResponse map[string]interface{}
 
+var tabPressed bool
+
+func tabHandler(_ *prompt.Buffer) {
+	tabPressed = true
+}
+
 func completer(in prompt.Document) []prompt.Suggest {
-	if !cfg.Core.ParamCompletion {
+	if !cfg.Core.ParamCompletion || len(strings.TrimRight(in.TextAfterCursor(), " ")) > 0 || !tabPressed {
+		tabPressed = false
 		return []prompt.Suggest{}
 	}
-	if in.TextBeforeCursor() == "" || len(strings.TrimRight(in.TextAfterCursor(), " ")) > 0 {
-		return []prompt.Suggest{}
-	}
+
+	tabPressed = false
 	args := strings.Split(strings.TrimLeft(in.TextBeforeCursor(), " "), " ")
 
 	for i := range args {
@@ -90,12 +96,14 @@ func completer(in prompt.Document) []prompt.Suggest {
 	apiMap := buildAPICacheMap(cfg.GetAPIVerbMap())
 
 	if len(args) <= 1 {
+		// API Verbs
 		for verb := range apiMap {
 			s = append(s, prompt.Suggest{
 				Text: verb,
 			})
 		}
 	} else if len(args) == 2 {
+		// API Resource
 		for _, api := range apiMap[args[0]] {
 			s = append(s, prompt.Suggest{
 				Text:        api.Noun,
@@ -224,6 +232,7 @@ func completer(in prompt.Document) []prompt.Suggest {
 				}
 
 			} else {
+				// API parameters
 				for _, arg := range apiFound.Args {
 					if inArray(arg.Name, opts) {
 						continue
