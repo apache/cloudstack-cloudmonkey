@@ -24,6 +24,7 @@ BIN      = $(CURDIR)/bin
 BASE     = $(CURDIR)
 PKGS     = $(or $(PKG),$(shell $(GO) list ./... | grep -v "^$(PACKAGE)/vendor/"))
 TESTPKGS = $(shell $(GO) list -f '{{ if or .TestGoFiles .XTestGoFiles }}{{ .ImportPath }}{{ end }}' $(PKGS))
+GIT_SHA  = $(shell git rev-parse --short HEAD)
 
 GO      = go
 GODOC   = godoc
@@ -34,10 +35,10 @@ Q = $(if $(filter 1,$V),,@)
 M = $(shell printf "\033[34;1m▶\033[0m ")
 
 .PHONY: all
-all: fmt ; $(info $(M) Building executable…) @ ## Build program binary
+all: fmt ; $(info $(M) Building executable… $(GIT_SHA)) @ ## Build program binary
 	$Q $(GO) build -mod=vendor \
 		-tags release \
-		-ldflags '-s -w -X $(PACKAGE)/cmd.Version=$(VERSION) -X $(PACKAGE)/cmd.BuildDate=$(DATE)' \
+		-ldflags '-s -w -X main.GitSHA=$(GIT_SHA) -X main.BuildDate=$(DATE)' \
 		-o bin/$(PACKAGE) cmk.go
 	$(info $(M) Done!) @
 
@@ -50,10 +51,10 @@ debug:
 dist: all
 	rm -fr dist
 	mkdir -p dist
-	GOOS=linux   GOARCH=amd64 $(GO) build -mod=vendor -ldflags='-s -w' -o dist/cmk.linux.amd64 cmk.go
-	GOOS=linux   GOARCH=arm64 $(GO) build -mod=vendor -ldflags='-s -w' -o dist/cmk.linux.arm64 cmk.go
-	GOOS=windows GOARCH=amd64 $(GO) build -mod=vendor -ldflags='-s -w' -o dist/cmk.exe cmk.go
-	GOOS=darwin  GOARCH=amd64 $(GO) build -mod=vendor -ldflags='-s -w' -o dist/cmk.darwin.amd64 cmk.go
+	GOOS=linux   GOARCH=amd64 $(GO) build -mod=vendor -ldflags='-s -w -X main.GitSHA=$(GIT_SHA) -X main.BuildDate=$(DATE)' -o dist/cmk.linux.amd64 cmk.go
+	GOOS=linux   GOARCH=arm64 $(GO) build -mod=vendor -ldflags='-s -w -X main.GitSHA=$(GIT_SHA) -X main.BuildDate=$(DATE)' -o dist/cmk.linux.arm64 cmk.go
+	GOOS=windows GOARCH=amd64 $(GO) build -mod=vendor -ldflags='-s -w -X main.GitSHA=$(GIT_SHA) -X main.BuildDate=$(DATE)' -o dist/cmk.exe cmk.go
+	GOOS=darwin  GOARCH=amd64 $(GO) build -mod=vendor -ldflags='-s -w -X main.GitSHA=$(GIT_SHA) -X main.BuildDate=$(DATE)' -o dist/cmk.darwin.amd64 cmk.go
 
 # Tools
 

@@ -27,6 +27,12 @@ import (
 	"github.com/apache/cloudstack-cloudmonkey/config"
 )
 
+// GitSHA holds the git SHA
+var GitSHA string
+
+// BuildDate holds the build datetime
+var BuildDate string
+
 func init() {
 	flag.Usage = func() {
 		cmd.PrintUsage()
@@ -38,12 +44,13 @@ func main() {
 	showVersion := flag.Bool("v", false, "show version")
 	debug := flag.Bool("d", false, "enable debug mode")
 	profile := flag.String("p", "", "server profile")
+
 	flag.Parse()
 
 	cfg := config.NewConfig()
 
 	if *showVersion {
-		fmt.Println(cfg.Name(), cfg.Version())
+		fmt.Printf("%s %s (build: %s, %s)\n", cfg.Name(), cfg.Version(), GitSHA, BuildDate)
 		os.Exit(0)
 	}
 
