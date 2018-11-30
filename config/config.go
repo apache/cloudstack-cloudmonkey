@@ -80,7 +80,15 @@ func getDefaultConfigDir() string {
 		fmt.Println(err)
 		os.Exit(1)
 	}
-	return path.Join(home, ".cmk")
+	cmkHome := path.Join(home, ".cmk")
+	if _, err := os.Stat(cmkHome); os.IsNotExist(err) {
+		err := os.Mkdir(cmkHome, 0700)
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+	}
+	return cmkHome
 }
 
 func defaultCoreConfig() Core {
