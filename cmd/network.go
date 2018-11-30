@@ -66,12 +66,12 @@ func Login(r *Request) (string, error) {
 	spinner := r.Config.StartSpinner("trying to log in...")
 	resp, err := r.Client().PostForm(msURL.String(), params)
 	r.Config.StopSpinner(spinner)
-	config.Debug("Login POST response status code:", resp.StatusCode)
 
 	if err != nil {
 		return "", errors.New("failed to authenticate with the CloudStack server, please check the settings: " + err.Error())
 	}
 
+	config.Debug("Login POST response status code:", resp.StatusCode)
 	if resp.StatusCode != http.StatusOK {
 		e := errors.New("failed to authenticate, please check the credentials")
 		if err != nil {
