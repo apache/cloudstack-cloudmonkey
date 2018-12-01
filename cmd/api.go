@@ -62,7 +62,7 @@ func init() {
 			for _, required := range api.RequiredArgs {
 				provided := false
 				for _, arg := range apiArgs {
-					if strings.HasPrefix(arg, required) {
+					if strings.Contains(arg, "=") && strings.HasPrefix(arg, required) {
 						provided = true
 					}
 				}
@@ -72,7 +72,7 @@ func init() {
 			}
 
 			if len(missingArgs) > 0 {
-				fmt.Println("💩 Missing required arguments: ", strings.Join(missingArgs, ", "))
+				fmt.Println("💩 Missing required parameters: ", strings.Join(missingArgs, ", "))
 				return nil
 			}
 
