@@ -1,6 +1,6 @@
 # github.com/briandowns/spinner v0.0.0-20181018151057-dd69c579ff20
 github.com/briandowns/spinner
-# github.com/c-bata/go-prompt v0.2.2
+# github.com/c-bata/go-prompt v0.2.3
 github.com/c-bata/go-prompt
 # github.com/fatih/color v1.7.0
 github.com/fatih/color

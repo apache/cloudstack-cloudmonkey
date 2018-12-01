@@ -15,6 +15,7 @@ func OptionParser(x ConsoleParser) Option {
 // OptionWriter to set a custom ConsoleWriter object. An argument should implement ConsoleWriter interface.
 func OptionWriter(x ConsoleWriter) Option {
 	return func(p *Prompt) error {
+		registerConsoleWriter(x)
 		p.renderer.out = x
 		return nil
 	}
@@ -225,13 +226,24 @@ func OptionAddASCIICodeBind(b ...ASCIICodeBind) Option {
 	}
 }
 
+// OptionShowCompletionAtStart to set completion window is open at start.
+func OptionShowCompletionAtStart() Option {
+	return func(p *Prompt) error {
+		p.completion.showAtStart = true
+		return nil
+	}
+}
+
 // New returns a Prompt with powerful auto-completion.
 func New(executor Executor, completer Completer, opts ...Option) *Prompt {
+	defaultWriter := NewStdoutWriter()
+	registerConsoleWriter(defaultWriter)
+
 	pt := &Prompt{
 		in: NewStandardInputParser(),
 		renderer: &Render{
 			prefix:                       "> ",
-			out:                          NewStandardOutputWriter(),
+			out:                          defaultWriter,
 			livePrefixCallback:           func() (string, bool) { return "", false },
 			prefixTextColor:              Blue,
 			prefixBGColor:                DefaultColor,
