@@ -169,7 +169,12 @@ func NewAPIRequest(r *Request, api string, args []string, isAsync bool) (map[str
 	for _, arg := range args {
 		parts := strings.SplitN(arg, "=", 2)
 		if len(parts) == 2 {
-			params.Add(parts[0], parts[1])
+			key := parts[0]
+			value := parts[1]
+			if strings.HasPrefix(value, "\"") && strings.HasSuffix(value, "\"") {
+				value = value[1 : len(value)-1]
+			}
+			params.Add(key, value)
 		}
 	}
 	params.Add("response", "json")
