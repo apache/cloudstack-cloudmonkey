@@ -13,7 +13,7 @@ For documentation, kindly see the [wiki](https://github.com/apache/cloudstack-cl
 
 ### Development
 
-For development the pre-requisites are Go 10 or latest and a unix-like
+For development the pre-requisites are Go 1.11 or latest and a unix-like
 environment. You can use the following targets for building:
 
     $ make help
