@@ -63,7 +63,7 @@ func main() {
 	}
 
 	if *profile != "" {
-		cfg.UpdateConfig("profile", *profile, false)
+		cfg.LoadProfile(*profile)
 	}
 
 	cli.SetConfig(cfg)

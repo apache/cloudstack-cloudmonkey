@@ -28,8 +28,8 @@ import (
 	"time"
 
 	"github.com/gofrs/flock"
-	"github.com/mitchellh/go-homedir"
-	"gopkg.in/ini.v1"
+	homedir "github.com/mitchellh/go-homedir"
+	ini "gopkg.in/ini.v1"
 )
 
 // Output formats
@@ -150,6 +150,11 @@ func newHTTPClient(cfg *Config) *http.Client {
 	return client
 }
 
+func setActiveProfile(cfg *Config, profile *ServerProfile) {
+	cfg.ActiveProfile = profile
+	cfg.ActiveProfile.Client = newHTTPClient(cfg)
+}
+
 func reloadConfig(cfg *Config) *Config {
 	fileLock := flock.New(path.Join(getDefaultConfigDir(), "lock"))
 	err := fileLock.Lock()
@@ -160,6 +165,18 @@ func reloadConfig(cfg *Config) *Config {
 	cfg = saveConfig(cfg)
 	fileLock.Unlock()
 	return cfg
+}
+
+func readConfig(cfg *Config) *ini.File {
+	conf, err := ini.LoadSources(ini.LoadOptions{
+		IgnoreInlineComment: true,
+	}, cfg.ConfigFile)
+
+	if err != nil {
+		fmt.Printf("Fail to read config file: %v", err)
+		os.Exit(1)
+	}
+	return conf
 }
 
 func saveConfig(cfg *Config) *Config {
@@ -177,18 +194,10 @@ func saveConfig(cfg *Config) *Config {
 		conf.SaveTo(cfg.ConfigFile)
 	}
 
-	// Read config
-	conf, err := ini.LoadSources(ini.LoadOptions{
-		IgnoreInlineComment: true,
-	}, cfg.ConfigFile)
-
-	if err != nil {
-		fmt.Printf("Fail to read config file: %v", err)
-		os.Exit(1)
-	}
+	conf := readConfig(cfg)
 
 	core, err := conf.GetSection(ini.DEFAULT_SECTION)
-	if core == nil {
+	if core == nil || err != nil {
 		defaultCore := defaultCoreConfig()
 		section, _ := conf.NewSection(ini.DEFAULT_SECTION)
 		section.ReflectFrom(&defaultCore)
@@ -209,7 +218,7 @@ func saveConfig(cfg *Config) *Config {
 		activeProfile := defaultProfile()
 		section, _ := conf.NewSection(cfg.Core.ProfileName)
 		section.ReflectFrom(&activeProfile)
-		cfg.ActiveProfile = &activeProfile
+		setActiveProfile(cfg, &activeProfile)
 	} else {
 		// Write
 		if cfg.ActiveProfile != nil {
@@ -218,7 +227,7 @@ func saveConfig(cfg *Config) *Config {
 		// Update
 		profile := new(ServerProfile)
 		conf.Section(cfg.Core.ProfileName).MapTo(profile)
-		cfg.ActiveProfile = profile
+		setActiveProfile(cfg, profile)
 	}
 	// Save
 	conf.SaveTo(cfg.ConfigFile)
@@ -232,8 +241,20 @@ func saveConfig(cfg *Config) *Config {
 		profiles = append(profiles, profile.Name())
 	}
 
-	cfg.ActiveProfile.Client = newHTTPClient(cfg)
 	return cfg
+}
+
+// LoadProfile loads an existing profile
+func (c *Config) LoadProfile(name string) {
+	conf := readConfig(c)
+	section, err := conf.GetSection(name)
+	if err != nil || section == nil {
+		fmt.Printf("Unable to load profile '%s': %v", name, err)
+		os.Exit(1)
+	}
+	profile := new(ServerProfile)
+	conf.Section(name).MapTo(profile)
+	setActiveProfile(c, profile)
 }
 
 // UpdateConfig updates and saves config
