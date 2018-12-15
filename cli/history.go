@@ -20,6 +20,7 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"strings"
 )
 
 func initHistory() {
@@ -48,7 +49,12 @@ func readHistory() []string {
 	return lines
 }
 
+var lastInput string
+
 func writeHistory(in string) {
+	if len(strings.TrimSpace(in)) < 1 || in == lastInput {
+		return
+	}
 	file, err := os.OpenFile(cfg.HistoryFile, os.O_APPEND|os.O_WRONLY, 0600)
 	if err != nil {
 		fmt.Println("Failed to open history file:", err)
@@ -58,4 +64,5 @@ func writeHistory(in string) {
 	if _, err = file.WriteString(in + "\n"); err != nil {
 		fmt.Println("Failed to write history:", err)
 	}
+	lastInput = in
 }
