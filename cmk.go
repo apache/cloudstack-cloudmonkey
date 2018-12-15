@@ -21,6 +21,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/apache/cloudstack-cloudmonkey/cli"
 	"github.com/apache/cloudstack-cloudmonkey/cmd"
@@ -68,7 +69,7 @@ func main() {
 
 	cli.SetConfig(cfg)
 	args := flag.Args()
-	config.Debug("cmdline args:", os.Args)
+	config.Debug("cmdline args:", strings.Join(os.Args, ", "))
 	if len(args) > 0 {
 		if err := cli.ExecCmd(args); err != nil {
 			fmt.Println("🙈 Error:", err)
