@@ -31,11 +31,10 @@ import (
 )
 
 func printJSON(response map[string]interface{}) {
-	jsonOutput, err := json.MarshalIndent(response, "", "  ")
-	if err != nil {
-		fmt.Println("Error during json marshalling:", err.Error())
-	}
-	fmt.Println(string(jsonOutput))
+	enc := json.NewEncoder(os.Stdout)
+	enc.SetEscapeHTML(false)
+	enc.SetIndent("", "  ")
+	enc.Encode(response)
 }
 
 func printTable(response map[string]interface{}) {

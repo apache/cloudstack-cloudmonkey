@@ -32,7 +32,7 @@ require (
 	github.com/mattn/go-tty v0.0.0-20181127064339-e4f871175a2f // indirect
 	github.com/mitchellh/go-homedir v1.0.0
 	github.com/olekukonko/tablewriter v0.0.1
-	github.com/pkg/term v0.0.0-20180730021639-bffc007b7fd5 // indirect
+	github.com/pkg/term v0.0.0-20181116001808-27bbf2edb814 // indirect
 	github.com/smartystreets/assertions v0.0.0-20180927180507-b2de0cb4f26d // indirect
 	github.com/smartystreets/goconvey v0.0.0-20180222194500-ef6db91d284a // indirect
 	golang.org/x/sys v0.0.0-20181019160139-8e24a49d80f8 // indirect
