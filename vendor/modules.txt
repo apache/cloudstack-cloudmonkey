@@ -1,4 +1,4 @@
-# github.com/briandowns/spinner v0.0.0-20181018151057-dd69c579ff20
+# github.com/briandowns/spinner v0.0.0-20181029155426-195c31b675a7
 github.com/briandowns/spinner
 # github.com/c-bata/go-prompt v0.2.3
 github.com/c-bata/go-prompt
@@ -14,11 +14,11 @@ github.com/mattn/go-colorable
 github.com/mattn/go-isatty
 # github.com/mattn/go-runewidth v0.0.3
 github.com/mattn/go-runewidth
-# github.com/mattn/go-tty v0.0.0-20180907095812-13ff1204f104
+# github.com/mattn/go-tty v0.0.0-20181127064339-e4f871175a2f
 github.com/mattn/go-tty
 # github.com/mitchellh/go-homedir v1.0.0
 github.com/mitchellh/go-homedir
-# github.com/olekukonko/tablewriter v0.0.0-20180912035003-be2c049b30cc
+# github.com/olekukonko/tablewriter v0.0.1
 github.com/olekukonko/tablewriter
 # github.com/pkg/term v0.0.0-20180730021639-bffc007b7fd5
 github.com/pkg/term/termios
