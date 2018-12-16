@@ -136,7 +136,7 @@ func (c *Config) UpdateCache(response map[string]interface{}) interface{} {
 				sort.Strings(related)
 			}
 			apiArgs = append(apiArgs, &APIArg{
-				Name:        apiArg["name"].(string),
+				Name:        apiArg["name"].(string) + "=",
 				Type:        apiArg["type"].(string),
 				Required:    apiArg["required"].(bool),
 				Related:     related,

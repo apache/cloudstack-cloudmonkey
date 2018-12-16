@@ -19,9 +19,11 @@ package cli
 
 import (
 	"fmt"
+	"io"
+	"strings"
 
 	"github.com/apache/cloudstack-cloudmonkey/config"
-	"github.com/c-bata/go-prompt"
+	"github.com/chzyer/readline"
 )
 
 // CLI config instance
@@ -32,48 +34,56 @@ func SetConfig(c *config.Config) {
 	cfg = c
 }
 
+var completer *autoCompleter
+var shell *readline.Instance
+
 // ExecPrompt starts a CLI prompt
 func ExecPrompt() {
+	completer = &autoCompleter{
+		Config: cfg,
+	}
+	shell, err := readline.NewEx(&readline.Config{
+		Prompt:            cfg.GetPrompt(),
+		HistoryFile:       cfg.HistoryFile,
+		AutoComplete:      completer,
+		InterruptPrompt:   "^C",
+		EOFPrompt:         "exit",
+		VimMode:           false,
+		HistorySearchFold: true,
+		FuncFilterInputRune: func(r rune) (rune, bool) {
+			switch r {
+			case readline.CharCtrlZ:
+				return r, false
+			}
+			return r, true
+		},
+	})
+
+	if err != nil {
+		panic(err)
+	}
+	defer shell.Close()
+
 	cfg.HasShell = true
 	cfg.PrintHeader()
-	shell := prompt.New(
-		func(in string) {
-			if err := ExecLine(in); err != nil {
-				fmt.Println("🙈 Error:", err)
-			}
-		},
-		completer,
-		prompt.OptionHistory(readHistory()),
-		prompt.OptionTitle("cloudmonkey"),
-		prompt.OptionPrefix(cfg.GetPrompt()),
-		prompt.OptionLivePrefix(func() (string, bool) {
-			return cfg.GetPrompt(), true
-		}),
-		prompt.OptionMaxSuggestion(5),
-		prompt.OptionPrefixTextColor(prompt.DefaultColor),
-		prompt.OptionPreviewSuggestionTextColor(prompt.DefaultColor),
-		prompt.OptionSelectedSuggestionTextColor(prompt.White),
-		prompt.OptionSelectedSuggestionBGColor(prompt.Cyan),
-		prompt.OptionSelectedDescriptionTextColor(prompt.White),
-		prompt.OptionSelectedDescriptionBGColor(prompt.DarkGray),
-		prompt.OptionSuggestionTextColor(prompt.Black),
-		prompt.OptionSuggestionBGColor(prompt.White),
-		prompt.OptionDescriptionTextColor(prompt.Black),
-		prompt.OptionDescriptionBGColor(prompt.LightGray),
-		prompt.OptionScrollbarThumbColor(prompt.Cyan),
-		prompt.OptionScrollbarBGColor(prompt.LightGray),
-		prompt.OptionAddKeyBind(prompt.KeyBind{
-			Key: prompt.Tab,
-			Fn:  tabHandler,
-		}),
-		prompt.OptionAddKeyBind(prompt.KeyBind{
-			Key: prompt.Up,
-			Fn:  tabHandler,
-		}),
-		prompt.OptionAddKeyBind(prompt.KeyBind{
-			Key: prompt.Down,
-			Fn:  tabHandler,
-		}),
-	)
-	shell.Run()
+
+	for {
+		shell.SetPrompt(cfg.GetPrompt())
+		line, err := shell.Readline()
+		if err == readline.ErrInterrupt {
+			continue
+		} else if err == io.EOF {
+			break
+		}
+
+		line = strings.TrimSpace(line)
+		if len(line) < 1 {
+			continue
+		}
+
+		if err = ExecLine(line); err != nil {
+			fmt.Println("🙈 Error:", err)
+		}
+	}
+
 }
