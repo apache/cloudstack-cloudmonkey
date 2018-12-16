@@ -47,7 +47,7 @@ func newOpCompleter(w io.Writer, op *Operation, width int) *opCompleter {
 }
 
 func (o *opCompleter) writeRunes(candidate []rune) {
-	lastIndex := 0
+	lastIndex := len(candidate)
 	for idx, r := range candidate {
 		if r == '(' {
 			lastIndex = idx
