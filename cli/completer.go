@@ -128,9 +128,6 @@ func doInternal(line []rune, pos int, lineLen int, argName []rune) (newLine [][]
 	return
 }
 
-// FIXME; use cached response
-var cachedResponse map[string]interface{}
-
 func (t *autoCompleter) Do(line []rune, pos int) (options [][]rune, offset int) {
 	apiMap := buildAPICacheMap(t.Config.GetAPIVerbMap())
 
@@ -229,10 +226,33 @@ func (t *autoCompleter) Do(line []rune, pos int) (options [][]rune, offset int) 
 			} else {
 				relatedNoun = strings.Replace(strings.Replace(argName, "ids", "", -1), "id", "", -1) + "s"
 			}
-			for _, related := range apiMap["list"] {
-				if relatedNoun == related.Noun {
-					autocompleteAPI = related
+
+			for _, listAPI := range apiMap["list"] {
+				if relatedNoun == listAPI.Noun {
+					autocompleteAPI = listAPI
 					break
+				}
+			}
+
+			if autocompleteAPI == nil {
+				relatedAPIName := ""
+				for _, name := range arg.Related {
+					if strings.HasPrefix(name, "list") {
+						if len(relatedAPIName) == 0 {
+							relatedAPIName = name
+						}
+						if len(name) < len(relatedAPIName) {
+							relatedAPIName = name
+						}
+					}
+				}
+				if len(relatedAPIName) > 0 {
+					for _, listAPI := range apiMap["list"] {
+						if relatedAPIName == listAPI.Name {
+							autocompleteAPI = listAPI
+							break
+						}
+					}
 				}
 			}
 
@@ -274,7 +294,12 @@ func (t *autoCompleter) Do(line []rune, pos int) (options [][]rune, offset int) 
 						if resource["displaytext"] != nil {
 							opt.Detail = resource["displaytext"].(string)
 						}
-
+						if len(opt.Detail) == 0 && resource["description"] != nil {
+							opt.Detail = resource["description"].(string)
+						}
+						if len(opt.Detail) == 0 && resource["ipaddress"] != nil {
+							opt.Detail = resource["ipaddress"].(string)
+						}
 						selectOptions = append(selectOptions, opt)
 					}
 					break
@@ -290,7 +315,11 @@ func (t *autoCompleter) Do(line []rune, pos int) (options [][]rune, offset int) 
 				for _, item := range selectOptions {
 					var option string
 					if hasID {
-						option = fmt.Sprintf("%v (%v)", item.ID, item.Name)
+						if len(item.Name) > 0 {
+							option = fmt.Sprintf("%v (%v)", item.ID, item.Name)
+						} else {
+							option = fmt.Sprintf("%v (%v)", item.ID, item.Detail)
+						}
 					} else {
 						if len(item.Detail) == 0 {
 							option = fmt.Sprintf("%v ", item.Name)
