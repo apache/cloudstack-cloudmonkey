@@ -99,14 +99,63 @@ func inArray(s string, array []string) bool {
 	return false
 }
 
-type autoCompleter struct {
-	Config *config.Config
+func lastString(array []string) string {
+	return array[len(array)-1]
 }
 
-type selectOption struct {
-	ID     string
-	Name   string
+type argOption struct {
+	Value  string
 	Detail string
+}
+
+func buildArgOptions(response map[string]interface{}, hasID bool) []argOption {
+	argOptions := []argOption{}
+	for _, v := range response {
+		switch obj := v.(type) {
+		case []interface{}:
+			if obj == nil {
+				break
+			}
+			for _, item := range obj {
+				resource, ok := item.(map[string]interface{})
+				if !ok {
+					continue
+				}
+				var id, name, detail string
+				if resource["id"] != nil {
+					id = resource["id"].(string)
+				}
+				if resource["name"] != nil {
+					name = resource["name"].(string)
+				} else if resource["username"] != nil {
+					name = resource["username"].(string)
+				}
+				if resource["displaytext"] != nil {
+					detail = resource["displaytext"].(string)
+				}
+				if len(detail) == 0 && resource["description"] != nil {
+					detail = resource["description"].(string)
+				}
+				if len(detail) == 0 && resource["ipaddress"] != nil {
+					detail = resource["ipaddress"].(string)
+				}
+				var opt argOption
+				if hasID {
+					opt.Value = id
+					opt.Detail = name
+					if len(name) == 0 {
+						opt.Detail = detail
+					}
+				} else {
+					opt.Value = name
+					opt.Detail = detail
+				}
+				argOptions = append(argOptions, opt)
+			}
+			break
+		}
+	}
+	return argOptions
 }
 
 func doInternal(line []rune, pos int, lineLen int, argName []rune) (newLine [][]rune, offset int) {
@@ -126,6 +175,10 @@ func doInternal(line []rune, pos int, lineLen int, argName []rune) (newLine [][]
 		}
 	}
 	return
+}
+
+type autoCompleter struct {
+	Config *config.Config
 }
 
 func (t *autoCompleter) Do(line []rune, pos int) (options [][]rune, offset int) {
@@ -189,7 +242,7 @@ func (t *autoCompleter) Do(line []rune, pos int) (options [][]rune, offset int) 
 		return
 	}
 
-	// Auto-complete api args
+	// Auto-complete API arg
 	splitLine := strings.Split(string(line), " ")
 	line = trimSpaceLeft([]rune(splitLine[len(splitLine)-1]))
 	for _, arg := range apiFound.Args {
@@ -199,16 +252,30 @@ func (t *autoCompleter) Do(line []rune, pos int) (options [][]rune, offset int) 
 			options = append(options, sLine...)
 			offset = sOffset
 		} else {
+			words := strings.Split(string(line), "=")
+			argInput := lastString(words)
 			if arg.Type == "boolean" {
-				options = [][]rune{[]rune("true "), []rune("false ")}
-				offset = 0
+				for _, search := range []string{"true ", "false "} {
+					offset = 0
+					if strings.HasPrefix(search, argInput) {
+						options = append(options, []rune(search[len(argInput):]))
+						offset = len(argInput)
+					}
+				}
 				return
 			}
 			if arg.Type == config.FAKE && arg.Name == "filter=" {
-				options = [][]rune{}
 				offset = 0
+				filterInputs := strings.Split(strings.Replace(argInput, ",", ",|", -1), "|")
+				lastFilterInput := lastString(filterInputs)
 				for _, key := range apiFound.ResponseKeys {
-					options = append(options, []rune(key))
+					if inArray(key, filterInputs) {
+						continue
+					}
+					if strings.HasPrefix(key, lastFilterInput) {
+						options = append(options, []rune(key[len(lastFilterInput):]))
+						offset = len(lastFilterInput)
+					}
 				}
 				return
 			}
@@ -260,87 +327,41 @@ func (t *autoCompleter) Do(line []rune, pos int) (options [][]rune, offset int) 
 				return nil, 0
 			}
 
-			r := cmd.NewRequest(nil, completer.Config, nil)
 			autocompleteAPIArgs := []string{"listall=true"}
 			if autocompleteAPI.Noun == "templates" {
 				autocompleteAPIArgs = append(autocompleteAPIArgs, "templatefilter=executable")
 			}
 
 			spinner := t.Config.StartSpinner("fetching options, please wait...")
-			response, _ := cmd.NewAPIRequest(r, autocompleteAPI.Name, autocompleteAPIArgs, false)
+			request := cmd.NewRequest(nil, completer.Config, nil)
+			response, _ := cmd.NewAPIRequest(request, autocompleteAPI.Name, autocompleteAPIArgs, false)
 			t.Config.StopSpinner(spinner)
 
-			selectOptions := []selectOption{}
-			for _, v := range response {
-				switch obj := v.(type) {
-				case []interface{}:
-					if obj == nil {
-						break
-					}
-					for _, item := range obj {
-						resource, ok := item.(map[string]interface{})
-						if !ok {
-							continue
-						}
-						var opt selectOption
-						if resource["id"] != nil {
-							opt.ID = resource["id"].(string)
-						}
-						if resource["name"] != nil {
-							opt.Name = resource["name"].(string)
-						} else if resource["username"] != nil {
-							opt.Name = resource["username"].(string)
-						}
-						if resource["displaytext"] != nil {
-							opt.Detail = resource["displaytext"].(string)
-						}
-						if len(opt.Detail) == 0 && resource["description"] != nil {
-							opt.Detail = resource["description"].(string)
-						}
-						if len(opt.Detail) == 0 && resource["ipaddress"] != nil {
-							opt.Detail = resource["ipaddress"].(string)
-						}
-						selectOptions = append(selectOptions, opt)
-					}
-					break
-				}
-			}
-
-			sort.Slice(selectOptions, func(i, j int) bool {
-				return selectOptions[i].Name < selectOptions[j].Name
-			})
-
 			hasID := strings.HasSuffix(arg.Name, "id=") || strings.HasSuffix(arg.Name, "ids=")
-			if len(selectOptions) > 1 {
-				for _, item := range selectOptions {
-					var option string
-					if hasID {
-						if len(item.Name) > 0 {
-							option = fmt.Sprintf("%v (%v)", item.ID, item.Name)
-						} else {
-							option = fmt.Sprintf("%v (%v)", item.ID, item.Detail)
-						}
-					} else {
-						if len(item.Detail) == 0 {
-							option = fmt.Sprintf("%v ", item.Name)
-						} else {
-							option = fmt.Sprintf("%v (%v)", item.Name, item.Detail)
-						}
-					}
-					options = append(options, []rune(option))
-				}
-			} else {
-				option := ""
-				if len(selectOptions) == 1 {
-					if hasID {
-						option = selectOptions[0].ID
-					} else {
-						option = selectOptions[0].Name
+			argOptions := buildArgOptions(response, hasID)
+
+			filteredOptions := []argOption{}
+			if len(argOptions) > 0 {
+				sort.Slice(argOptions, func(i, j int) bool {
+					return argOptions[i].Value < argOptions[j].Value
+				})
+				for _, item := range argOptions {
+					if strings.HasPrefix(item.Value, argInput) {
+						filteredOptions = append(filteredOptions, item)
 					}
 				}
-				options = [][]rune{[]rune(option + " ")}
 			}
 			offset = 0
+			for _, item := range filteredOptions {
+				option := item.Value + " "
+				if len(filteredOptions) > 1 && len(item.Detail) > 0 {
+					option += fmt.Sprintf("(%v)", item.Detail)
+				}
+				if strings.HasPrefix(option, argInput) {
+					options = append(options, []rune(option[len(argInput):]))
+					offset = len(argInput)
+				}
+			}
 			return
 		}
 	}
