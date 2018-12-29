@@ -32,7 +32,6 @@ import (
 // ExecLine executes a line of command
 func ExecLine(line string) error {
 	config.Debug("ExecLine line:", line)
-	writeHistory(line)
 	args, err := shlex.Split(line)
 	if err != nil {
 		return err

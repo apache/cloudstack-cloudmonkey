@@ -136,7 +136,7 @@ func (c *Config) UpdateCache(response map[string]interface{}) interface{} {
 				sort.Strings(related)
 			}
 			apiArgs = append(apiArgs, &APIArg{
-				Name:        apiArg["name"].(string),
+				Name:        apiArg["name"].(string) + "=",
 				Type:        apiArg["type"].(string),
 				Required:    apiArg["required"].(bool),
 				Related:     related,
@@ -146,7 +146,7 @@ func (c *Config) UpdateCache(response map[string]interface{}) interface{} {
 
 		// Add filter arg
 		apiArgs = append(apiArgs, &APIArg{
-			Name:        "filter",
+			Name:        "filter=",
 			Type:        FAKE,
 			Description: "cloudmonkey specific response key filtering",
 		})
@@ -164,6 +164,7 @@ func (c *Config) UpdateCache(response map[string]interface{}) interface{} {
 				responseKeys = append(responseKeys, fmt.Sprintf("%v,", resp["name"]))
 			}
 		}
+		sort.Strings(responseKeys)
 
 		var requiredArgs []string
 		for _, arg := range apiArgs {
