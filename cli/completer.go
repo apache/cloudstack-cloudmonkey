@@ -352,6 +352,9 @@ func (t *autoCompleter) Do(line []rune, pos int) (options [][]rune, offset int) 
 				}
 			}
 			offset = 0
+			if len(filteredOptions) == 0 {
+				options = [][]rune{[]rune("")}
+			}
 			for _, item := range filteredOptions {
 				option := item.Value + " "
 				if len(filteredOptions) > 1 && len(item.Detail) > 0 {
