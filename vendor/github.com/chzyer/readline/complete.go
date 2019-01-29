@@ -47,13 +47,18 @@ func newOpCompleter(w io.Writer, op *Operation, width int) *opCompleter {
 }
 
 func (o *opCompleter) writeRunes(candidate []rune) {
-	lastIndex := len(candidate)
+	detailIndex := len(candidate)
+	spaceFound := false
 	for idx, r := range candidate {
-		if r == '(' {
-			lastIndex = idx
+		if r == ' ' {
+			spaceFound = true
+		}
+		if spaceFound && r == '(' {
+			detailIndex = idx
+			break
 		}
 	}
-	o.op.buf.WriteRunes(candidate[:lastIndex])
+	o.op.buf.WriteRunes(candidate[:detailIndex])
 }
 
 func (o *opCompleter) doSelect() {
