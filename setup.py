@@ -29,6 +29,7 @@ from cloudmonkey import __maintainer__, __maintaineremail__
 from cloudmonkey import __project__, __projecturl__, __projectemail__
 
 requires = [
+              'jmespath',
               'Pygments>=1.5',
               'argcomplete',
               'dicttoxml',
