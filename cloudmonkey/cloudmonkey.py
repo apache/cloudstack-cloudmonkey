@@ -235,7 +235,7 @@ class CloudMonkeyShell(cmd.Cmd, object):
             else:
                 print output
 
-    def print_result(self, result, result_filter=[]):
+    def print_result(self, result, result_filter=[], result_query=''):
         if not result or len(result) == 0:
             return
 
@@ -458,6 +458,10 @@ class CloudMonkeyShell(cmd.Cmd, object):
                                         x.partition("=")[2]],
                              args[1:])[x] for x in range(len(args) - 1))
 
+        field_query = []
+        if 'query' in args_dict:
+            field_query = args_dict.pop('query')
+        
         field_filter = []
         if 'filter' in args_dict:
             field_filter = filter(lambda x: x.strip() != '',
@@ -490,7 +494,7 @@ class CloudMonkeyShell(cmd.Cmd, object):
         try:
             responsekeys = filter(lambda x: 'response' in x, result.keys())
             for responsekey in responsekeys:
-                self.print_result(result[responsekey], field_filter)
+                self.print_result(result[responsekey], field_filter, field_query)
             if apiname.startswith("list") and "id" not in args_dict:
                 self.update_param_cache(apiname, result)
         except Exception as e:
