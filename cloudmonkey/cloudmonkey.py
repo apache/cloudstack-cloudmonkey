@@ -31,6 +31,7 @@ try:
     import sys
     import time
     import types
+    import jmespath
 
     from cachemaker import loadcache, savecache, monkeycache, splitverbsubject
     from config import __version__, __description__, __projecturl__
