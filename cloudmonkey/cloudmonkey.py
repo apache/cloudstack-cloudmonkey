@@ -278,6 +278,21 @@ class CloudMonkeyShell(cmd.Cmd, object):
                                         ensure_ascii=False,
                                         separators=(',', ': ')))
 
+        def print_result_jmespath(result, result_query):
+            try:
+                expression = jmespath.compile(result_query)
+            except Exception as e:
+                raise ValueError("Bad value for --query: %s \n\n %s" % (result_query, str(e)))
+            
+            try:
+                self.monkeyprint(json.dumps(expression.search(result),
+                                                    sort_keys=True,
+                                                    indent=2,
+                                                    ensure_ascii=False,
+                                                    separators=(',', ': ')))
+            except Exception as e:
+                raise ValueError("Bad formatted JSON for JMESPATH: %s \n\n %s" % (result, str(e)))
+
         def print_result_xml(result):
             custom_root = "CloudStack-%s" % self.profile.replace(" ", "_")
             xml = dicttoxml(result, attr_type=False, custom_root=custom_root)
@@ -368,6 +383,10 @@ class CloudMonkeyShell(cmd.Cmd, object):
 
         if self.display == "json":
             print_result_json(filtered_result)
+            return
+
+        if self.display == "jmespath":
+            print_result_jmespath(filtered_result, result_query)
             return
 
         if self.display == "xml":
