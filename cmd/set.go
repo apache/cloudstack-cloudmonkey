@@ -19,7 +19,10 @@ package cmd
 
 import (
 	"fmt"
+	"reflect"
 	"strings"
+
+	"github.com/apache/cloudstack-cloudmonkey/config"
 )
 
 func init() {
@@ -44,11 +47,16 @@ func init() {
 		},
 		Handle: func(r *Request) error {
 			if len(r.Args) < 1 {
-				fmt.Println("Please provide one of the sub-commands: ", r.Command.SubCommands)
+				fmt.Println("Please provide one of the sub-commands: ", reflect.ValueOf(r.Command.SubCommands).MapKeys())
 				return nil
 			}
 			subCommand := r.Args[0]
-			value := strings.Join(r.Args[1:], " ")
+			value := strings.Trim(strings.Join(r.Args[1:], " "), " ")
+			config.Debug("Set command received:", subCommand, " values:", value)
+			if r.Args[len(r.Args)-1] == "-h" {
+				fmt.Println("Usage: set <subcommand> <option>. Press tab-tab to see available subcommands and options.")
+				return nil
+			}
 			r.Config.UpdateConfig(subCommand, value, true)
 
 			if subCommand == "profile" && r.Config.HasShell {

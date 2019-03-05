@@ -282,7 +282,10 @@ func (c *Config) UpdateConfig(key string, value string, update bool) {
 	case "output":
 		c.Core.Output = value
 	case "timeout":
-		intValue, _ := strconv.Atoi(value)
+		intValue, err := strconv.Atoi(value)
+		if err != nil {
+			fmt.Println("Error caught while setting timeout:", err)
+		}
 		c.Core.Timeout = intValue
 	case "profile":
 		c.Core.ProfileName = value
@@ -309,6 +312,9 @@ func (c *Config) UpdateConfig(key string, value string, update bool) {
 		} else {
 			DisableDebugging()
 		}
+	default:
+		fmt.Println("Invalid option provided:", key)
+		return
 	}
 
 	Debug("UpdateConfig key:", key, " value:", value, " update:", update)
