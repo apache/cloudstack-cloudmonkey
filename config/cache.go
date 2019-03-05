@@ -79,8 +79,10 @@ func (c *Config) GetCache() map[string]*API {
 }
 
 // LoadCache loads cache using the default cache file
-func LoadCache(c *Config) {
-	cache, err := ioutil.ReadFile(c.CacheFile)
+func LoadCache(c *Config) interface{} {
+	cacheFile := c.CacheFile()
+	Debug("Trying to read API cache from:", cacheFile)
+	cache, err := ioutil.ReadFile(cacheFile)
 	if err != nil {
 		if c.HasShell {
 			fmt.Fprintf(os.Stderr, "Loaded in-built API cache. Failed to read API cache, please run 'sync'.\n")
@@ -89,13 +91,13 @@ func LoadCache(c *Config) {
 	}
 	var data map[string]interface{}
 	_ = json.Unmarshal(cache, &data)
-	c.UpdateCache(data)
+	return c.UpdateCache(data)
 }
 
 // SaveCache saves received auto-discovery data to cache file
 func (c *Config) SaveCache(response map[string]interface{}) {
 	output, _ := json.Marshal(response)
-	ioutil.WriteFile(c.CacheFile, output, 0600)
+	ioutil.WriteFile(c.CacheFile(), output, 0600)
 }
 
 // UpdateCache uses auto-discovery data to update internal API cache

@@ -68,11 +68,32 @@ type Config struct {
 	Dir           string
 	ConfigFile    string
 	HistoryFile   string
-	CacheFile     string
 	LogFile       string
 	HasShell      bool
 	Core          *Core
 	ActiveProfile *ServerProfile
+}
+
+// CacheFile returns the path to the cache file for a server profile
+func (c Config) CacheFile() string {
+	cacheDir := path.Join(c.Dir, "profiles")
+	cacheFileName := "cache"
+	if c.Core != nil && len(c.Core.ProfileName) > 0 {
+		cacheFileName = c.Core.ProfileName + ".cache"
+	}
+	checkAndCreateDir(cacheDir)
+	return path.Join(cacheDir, cacheFileName)
+}
+
+func checkAndCreateDir(path string) string {
+	if fileInfo, err := os.Stat(path); os.IsNotExist(err) || !fileInfo.IsDir() {
+		err := os.Mkdir(path, 0700)
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+	}
+	return path
 }
 
 func getDefaultConfigDir() string {
@@ -81,15 +102,7 @@ func getDefaultConfigDir() string {
 		fmt.Println(err)
 		os.Exit(1)
 	}
-	cmkHome := path.Join(home, ".cmk")
-	if _, err := os.Stat(cmkHome); os.IsNotExist(err) {
-		err := os.Mkdir(cmkHome, 0700)
-		if err != nil {
-			fmt.Println(err)
-			os.Exit(1)
-		}
-	}
-	return cmkHome
+	return checkAndCreateDir(path.Join(home, ".cmk"))
 }
 
 func defaultCoreConfig() Core {
@@ -122,7 +135,6 @@ func defaultConfig() *Config {
 	return &Config{
 		Dir:           configDir,
 		ConfigFile:    path.Join(configDir, "config"),
-		CacheFile:     path.Join(configDir, "cache"),
 		HistoryFile:   path.Join(configDir, "history"),
 		LogFile:       path.Join(configDir, "log"),
 		HasShell:      false,
@@ -164,6 +176,7 @@ func reloadConfig(cfg *Config) *Config {
 	}
 	cfg = saveConfig(cfg)
 	fileLock.Unlock()
+	LoadCache(cfg)
 	return cfg
 }
 

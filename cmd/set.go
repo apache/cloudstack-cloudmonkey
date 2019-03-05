@@ -57,6 +57,8 @@ func init() {
 				fmt.Println("Username:   ", r.Config.ActiveProfile.Username)
 				fmt.Println("Domain:     ", r.Config.ActiveProfile.Domain)
 				fmt.Println("API Key:    ", r.Config.ActiveProfile.APIKey)
+				fmt.Println("Total APIs: ", len(r.Config.GetCache()))
+
 				fmt.Println()
 			}
 			return nil
