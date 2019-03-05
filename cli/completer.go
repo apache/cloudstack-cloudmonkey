@@ -149,6 +149,9 @@ func buildArgOptions(response map[string]interface{}, hasID bool) []argOption {
 				} else {
 					opt.Value = name
 					opt.Detail = detail
+					if len(name) == 0 {
+						opt.Value = detail
+					}
 				}
 				argOptions = append(argOptions, opt)
 			}
@@ -175,6 +178,73 @@ func doInternal(line []rune, pos int, lineLen int, argName []rune) (newLine [][]
 		}
 	}
 	return
+}
+
+func findAutocompleteAPI(arg *config.APIArg, apiFound *config.API, apiMap map[string][]*config.API) *config.API {
+	if arg.Type == "map" {
+		return nil
+	}
+
+	var autocompleteAPI *config.API
+	argName := strings.Replace(arg.Name, "=", "", -1)
+	relatedNoun := argName
+	if argName == "id" || argName == "ids" {
+		// Heuristic: user is trying to autocomplete for id/ids arg for a list API
+		relatedNoun = apiFound.Noun
+		if apiFound.Verb != "list" {
+			relatedNoun += "s"
+		}
+	} else if argName == "account" {
+		// Heuristic: user is trying to autocomplete for accounts
+		relatedNoun = "accounts"
+	} else if argName == "ipaddressid" {
+		// Heuristic: user is trying to autocomplete for ip addresses
+		relatedNoun = "publicipaddresses"
+	} else {
+		// Heuristic: autocomplete for the arg for which a list<Arg without id/ids>s API exists
+		// For example, for zoneid arg, listZones API exists
+		cutIdx := len(argName)
+		if strings.HasSuffix(argName, "id") {
+			cutIdx -= 2
+		} else if strings.HasSuffix(argName, "ids") {
+			cutIdx -= 3
+		} else {
+		}
+		relatedNoun = argName[:cutIdx] + "s"
+	}
+
+	config.Debug("Possible related noun for the arg: ", relatedNoun, " and type: ", arg.Type)
+	for _, listAPI := range apiMap["list"] {
+		if relatedNoun == listAPI.Noun {
+			autocompleteAPI = listAPI
+			break
+		}
+	}
+
+	if autocompleteAPI != nil {
+		config.Debug("Autocomplete: API found using heuristics: ", autocompleteAPI.Name)
+	}
+
+	if strings.HasSuffix(relatedNoun, "s") {
+		relatedNoun = relatedNoun[:len(relatedNoun)-1]
+	}
+
+	// Heuristic: find any list API that contains the arg name
+	if autocompleteAPI == nil {
+		config.Debug("Finding possible API that have: ", argName, " related APIs: ", arg.Related)
+		possibleAPIs := []*config.API{}
+		for _, listAPI := range apiMap["list"] {
+			if strings.Contains(listAPI.Noun, argName) {
+				config.Debug("Found possible API: ", listAPI.Name)
+				possibleAPIs = append(possibleAPIs, listAPI)
+			}
+		}
+		if len(possibleAPIs) == 1 {
+			autocompleteAPI = possibleAPIs[0]
+		}
+	}
+
+	return autocompleteAPI
 }
 
 type autoCompleter struct {
@@ -280,49 +350,7 @@ func (t *autoCompleter) Do(line []rune, pos int) (options [][]rune, offset int) 
 				return
 			}
 
-			argName := strings.Replace(arg.Name, "=", "", -1)
-			var autocompleteAPI *config.API
-			var relatedNoun string
-			if argName == "id" || argName == "ids" {
-				relatedNoun = apiFound.Noun
-				if apiFound.Verb != "list" {
-					relatedNoun += "s"
-				}
-			} else if argName == "account" {
-				relatedNoun = "accounts"
-			} else {
-				relatedNoun = strings.Replace(strings.Replace(argName, "ids", "", -1), "id", "", -1) + "s"
-			}
-
-			for _, listAPI := range apiMap["list"] {
-				if relatedNoun == listAPI.Noun {
-					autocompleteAPI = listAPI
-					break
-				}
-			}
-
-			if autocompleteAPI == nil {
-				relatedAPIName := ""
-				for _, name := range arg.Related {
-					if strings.HasPrefix(name, "list") {
-						if len(relatedAPIName) == 0 {
-							relatedAPIName = name
-						}
-						if len(name) < len(relatedAPIName) {
-							relatedAPIName = name
-						}
-					}
-				}
-				if len(relatedAPIName) > 0 {
-					for _, listAPI := range apiMap["list"] {
-						if relatedAPIName == listAPI.Name {
-							autocompleteAPI = listAPI
-							break
-						}
-					}
-				}
-			}
-
+			autocompleteAPI := findAutocompleteAPI(arg, apiFound, apiMap)
 			if autocompleteAPI == nil {
 				return nil, 0
 			}
