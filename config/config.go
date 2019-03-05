@@ -307,7 +307,7 @@ func (c *Config) UpdateConfig(key string, value string, update bool) {
 	case "verifycert":
 		c.Core.VerifyCert = value == "true"
 	case "debug":
-		if value == "true" {
+		if value == "true" || value == "on" {
 			EnableDebugging()
 		} else {
 			DisableDebugging()

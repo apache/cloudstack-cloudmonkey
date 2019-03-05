@@ -29,6 +29,7 @@ import (
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
+	"os"
 	"sort"
 	"strings"
 	"time"
@@ -173,6 +174,17 @@ func NewAPIRequest(r *Request, api string, args []string, isAsync bool) (map[str
 			value := parts[1]
 			if strings.HasPrefix(value, "\"") && strings.HasSuffix(value, "\"") {
 				value = value[1 : len(value)-1]
+			}
+			if strings.HasPrefix(value, "@") {
+				possibleFileName := value[1:]
+				if fileInfo, err := os.Stat(possibleFileName); err == nil && !fileInfo.IsDir() {
+					bytes, err := ioutil.ReadFile(possibleFileName)
+					config.Debug()
+					if err == nil {
+						value = string(bytes)
+						config.Debug("Content for argument ", key, " read from file: ", possibleFileName, " is: ", value)
+					}
+				}
 			}
 			params.Add(key, value)
 		}
