@@ -39,7 +39,7 @@ param_type = ['boolean', 'date', 'float', 'integer', 'short', 'list',
 iterable_type = ['set', 'list', 'object']
 
 # cloudmonkey display types
-display_types = ["json", "xml", "csv", "table", "default"]
+display_types = ["jmespath","json", "xml", "csv", "table", "default"]
 
 config_dir = expanduser('~/.cloudmonkey')
 config_file = expanduser(config_dir + '/config')
