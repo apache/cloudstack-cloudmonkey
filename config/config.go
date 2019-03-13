@@ -259,6 +259,7 @@ func saveConfig(cfg *Config) *Config {
 
 // LoadProfile loads an existing profile
 func (c *Config) LoadProfile(name string) {
+	Debug("Trying to load profile: " + name)
 	conf := readConfig(c)
 	section, err := conf.GetSection(name)
 	if err != nil || section == nil {
@@ -268,6 +269,7 @@ func (c *Config) LoadProfile(name string) {
 	profile := new(ServerProfile)
 	conf.Section(name).MapTo(profile)
 	setActiveProfile(c, profile)
+	c.Core.ProfileName = name
 }
 
 // UpdateConfig updates and saves config
