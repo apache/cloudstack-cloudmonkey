@@ -1,0 +1,37 @@
+name: cloudmonkey
+base: core18
+version: git
+summary: Apache CloudStack CLI
+description: |
+  An CLI and interactive shell that simplifies configuration and management of
+  Apache CloudStack, the opensource IAAS cloud computing platform.
+
+grade: stable
+confinement: classic
+
+license: Apache-2.0
+
+apps:
+  cloudmonkey:
+    command: bin/cloudstack-cloudmonkey
+    plugs:
+    - home
+    - network
+    - personal-files
+
+plugs:
+  network:
+  personal-files:
+    read:
+    - $HOME/.cmk
+    write:
+    - $HOME/.cmk
+
+parts:
+  cloudmonkey:
+    source: .
+    source-type: git
+    plugin: go
+    go-importpath: github.com/apache/cloudstack-cloudmonkey
+    build-packages:
+      - gcc
