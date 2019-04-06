@@ -4,6 +4,8 @@ summary: Apache CloudStack CLI
 description: |
   An CLI and interactive shell that simplifies configuration and management of
   Apache CloudStack, the opensource IAAS cloud computing platform.
+
+base: core18
 license: Apache-2.0
 grade: stable
 confinement: strict
@@ -16,11 +18,8 @@ apps:
     - network
 
 parts:
-  go:
-    source-tag: go1.12.1
   cloudmonkey:
-    after: [go]
-    source: https://github.com/apache/cloudstack-cloudmonkey
+    source: .
     source-type: git
     source-tag: 6.0.0
     plugin: go
@@ -32,10 +31,10 @@ parts:
     override-build: |
       set -eu
       go version
-      GIT_SHA=$(git rev-parse --short HEAD)
-      DATE=$(date +%FT%T%z)
-      go build -mod=vendor -ldflags='-s -w -X main.GitSHA=$(GIT_SHA) -X main.BuildDate=$(DATE)' -o cmk cmk.go
+      go build -mod=vendor -ldflags="-s -w -X main.GitSHA=$(git rev-parse --short HEAD) -X main.BuildDate=$(date +%FT%T%z)" -o cmk cmk.go
       file cmk
+      chmod +x cmk
+      ./cmk -v
       mkdir -p $SNAPCRAFT_PART_INSTALL/bin
       mv cmk $SNAPCRAFT_PART_INSTALL/bin/
       strip --remove-section=.comment --remove-section=.note $SNAPCRAFT_PART_INSTALL/bin/cmk
