@@ -7,7 +7,7 @@ description: |
   Apache CloudStack, the opensource IAAS cloud computing platform.
 
 grade: stable
-confinement: classic
+confinement: strict
 
 license: Apache-2.0
 
@@ -17,15 +17,15 @@ apps:
     plugs:
     - home
     - network
-    - personal-files
+    #- personal-files
 
-plugs:
-  network:
-  personal-files:
-    read:
-    - $HOME/.cmk
-    write:
-    - $HOME/.cmk
+#plugs:
+#  network:
+#  personal-files:
+#    read:
+#    - $HOME/.cmk
+#    write:
+#    - $HOME/.cmk
 
 parts:
   cloudmonkey:
