@@ -60,6 +60,7 @@ func init() {
 
 			var missingArgs []string
 			for _, required := range api.RequiredArgs {
+				required = strings.ReplaceAll(required, "=", "")
 				provided := false
 				for _, arg := range apiArgs {
 					if strings.Contains(arg, "=") && strings.HasPrefix(arg, required) {
