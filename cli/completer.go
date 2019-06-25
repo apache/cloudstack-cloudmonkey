@@ -360,6 +360,10 @@ func (t *autoCompleter) Do(line []rune, pos int) (options [][]rune, offset int) 
 				autocompleteAPIArgs = append(autocompleteAPIArgs, "templatefilter=executable")
 			}
 
+			if apiFound.Name != "provisionCertificate" && autocompleteAPI.Name == "listHosts" {
+				autocompleteAPIArgs = append(autocompleteAPIArgs, "type=Routing")
+			}
+
 			spinner := t.Config.StartSpinner("fetching options, please wait...")
 			request := cmd.NewRequest(nil, completer.Config, nil)
 			response, _ := cmd.NewAPIRequest(request, autocompleteAPI.Name, autocompleteAPIArgs, false)
