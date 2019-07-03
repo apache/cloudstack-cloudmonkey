@@ -54,13 +54,12 @@ type ServerProfile struct {
 
 // Core block describes common options for the CLI
 type Core struct {
-	Prompt          string `ini:"prompt"`
-	AsyncBlock      bool   `ini:"asyncblock"`
-	Timeout         int    `ini:"timeout"`
-	Output          string `ini:"output"`
-	ParamCompletion bool   `ini:"paramcompletion"`
-	VerifyCert      bool   `ini:"verifycert"`
-	ProfileName     string `ini:"profile"`
+	Prompt      string `ini:"prompt"`
+	AsyncBlock  bool   `ini:"asyncblock"`
+	Timeout     int    `ini:"timeout"`
+	Output      string `ini:"output"`
+	VerifyCert  bool   `ini:"verifycert"`
+	ProfileName string `ini:"profile"`
 }
 
 // Config describes CLI config file and default options
@@ -68,11 +67,32 @@ type Config struct {
 	Dir           string
 	ConfigFile    string
 	HistoryFile   string
-	CacheFile     string
 	LogFile       string
 	HasShell      bool
 	Core          *Core
 	ActiveProfile *ServerProfile
+}
+
+// CacheFile returns the path to the cache file for a server profile
+func (c Config) CacheFile() string {
+	cacheDir := path.Join(c.Dir, "profiles")
+	cacheFileName := "cache"
+	if c.Core != nil && len(c.Core.ProfileName) > 0 {
+		cacheFileName = c.Core.ProfileName + ".cache"
+	}
+	checkAndCreateDir(cacheDir)
+	return path.Join(cacheDir, cacheFileName)
+}
+
+func checkAndCreateDir(path string) string {
+	if fileInfo, err := os.Stat(path); os.IsNotExist(err) || !fileInfo.IsDir() {
+		err := os.Mkdir(path, 0700)
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+	}
+	return path
 }
 
 func getDefaultConfigDir() string {
@@ -81,26 +101,17 @@ func getDefaultConfigDir() string {
 		fmt.Println(err)
 		os.Exit(1)
 	}
-	cmkHome := path.Join(home, ".cmk")
-	if _, err := os.Stat(cmkHome); os.IsNotExist(err) {
-		err := os.Mkdir(cmkHome, 0700)
-		if err != nil {
-			fmt.Println(err)
-			os.Exit(1)
-		}
-	}
-	return cmkHome
+	return checkAndCreateDir(path.Join(home, ".cmk"))
 }
 
 func defaultCoreConfig() Core {
 	return Core{
-		Prompt:          "🐱",
-		AsyncBlock:      true,
-		Timeout:         1800,
-		Output:          JSON,
-		ParamCompletion: true,
-		VerifyCert:      true,
-		ProfileName:     "localcloud",
+		Prompt:      "🐱",
+		AsyncBlock:  true,
+		Timeout:     1800,
+		Output:      JSON,
+		VerifyCert:  true,
+		ProfileName: "localcloud",
 	}
 }
 
@@ -122,7 +133,6 @@ func defaultConfig() *Config {
 	return &Config{
 		Dir:           configDir,
 		ConfigFile:    path.Join(configDir, "config"),
-		CacheFile:     path.Join(configDir, "cache"),
 		HistoryFile:   path.Join(configDir, "history"),
 		LogFile:       path.Join(configDir, "log"),
 		HasShell:      false,
@@ -164,6 +174,7 @@ func reloadConfig(cfg *Config) *Config {
 	}
 	cfg = saveConfig(cfg)
 	fileLock.Unlock()
+	LoadCache(cfg)
 	return cfg
 }
 
@@ -246,6 +257,7 @@ func saveConfig(cfg *Config) *Config {
 
 // LoadProfile loads an existing profile
 func (c *Config) LoadProfile(name string) {
+	Debug("Trying to load profile: " + name)
 	conf := readConfig(c)
 	section, err := conf.GetSection(name)
 	if err != nil || section == nil {
@@ -255,6 +267,7 @@ func (c *Config) LoadProfile(name string) {
 	profile := new(ServerProfile)
 	conf.Section(name).MapTo(profile)
 	setActiveProfile(c, profile)
+	c.Core.ProfileName = name
 }
 
 // UpdateConfig updates and saves config
@@ -269,7 +282,10 @@ func (c *Config) UpdateConfig(key string, value string, update bool) {
 	case "output":
 		c.Core.Output = value
 	case "timeout":
-		intValue, _ := strconv.Atoi(value)
+		intValue, err := strconv.Atoi(value)
+		if err != nil {
+			fmt.Println("Error caught while setting timeout:", err)
+		}
 		c.Core.Timeout = intValue
 	case "profile":
 		c.Core.ProfileName = value
@@ -286,16 +302,17 @@ func (c *Config) UpdateConfig(key string, value string, update bool) {
 		c.ActiveProfile.APIKey = value
 	case "secretkey":
 		c.ActiveProfile.SecretKey = value
-	case "paramcompletion":
-		c.Core.ParamCompletion = value == "true"
 	case "verifycert":
 		c.Core.VerifyCert = value == "true"
 	case "debug":
-		if value == "true" {
+		if value == "true" || value == "on" {
 			EnableDebugging()
 		} else {
 			DisableDebugging()
 		}
+	default:
+		fmt.Println("Invalid option provided:", key)
+		return
 	}
 
 	Debug("UpdateConfig key:", key, " value:", value, " update:", update)

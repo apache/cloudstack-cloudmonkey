@@ -19,7 +19,10 @@ package cmd
 
 import (
 	"fmt"
+	"reflect"
 	"strings"
+
+	"github.com/apache/cloudstack-cloudmonkey/config"
 )
 
 func init() {
@@ -27,28 +30,32 @@ func init() {
 		Name: "set",
 		Help: "Configures options for cmk",
 		SubCommands: map[string][]string{
-			"prompt":          {"🐵", "🐱", "random"},
-			"asyncblock":      {"true", "false"},
-			"timeout":         {"600", "1800", "3600"},
-			"output":          {"json", "text", "table", "column", "csv"},
-			"profile":         {},
-			"url":             {},
-			"username":        {},
-			"password":        {},
-			"domain":          {},
-			"apikey":          {},
-			"secretkey":       {},
-			"paramcompletion": {"true", "false"},
-			"verifycert":      {"true", "false"},
-			"debug":           {"true", "false"},
+			"prompt":     {"🐵", "🐱", "random"},
+			"asyncblock": {"true", "false"},
+			"timeout":    {"600", "1800", "3600"},
+			"output":     {"json", "text", "table", "column", "csv"},
+			"profile":    {},
+			"url":        {},
+			"username":   {},
+			"password":   {},
+			"domain":     {},
+			"apikey":     {},
+			"secretkey":  {},
+			"verifycert": {"true", "false"},
+			"debug":      {"true", "false"},
 		},
 		Handle: func(r *Request) error {
 			if len(r.Args) < 1 {
-				fmt.Println("Please provide one of the sub-commands: ", r.Command.SubCommands)
+				fmt.Println("Please provide one of the sub-commands: ", reflect.ValueOf(r.Command.SubCommands).MapKeys())
 				return nil
 			}
 			subCommand := r.Args[0]
-			value := strings.Join(r.Args[1:], " ")
+			value := strings.Trim(strings.Join(r.Args[1:], " "), " ")
+			config.Debug("Set command received:", subCommand, " values:", value)
+			if r.Args[len(r.Args)-1] == "-h" {
+				fmt.Println("Usage: set <subcommand> <option>. Press tab-tab to see available subcommands and options.")
+				return nil
+			}
 			r.Config.UpdateConfig(subCommand, value, true)
 
 			if subCommand == "profile" && r.Config.HasShell {
@@ -57,6 +64,8 @@ func init() {
 				fmt.Println("Username:   ", r.Config.ActiveProfile.Username)
 				fmt.Println("Domain:     ", r.Config.ActiveProfile.Domain)
 				fmt.Println("API Key:    ", r.Config.ActiveProfile.APIKey)
+				fmt.Println("Total APIs: ", len(r.Config.GetCache()))
+
 				fmt.Println()
 			}
 			return nil
