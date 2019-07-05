@@ -41,6 +41,7 @@ func init() {
 
 			apiName := strings.ToLower(r.Args[0])
 			apiArgs := r.Args[1:]
+			fmt.Println("DEBUGUEI", apiArgs)
 			if r.Config.GetCache()[apiName] == nil && len(r.Args) > 1 {
 				apiName = strings.ToLower(strings.Join(r.Args[:2], ""))
 				apiArgs = r.Args[2:]
@@ -85,10 +86,17 @@ func init() {
 				return err
 			}
 
-			var filterKeys []string
+			var filterKeys, queryKeys []string
 			for _, arg := range apiArgs {
 				if strings.HasPrefix(arg, "filter=") {
 					filterKeys = strings.Split(strings.Split(arg, "=")[1], ",")
+					fmt.Println("filterKeys1 => ", filterKeys)
+				} else if strings.HasPrefix(arg, "query=") {
+					filterKeys = strings.Split(arg, "=")[1:]
+					fmt.Println("filterKeys2 => ", queryKeys)
+
+					printResultJmespath(r.Config.Core.Output, response, queryKeys)
+					return nil
 				}
 			}
 

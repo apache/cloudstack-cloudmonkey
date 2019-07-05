@@ -27,6 +27,7 @@ import (
 	"text/tabwriter"
 
 	"github.com/apache/cloudstack-cloudmonkey/config"
+	jmespath "github.com/jmespath/go-jmespath"
 	"github.com/olekukonko/tablewriter"
 )
 
@@ -205,6 +206,62 @@ func filterResponse(response map[string]interface{}, filter []string) map[string
 
 func printResult(outputType string, response map[string]interface{}, filter []string) {
 	response = filterResponse(response, filter)
+	switch outputType {
+	case config.JSON:
+		printJSON(response)
+	case config.TABLE:
+		printTable(response)
+	case config.TEXT:
+		printText(response)
+	case config.COLUMN:
+		printColumn(response)
+	case config.CSV:
+		printCsv(response)
+	default:
+		fmt.Println("Invalid output type configured, please fix that!")
+	}
+}
+
+func queryResponse(response map[string]interface{}, query []string) map[string]interface{} {
+	if query == nil || len(query) == 0 {
+		return response
+	}
+	queriedResponse := make(map[string]interface{})
+	for k, v := range response {
+		valueType := reflect.TypeOf(v)
+		if valueType.Kind() == reflect.Slice || valueType.Kind() == reflect.Map {
+			items, ok := v.([]interface{})
+			if !ok {
+				continue
+			}
+			var queriedRows []interface{}
+			for _, item := range items {
+				row, ok := item.(map[string]interface{})
+				if !ok || len(row) < 1 {
+					continue
+				}
+				queriedRow := make(map[string]interface{})
+				for _, queryKey := range query {
+					for field := range row {
+						if queryKey == field {
+							queriedRow[field] = row[field]
+						}
+					}
+				}
+				queriedRows = append(queriedRows, queriedRow)
+			}
+			queriedResponse[k] = queriedRows
+		} else {
+			queriedResponse[k] = v
+			continue
+		}
+
+	}
+	return queriedResponse
+}
+
+func printResultJmespath(outputType string, response map[string]interface{}, query []string) {
+	response = queryResponse(response, query)
 	switch outputType {
 	case config.JSON:
 		printJSON(response)

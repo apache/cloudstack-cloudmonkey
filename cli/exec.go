@@ -57,6 +57,8 @@ func ExecCmd(args []string) error {
 		return nil
 	}
 
+	// fmt.Printf("args0 => %s", args[0])
+	// fmt.Printf("args1 => %s", args[1])
 	command := cmd.FindCommand(args[0])
 	if command != nil {
 		return command.Handle(cmd.NewRequest(command, cfg, args[1:]))
