@@ -8,6 +8,8 @@ github.com/fatih/color
 github.com/gofrs/flock
 # github.com/google/shlex v0.0.0-20150127133951-6f45313302b9
 github.com/google/shlex
+# github.com/jmespath/go-jmespath v0.0.0-20180206201540-c2b33e8439af
+github.com/jmespath/go-jmespath
 # github.com/mattn/go-colorable v0.0.9
 github.com/mattn/go-colorable
 # github.com/mattn/go-isatty v0.0.4

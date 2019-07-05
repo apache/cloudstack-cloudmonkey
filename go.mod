@@ -26,6 +26,7 @@ require (
 	github.com/gofrs/flock v0.7.0
 	github.com/google/shlex v0.0.0-20150127133951-6f45313302b9
 	github.com/gopherjs/gopherjs v0.0.0-20181017120253-0766667cb4d1 // indirect
+	github.com/jmespath/go-jmespath v0.0.0-20180206201540-c2b33e8439af
 	github.com/jtolds/gls v4.2.1+incompatible // indirect
 	github.com/kr/pretty v0.1.0 // indirect
 	github.com/mattn/go-colorable v0.0.9 // indirect
