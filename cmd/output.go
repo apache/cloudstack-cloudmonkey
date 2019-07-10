@@ -27,7 +27,6 @@ import (
 	"text/tabwriter"
 
 	"github.com/apache/cloudstack-cloudmonkey/config"
-	jmespath "github.com/jmespath/go-jmespath"
 	"github.com/olekukonko/tablewriter"
 )
 
@@ -228,6 +227,8 @@ func queryResponse(response map[string]interface{}, query []string) map[string]i
 	}
 	queriedResponse := make(map[string]interface{})
 	for k, v := range response {
+		fmt.Println("k1 => ", k)
+		fmt.Println("v1 => ", v)
 		valueType := reflect.TypeOf(v)
 		if valueType.Kind() == reflect.Slice || valueType.Kind() == reflect.Map {
 			items, ok := v.([]interface{})
@@ -235,12 +236,15 @@ func queryResponse(response map[string]interface{}, query []string) map[string]i
 				continue
 			}
 			var queriedRows []interface{}
+			fmt.Println("items1 => ", items)
 			for _, item := range items {
+				fmt.Println("item1 => ", item)
 				row, ok := item.(map[string]interface{})
 				if !ok || len(row) < 1 {
 					continue
 				}
 				queriedRow := make(map[string]interface{})
+				fmt.Println("row1 => ", row)
 				for _, queryKey := range query {
 					for field := range row {
 						if queryKey == field {
