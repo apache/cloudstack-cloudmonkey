@@ -18,7 +18,10 @@
 sudo: false
 language: go
 go:
-  - 1.12
+  - 1.12.x
 
 script:
   - make all
+
+env:
+  - GO111MODULE=on
