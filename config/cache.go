@@ -153,6 +153,13 @@ func (c *Config) UpdateCache(response map[string]interface{}) interface{} {
 			Description: "cloudmonkey specific response key filtering",
 		})
 
+		// Add query arg
+		apiArgs = append(apiArgs, &APIArg{
+			Name:        "query=",
+			Type:        FAKE,
+			Description: "cloudmonkey specific response key for jmespath query",
+		})
+
 		sort.Slice(apiArgs, func(i, j int) bool {
 			return apiArgs[i].Name < apiArgs[j].Name
 		})
