@@ -27,6 +27,7 @@ import (
 	"text/tabwriter"
 
 	"github.com/apache/cloudstack-cloudmonkey/config"
+	"github.com/jmespath/go-jmespath"
 	"github.com/olekukonko/tablewriter"
 )
 
@@ -226,41 +227,25 @@ func queryResponse(response map[string]interface{}, query []string) map[string]i
 		return response
 	}
 	queriedResponse := make(map[string]interface{})
-	for k, v := range response {
-		fmt.Println("k1 => ", k)
-		fmt.Println("v1 => ", v)
-		valueType := reflect.TypeOf(v)
-		if valueType.Kind() == reflect.Slice || valueType.Kind() == reflect.Map {
-			items, ok := v.([]interface{})
-			if !ok {
-				continue
-			}
-			var queriedRows []interface{}
-			fmt.Println("items1 => ", items)
-			for _, item := range items {
-				fmt.Println("item1 => ", item)
-				row, ok := item.(map[string]interface{})
-				if !ok || len(row) < 1 {
-					continue
-				}
-				queriedRow := make(map[string]interface{})
-				fmt.Println("row1 => ", row)
-				for _, queryKey := range query {
-					for field := range row {
-						if queryKey == field {
-							queriedRow[field] = row[field]
-						}
-					}
-				}
-				queriedRows = append(queriedRows, queriedRow)
-			}
-			queriedResponse[k] = queriedRows
-		} else {
-			queriedResponse[k] = v
-			continue
-		}
 
+	expression := strings.Join(query, ", ")
+	fmt.Println("conteudo expression =>", expression)
+	result, err := jmespath.Search(expression, response)
+	if err != nil {
+		fmt.Printf("Error executing expression: %s", err)
 	}
+	jsonBlob, err := json.MarshalIndent(result, "", "  ")
+	if err != nil {
+		fmt.Printf("Error serializing result to JSON: %s", err)
+	}
+	fmt.Println("@@@@@@@@@@@@@@@@@@@@")
+	fmt.Println("conteudo jsonBlob =>", string(jsonBlob))
+	fmt.Println("@@@@@@@@@@@@@@@@@@@@")
+	err := json.Unmarshal(jsonBlob, &queriedResponse)
+	fmt.Println("@@@@@@@@@@@@@@@@@@@@")
+	fmt.Println("conteudo queriedResponse =>", queriedResponse)
+	fmt.Println("@@@@@@@@@@@@@@@@@@@@")
+
 	return queriedResponse
 }
 
