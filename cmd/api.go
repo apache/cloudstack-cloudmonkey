@@ -92,7 +92,7 @@ func init() {
 					filterKeys = strings.Split(strings.Split(arg, "=")[1], ",")
 					fmt.Println("filterKeys1 => ", filterKeys)
 				} else if strings.HasPrefix(arg, "query=") {
-					queryKeys = strings.Split(arg, "=")[1:]
+					queryKeys = strings.Split(arg, "query=")[1:]
 					fmt.Println("filterKeys2 => ", queryKeys)
 
 					printResultJmespath(r.Config.Core.Output, response, queryKeys)
