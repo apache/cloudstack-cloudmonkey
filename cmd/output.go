@@ -222,13 +222,16 @@ func printResult(outputType string, response map[string]interface{}, filter []st
 	}
 }
 
-func queryResponse(response map[string]interface{}, query []string) map[string]interface{} {
-	if query == nil || len(query) == 0 {
+func queryResponse(response map[string]interface{}, query string) map[string]interface{} {
+	if len(query) == 0 {
 		return response
 	}
-	queriedResponse := make(map[string]interface{})
-
-	expression := strings.Join(query, ", ")
+	// var queriedResponse2 []interface{}
+	// var queriedResponse []interface{}
+	// queriedResponseReturn := make(map[string]interface{})
+	// expression := strings.Join(query, ", ")
+	var queriedResponseReal interface{}
+	expression := query
 	fmt.Println("conteudo expression =>", expression)
 	result, err := jmespath.Search(expression, response)
 	if err != nil {
@@ -240,16 +243,98 @@ func queryResponse(response map[string]interface{}, query []string) map[string]i
 	}
 	fmt.Println("@@@@@@@@@@@@@@@@@@@@")
 	fmt.Println("conteudo jsonBlob =>", string(jsonBlob))
-	fmt.Println("@@@@@@@@@@@@@@@@@@@@")
-	err := json.Unmarshal(jsonBlob, &queriedResponse)
-	fmt.Println("@@@@@@@@@@@@@@@@@@@@")
-	fmt.Println("conteudo queriedResponse =>", queriedResponse)
+	fmt.Println("tipo de jsonBlob =>", reflect.TypeOf(jsonBlob))
+	fmt.Println("jsonBlob é válido =>", json.Valid(jsonBlob))
+
+	if strings.HasPrefix(string(jsonBlob), "{") {
+		var queriedResponse map[string]interface{}
+		fmt.Println("jsonBlob é { =>", strings.HasPrefix(string(jsonBlob), "{"))
+
+		json.Unmarshal(jsonBlob, &queriedResponse)
+		queriedResponseReal = queriedResponse
+		fmt.Println("conteudo queriedResponse dentro do IF =>", queriedResponse)
+		for key, value := range queriedResponse {
+			fmt.Println("tipo de key", reflect.TypeOf(key))
+			fmt.Println("tipo de value", reflect.TypeOf(value))
+		}
+
+	} else if strings.HasPrefix(string(jsonBlob), "[") {
+		var queriedResponse []interface{}
+		fmt.Println("jsonBlob é [ =>", strings.HasPrefix(string(jsonBlob), "["))
+
+		json.Unmarshal(jsonBlob, &queriedResponse)
+		queriedResponseReal = queriedResponse
+		fmt.Println("conteudo queriedResponse dentro do IF =>", queriedResponse)
+		for key, value := range queriedResponse {
+			fmt.Println("tipo de key", reflect.TypeOf(key))
+			fmt.Println("tipo de value", reflect.TypeOf(value))
+		}
+	} else {
+		var queriedResponse interface{}
+		fmt.Println("jsonBlob é uma STRING")
+
+		json.Unmarshal(jsonBlob, &queriedResponse)
+		queriedResponseReal = queriedResponse
+		fmt.Println("conteudo queriedResponse dentro do IF =>", queriedResponse)
+	}
+
 	fmt.Println("@@@@@@@@@@@@@@@@@@@@")
 
-	return queriedResponse
+	// queriedResponseCount = 0
+	// for key, value := range queriedResponse {
+	// 	fmt.Println("tipo de key", reflect.TypeOf(key))
+	// 	fmt.Println("tipo de value", reflect.TypeOf(value))
+	// 	value := value.(map[string]interface{})
+	// 	// queriedResponseReturn[key] = value
+	//
+	// 	for internalKey, internalValue := range value {
+	// 		fmt.Println("tipo de internalKey", reflect.TypeOf(internalKey))
+	// 		fmt.Println("tipo de internalValue", reflect.TypeOf(internalValue))
+	//
+	// 		valueType := reflect.TypeOf(internalValue)
+	// 		if valueType.Kind() == reflect.Slice || valueType.Kind() == reflect.Map {
+	// 			items, ok := internalValue.([]interface{})
+	// 			if !ok {
+	// 				continue
+	// 			}
+	// 			var queriedRows []interface{}
+	// 			for _, item := range items {
+	// 				row, ok := item.(map[string]interface{})
+	// 				if !ok || len(row) < 1 {
+	// 					continue
+	// 				}
+	// 				queriedRow := make(map[string]interface{})
+	// 				// for _, queryKey := range query {
+	// 				// 	for field := range row {
+	// 				// 		if queryKey == field {
+	// 				// 			queriedRow[field] = row[field]
+	// 				// 		}
+	// 				// 	}
+	// 				// }
+	// 				queriedRows = append(queriedRows, queriedRow)
+	// 			}
+	// 			queriedResponseReturn[internalKey] = queriedRows
+	// 		} else {
+	// 			queriedResponseReturn[internalKey] = internalValue
+	// 			continue
+	// 		}
+	// 	}
+	// }
+
+	fmt.Println("@@@@@@@@@@@@@@@@@@@@")
+	fmt.Println("conteudo queriedResponse =>", queriedResponseReal)
+	fmt.Println("@@@@@@@@@@@@@@@@@@@@")
+
+	queriedResponseReturn := map[string]interface{}{"": queriedResponseReal}
+
+	fmt.Println("@@@@@@@@@@@@@@@@@@@@")
+	fmt.Println("conteudo queriedResponseReturn =>", queriedResponseReturn)
+	fmt.Println("@@@@@@@@@@@@@@@@@@@@")
+
+	return queriedResponseReturn
 }
 
-func printResultJmespath(outputType string, response map[string]interface{}, query []string) {
+func printResultJmespath(outputType string, response map[string]interface{}, query string) {
 	response = queryResponse(response, query)
 	switch outputType {
 	case config.JSON:
