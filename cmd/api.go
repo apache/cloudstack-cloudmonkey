@@ -86,13 +86,14 @@ func init() {
 				return err
 			}
 
-			var filterKeys, queryKeys []string
+			var filterKeys []string
+			var queryKeys string
 			for _, arg := range apiArgs {
 				if strings.HasPrefix(arg, "filter=") {
 					filterKeys = strings.Split(strings.Split(arg, "=")[1], ",")
 					fmt.Println("filterKeys1 => ", filterKeys)
 				} else if strings.HasPrefix(arg, "query=") {
-					queryKeys = strings.Split(arg, "query=")[1:]
+					queryKeys = strings.Join(strings.Split(arg, "query=")[1:], ", ")
 					fmt.Println("filterKeys2 => ", queryKeys)
 
 					printResultJmespath(r.Config.Core.Output, response, queryKeys)
