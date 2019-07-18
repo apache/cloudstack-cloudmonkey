@@ -93,6 +93,7 @@ func init() {
 				} else if strings.HasPrefix(arg, "query=") {
 					queryKeys = strings.Join(strings.Split(arg, "query=")[1:], ", ")
 					printResultJmespath(r.Config.Core.Output, response, queryKeys)
+					return nil
 				}
 			}
 
