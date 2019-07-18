@@ -230,32 +230,28 @@ func queryResponse(response map[string]interface{}, query string) map[string]int
 
 	result, err := jmespath.Search(expression, response)
 	if err != nil {
-		fmt.Printf("Error executing expression: %s", err)
+		fmt.Printf("Error executing JMESPATH expression: %s\n", err)
 	}
 	jsonBlob, err := json.MarshalIndent(result, "", "  ")
 	if err != nil {
-		fmt.Printf("Error serializing result to JSON: %s", err)
-	}
-	if json.Valid(jsonBlob) {
-		fmt.Printf("Error: Invalid jsonBlob from JMESPATH.")
+		fmt.Printf("Error serializing JMESPATH result to JSON: %s\n", err)
 	}
 
-	var queriedResponseOutside interface{}
+	queriedResponseReturn := make(map[string]interface{})
 	if strings.HasPrefix(string(jsonBlob), "{") {
 		var queriedResponseInside map[string]interface{}
 		json.Unmarshal(jsonBlob, &queriedResponseInside)
-		queriedResponseOutside = queriedResponseInside
+		queriedResponseReturn = queriedResponseInside
 	} else if strings.HasPrefix(string(jsonBlob), "[") {
 		var queriedResponseInside []interface{}
 		json.Unmarshal(jsonBlob, &queriedResponseInside)
-		queriedResponseOutside = queriedResponseInside
+		queriedResponseReturn = map[string]interface{}{expression: queriedResponseInside}
 	} else {
 		var queriedResponseInside interface{}
 		json.Unmarshal(jsonBlob, &queriedResponseInside)
-		queriedResponseOutside = queriedResponseInside
+		queriedResponseReturn = map[string]interface{}{expression: queriedResponseInside}
 	}
 
-	queriedResponseReturn := map[string]interface{}{"": queriedResponseOutside}
 	return queriedResponseReturn
 }
 
