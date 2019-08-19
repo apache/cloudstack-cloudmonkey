@@ -30,6 +30,16 @@ import (
 	"github.com/olekukonko/tablewriter"
 )
 
+func jsonify(value interface{}) string {
+	if reflect.TypeOf(value).Kind() == reflect.Map || reflect.TypeOf(value).Kind() == reflect.Slice {
+		jsonStr, err := json.Marshal(value)
+		if err == nil {
+			value = string(jsonStr)
+		}
+	}
+	return fmt.Sprintf("%v", value)
+}
+
 func printJSON(response map[string]interface{}) {
 	enc := json.NewEncoder(os.Stdout)
 	enc.SetEscapeHTML(false)
@@ -46,7 +56,7 @@ func printTable(response map[string]interface{}) {
 			if !ok {
 				continue
 			}
-			fmt.Printf("%s:\n", k)
+			fmt.Printf("%v:\n", k)
 			var header []string
 			for _, item := range items {
 				row, ok := item.(map[string]interface{})
@@ -63,12 +73,12 @@ func printTable(response map[string]interface{}) {
 				}
 				var rowArray []string
 				for _, field := range header {
-					rowArray = append(rowArray, fmt.Sprintf("%v", row[field]))
+					rowArray = append(rowArray, jsonify(row[field]))
 				}
 				table.Append(rowArray)
 			}
 		} else {
-			fmt.Printf("%s = %v\n", k, v)
+			fmt.Printf("%v = %v\n", k, v)
 		}
 	}
 	table.Render()
@@ -78,7 +88,7 @@ func printText(response map[string]interface{}) {
 	for k, v := range response {
 		valueType := reflect.TypeOf(v)
 		if valueType.Kind() == reflect.Slice {
-			fmt.Printf("%s:\n", k)
+			fmt.Printf("%v:\n", k)
 			for idx, item := range v.([]interface{}) {
 				if idx > 0 {
 					fmt.Println("================================================================================")
@@ -86,14 +96,14 @@ func printText(response map[string]interface{}) {
 				row, isMap := item.(map[string]interface{})
 				if isMap {
 					for field, value := range row {
-						fmt.Printf("%s = %v\n", field, value)
+						fmt.Printf("%s = %v\n", field, jsonify(value))
 					}
 				} else {
 					fmt.Printf("%v\n", item)
 				}
 			}
 		} else {
-			fmt.Printf("%s = %v\n", k, v)
+			fmt.Printf("%v = %v\n", k, jsonify(v))
 		}
 	}
 }
@@ -123,7 +133,7 @@ func printColumn(response map[string]interface{}) {
 				}
 				var values []string
 				for _, key := range header {
-					values = append(values, fmt.Sprintf("%v", row[strings.ToLower(key)]))
+					values = append(values, jsonify(row[strings.ToLower(key)]))
 				}
 				fmt.Fprintln(w, strings.Join(values, "\t"))
 			}
@@ -156,7 +166,7 @@ func printCsv(response map[string]interface{}) {
 				}
 				var values []string
 				for _, key := range header {
-					values = append(values, fmt.Sprintf("%v", row[key]))
+					values = append(values, jsonify(row[key]))
 				}
 				fmt.Println(strings.Join(values, ","))
 			}
