@@ -1,12 +1,13 @@
 Apache CloudStack CloudMonkey Changelog
 ---------------------------------------
 
-Version 6.0.0 (alpha, in progress)
+Version 6.0.0
 =============
 This release includes
 - Rewrite cloudmonkey in golang
 - Interactive parameter completion
 - Simplification of configuration
+- https://github.com/apache/cloudstack-cloudmonkey/releases/tag/6.0.0
 
 Version 5.3.3
 =============
