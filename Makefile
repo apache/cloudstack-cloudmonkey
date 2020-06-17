@@ -26,7 +26,7 @@ PKGS     = $(or $(PKG),$(shell $(GO) list ./... | grep -v "^$(PACKAGE)/vendor/")
 TESTPKGS = $(shell $(GO) list -f '{{ if or .TestGoFiles .XTestGoFiles }}{{ .ImportPath }}{{ end }}' $(PKGS))
 GIT_SHA  = $(shell git rev-parse --short HEAD)
 
-GO      = go
+GO      = CGO_ENABLED=0 go
 GODOC   = godoc
 GOFMT   = gofmt
 TIMEOUT = 15
