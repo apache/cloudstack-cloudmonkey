@@ -1,4 +1,4 @@
-## CloudMonkey [![Build Status](https://travis-ci.org/apache/cloudstack-cloudmonkey.svg?branch=master)](https://travis-ci.org/apache/cloudstack-cloudmonkey)[![cloudmonkey](https://snapcraft.io/cloudmonkey/badge.svg)](https://snapcraft.io/cloudmonkey)
+## CloudMonkey [![Build Status](https://travis-ci.org/apache/cloudstack-cloudmonkey.svg?branch=master)](https://travis-ci.org/apache/cloudstack-cloudmonkey)[![](https://images.microbadger.com/badges/version/apache/cloudstack-cloudmonkey.svg)](https://hub.docker.com/r/apache/cloudstack-cloudmonkey)[![cloudmonkey](https://snapcraft.io/cloudmonkey/badge.svg)](https://snapcraft.io/cloudmonkey)
 
 `cloudmonkey` :cloud::monkey_face: is a command line interface (CLI) for
 [Apache CloudStack](http://cloudstack.apache.org).
