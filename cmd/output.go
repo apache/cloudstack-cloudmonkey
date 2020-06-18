@@ -31,6 +31,9 @@ import (
 )
 
 func jsonify(value interface{}) string {
+	if value == nil {
+		return ""
+	}
 	if reflect.TypeOf(value).Kind() == reflect.Map || reflect.TypeOf(value).Kind() == reflect.Slice {
 		jsonStr, err := json.Marshal(value)
 		if err == nil {
@@ -45,43 +48,6 @@ func printJSON(response map[string]interface{}) {
 	enc.SetEscapeHTML(false)
 	enc.SetIndent("", "  ")
 	enc.Encode(response)
-}
-
-func printTable(response map[string]interface{}) {
-	table := tablewriter.NewWriter(os.Stdout)
-	for k, v := range response {
-		valueType := reflect.TypeOf(v)
-		if valueType.Kind() == reflect.Slice {
-			items, ok := v.([]interface{})
-			if !ok {
-				continue
-			}
-			fmt.Printf("%v:\n", k)
-			var header []string
-			for _, item := range items {
-				row, ok := item.(map[string]interface{})
-				if !ok || len(row) < 1 {
-					continue
-				}
-
-				if len(header) == 0 {
-					for field := range row {
-						header = append(header, field)
-					}
-					sort.Strings(header)
-					table.SetHeader(header)
-				}
-				var rowArray []string
-				for _, field := range header {
-					rowArray = append(rowArray, jsonify(row[field]))
-				}
-				table.Append(rowArray)
-			}
-		} else {
-			fmt.Printf("%v = %v\n", k, v)
-		}
-	}
-	table.Render()
 }
 
 func printText(response map[string]interface{}) {
@@ -108,7 +74,47 @@ func printText(response map[string]interface{}) {
 	}
 }
 
-func printColumn(response map[string]interface{}) {
+func printTable(response map[string]interface{}, filter []string) {
+	table := tablewriter.NewWriter(os.Stdout)
+	for k, v := range response {
+		valueType := reflect.TypeOf(v)
+		if valueType.Kind() == reflect.Slice {
+			items, ok := v.([]interface{})
+			if !ok {
+				continue
+			}
+			fmt.Printf("%v:\n", k)
+			var header []string
+			for _, item := range items {
+				row, ok := item.(map[string]interface{})
+				if !ok || len(row) < 1 {
+					continue
+				}
+				if len(header) == 0 {
+					if len(filter) > 0 {
+						header = filter
+					} else {
+						for field := range row {
+							header = append(header, field)
+						}
+						sort.Strings(header)
+					}
+					table.SetHeader(header)
+				}
+				var rowArray []string
+				for _, field := range header {
+					rowArray = append(rowArray, jsonify(row[field]))
+				}
+				table.Append(rowArray)
+			}
+		} else {
+			fmt.Printf("%v = %v\n", k, v)
+		}
+	}
+	table.Render()
+}
+
+func printColumn(response map[string]interface{}, filter []string) {
 	w := tabwriter.NewWriter(os.Stdout, 0, 0, 3, ' ', tabwriter.DiscardEmptyColumns)
 	for _, v := range response {
 		valueType := reflect.TypeOf(v)
@@ -125,10 +131,14 @@ func printColumn(response map[string]interface{}) {
 				}
 
 				if idx == 0 {
-					for rk := range row {
-						header = append(header, strings.ToUpper(rk))
+					if len(filter) > 0 {
+						header = filter
+					} else {
+						for rk := range row {
+							header = append(header, strings.ToUpper(rk))
+						}
+						sort.Strings(header)
 					}
-					sort.Strings(header)
 					fmt.Fprintln(w, strings.Join(header, "\t"))
 				}
 				var values []string
@@ -142,7 +152,7 @@ func printColumn(response map[string]interface{}) {
 	w.Flush()
 }
 
-func printCsv(response map[string]interface{}) {
+func printCsv(response map[string]interface{}, filter []string) {
 	for _, v := range response {
 		valueType := reflect.TypeOf(v)
 		if valueType.Kind() == reflect.Slice || valueType.Kind() == reflect.Map {
@@ -158,10 +168,14 @@ func printCsv(response map[string]interface{}) {
 				}
 
 				if idx == 0 {
-					for rk := range row {
-						header = append(header, rk)
+					if len(filter) > 0 {
+						header = filter
+					} else {
+						for rk := range row {
+							header = append(header, rk)
+						}
+						sort.Strings(header)
 					}
-					sort.Strings(header)
 					fmt.Println(strings.Join(header, ","))
 				}
 				var values []string
@@ -170,7 +184,6 @@ func printCsv(response map[string]interface{}) {
 				}
 				fmt.Println(strings.Join(values, ","))
 			}
-
 		}
 	}
 }
@@ -195,9 +208,6 @@ func filterResponse(response map[string]interface{}, filter []string, outputType
 				}
 				filteredRow := make(map[string]interface{})
 				for _, filterKey := range filter {
-					if len(strings.TrimSpace(filterKey)) == 0 {
-						continue
-					}
 					for field := range row {
 						if filterKey == field {
 							filteredRow[field] = row[field]
@@ -226,14 +236,14 @@ func printResult(outputType string, response map[string]interface{}, filter []st
 	switch outputType {
 	case config.JSON:
 		printJSON(response)
-	case config.TABLE:
-		printTable(response)
 	case config.TEXT:
 		printText(response)
 	case config.COLUMN:
-		printColumn(response)
+		printColumn(response, filter)
 	case config.CSV:
-		printCsv(response)
+		printCsv(response, filter)
+	case config.TABLE:
+		printTable(response, filter)
 	default:
 		fmt.Println("Invalid output type configured, please fix that!")
 	}

@@ -88,7 +88,11 @@ func init() {
 			var filterKeys []string
 			for _, arg := range apiArgs {
 				if strings.HasPrefix(arg, "filter=") {
-					filterKeys = strings.Split(strings.Split(arg, "=")[1], ",")
+					for _, filterKey := range strings.Split(strings.Split(arg, "=")[1], ",") {
+						if len(strings.TrimSpace(filterKey)) > 0 {
+							filterKeys = append(filterKeys, strings.TrimSpace(filterKey))
+						}
+					}
 				}
 			}
 
