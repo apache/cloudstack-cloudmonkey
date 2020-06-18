@@ -175,7 +175,7 @@ func printCsv(response map[string]interface{}) {
 	}
 }
 
-func filterResponse(response map[string]interface{}, filter []string) map[string]interface{} {
+func filterResponse(response map[string]interface{}, filter []string, outputType string) map[string]interface{} {
 	if filter == nil || len(filter) == 0 {
 		return response
 	}
@@ -195,9 +195,17 @@ func filterResponse(response map[string]interface{}, filter []string) map[string
 				}
 				filteredRow := make(map[string]interface{})
 				for _, filterKey := range filter {
+					if len(strings.TrimSpace(filterKey)) == 0 {
+						continue
+					}
 					for field := range row {
 						if filterKey == field {
 							filteredRow[field] = row[field]
+						}
+					}
+					if outputType == config.COLUMN || outputType == config.CSV || outputType == config.TABLE {
+						if _, ok := filteredRow[filterKey]; !ok {
+							filteredRow[filterKey] = ""
 						}
 					}
 				}
@@ -214,7 +222,7 @@ func filterResponse(response map[string]interface{}, filter []string) map[string
 }
 
 func printResult(outputType string, response map[string]interface{}, filter []string) {
-	response = filterResponse(response, filter)
+	response = filterResponse(response, filter, outputType)
 	switch outputType {
 	case config.JSON:
 		printJSON(response)
