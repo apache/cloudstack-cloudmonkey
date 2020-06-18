@@ -1,13 +1,22 @@
 Apache CloudStack CloudMonkey Changelog
 ---------------------------------------
 
+Version 6.1.0
+=============
+This release includes
+- Fix issue of required parameters for tags and details
+- Fix issue of hostid parameter completing to show hosts with type=routing
+- Statically building the binary to not depend on gcc compiler #59
+- Allow http/https web-proxy support #49
+- Show keys as per provided filter for table/csv/column output #63
+- Don't sort header when filter keys are provided
+
 Version 6.0.0
 =============
 This release includes
 - Rewrite cloudmonkey in golang
 - Interactive parameter completion
 - Simplification of configuration
-- https://github.com/apache/cloudstack-cloudmonkey/releases/tag/6.0.0
 
 Version 5.3.3
 =============

@@ -21,7 +21,7 @@ parts:
   cloudmonkey:
     source: .
     source-type: git
-    source-tag: 6.0.0
+    source-tag: 6.1.0
     plugin: go
     go-importpath: github.com/apache/cloudstack-cloudmonkey
     build-packages:

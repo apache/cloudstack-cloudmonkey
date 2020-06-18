@@ -21,14 +21,13 @@ MAINTAINER "Apache CloudStack" <dev@cloudstack.apache.org>
 LABEL Description="Apache CloudStack CloudMonkey; Go based CloudStack command line interface"
 LABEL Vendor="Apache.org"
 LABEL License=ApacheV2
-LABEL Version=6.0.0
+LABEL Version=6.1.0
 
 WORKDIR /work/
 RUN apt -y update && apt -y install git golang-go build-essential && \
     git clone https://github.com/apache/cloudstack-cloudmonkey.git && \
     go version && \
     cd cloudstack-cloudmonkey && \
-    git checkout tags/6.0.0 && \
     make all && \
     pwd && \
     ls -alh ./bin/cmk
