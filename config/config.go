@@ -153,6 +153,7 @@ func newHTTPClient(cfg *Config) *http.Client {
 	client := &http.Client{
 		Jar: jar,
 		Transport: &http.Transport{
+			Proxy:           http.ProxyFromEnvironment,
 			TLSClientConfig: &tls.Config{InsecureSkipVerify: !cfg.Core.VerifyCert},
 		},
 	}
