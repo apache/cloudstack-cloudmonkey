@@ -28,9 +28,14 @@ parts:
       - gcc
       - make
       - file
+      - git
     override-build: |
       set -eu
       go version
+      go mod vendor
+      git checkout -- .
+      git status
+      git rev-parse HEAD
       go build -mod=vendor -ldflags="-s -w -X main.GitSHA=$(git rev-parse --short HEAD) -X main.BuildDate=$(date +%FT%T%z)" -o cmk cmk.go
       file cmk
       chmod +x cmk
