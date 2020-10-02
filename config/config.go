@@ -24,6 +24,7 @@ import (
 	"net/http/cookiejar"
 	"os"
 	"path"
+	"path/filepath"
 	"strconv"
 	"time"
 
@@ -324,10 +325,13 @@ func (c *Config) UpdateConfig(key string, value string, update bool) {
 }
 
 // NewConfig creates or reload config and loads API cache
-func NewConfig() *Config {
+func NewConfig(configFilePath *string) *Config {
 	defaultConf := defaultConfig()
 	defaultConf.Core = nil
 	defaultConf.ActiveProfile = nil
+	if *configFilePath != "" {
+		defaultConf.ConfigFile, _ = filepath.Abs(*configFilePath)
+	}
 	cfg := reloadConfig(defaultConf)
 	LoadCache(cfg)
 	return cfg

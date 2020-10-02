@@ -45,10 +45,11 @@ func main() {
 	showVersion := flag.Bool("v", false, "show version")
 	debug := flag.Bool("d", false, "enable debug mode")
 	profile := flag.String("p", "", "server profile")
+	configFilePath := flag.String("c", "", "config file path")
 
 	flag.Parse()
 
-	cfg := config.NewConfig()
+	cfg := config.NewConfig(configFilePath)
 
 	if *showVersion {
 		fmt.Printf("%s %s (build: %s, %s)\n", cfg.Name(), cfg.Version(), GitSHA, BuildDate)
