@@ -331,6 +331,10 @@ func NewConfig(configFilePath *string) *Config {
 	defaultConf.ActiveProfile = nil
 	if *configFilePath != "" {
 		defaultConf.ConfigFile, _ = filepath.Abs(*configFilePath)
+		if _, err := os.Stat(defaultConf.ConfigFile); os.IsNotExist(err) {
+			fmt.Println("Config file doesn't exist.")
+			os.Exit(1)
+		}
 	}
 	cfg := reloadConfig(defaultConf)
 	LoadCache(cfg)
