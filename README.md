@@ -1,4 +1,4 @@
-## CloudMonkey [![Build Status](https://travis-ci.org/apache/cloudstack-cloudmonkey.svg?branch=master)](https://travis-ci.org/apache/cloudstack-cloudmonkey)[![](https://images.microbadger.com/badges/version/apache/cloudstack-cloudmonkey.svg)](https://hub.docker.com/r/apache/cloudstack-cloudmonkey)[![cloudmonkey](https://snapcraft.io/cloudmonkey/badge.svg)](https://snapcraft.io/cloudmonkey)
+## CloudMonkey [![Build Status](https://travis-ci.org/apache/cloudstack-cloudmonkey.svg?branch=main)](https://travis-ci.org/apache/cloudstack-cloudmonkey)[![](https://images.microbadger.com/badges/version/apache/cloudstack-cloudmonkey.svg)](https://hub.docker.com/r/apache/cloudstack-cloudmonkey)[![cloudmonkey](https://snapcraft.io/cloudmonkey/badge.svg)](https://snapcraft.io/cloudmonkey)
 
 `cloudmonkey` :cloud::monkey_face: is a command line interface (CLI) for
 [Apache CloudStack](http://cloudstack.apache.org).
@@ -57,7 +57,7 @@ Report issue(s) on the `user` mailing list and/or open a Github [issue](https://
 3. Commit your change
 4. Write tests for your change if applicable
 5. Run the tests, ensuring they all pass
-6. Submit a [Pull Request](https://github.com/apache/cloudstack-cloudmonkey/pull/new/master) using Github
+6. Submit a [Pull Request](https://github.com/apache/cloudstack-cloudmonkey/pull/new/main) using Github
 
 ### History
 
