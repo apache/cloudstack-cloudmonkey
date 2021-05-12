@@ -135,32 +135,38 @@ func getResponseData(data map[string]interface{}) map[string]interface{} {
 }
 
 func pollAsyncJob(r *Request, jobID string) (map[string]interface{}, error) {
-	for timeout := float64(r.Config.Core.Timeout); timeout > 0.0; {
-		startTime := time.Now()
-		spinner := r.Config.StartSpinner("polling for async API result")
-		queryResult, queryError := NewAPIRequest(r, "queryAsyncJobResult", []string{"jobid=" + jobID}, false)
-		diff := time.Duration(1*time.Second).Nanoseconds() - time.Now().Sub(startTime).Nanoseconds()
-		if diff > 0 {
-			time.Sleep(time.Duration(diff) * time.Nanosecond)
-		}
-		timeout = timeout - time.Now().Sub(startTime).Seconds()
-		r.Config.StopSpinner(spinner)
-		if queryError != nil {
-			return queryResult, queryError
-		}
-		jobStatus := queryResult["jobstatus"].(float64)
-		if jobStatus == 0 {
-			continue
-		}
-		if jobStatus == 1 {
-			return queryResult["jobresult"].(map[string]interface{}), nil
+	timeout := time.NewTimer(time.Duration(float64(r.Config.Core.Timeout)) * time.Second)
+	ticker := time.NewTicker(time.Duration(2 * time.Second))
+	defer ticker.Stop()
+	defer timeout.Stop()
 
-		}
-		if jobStatus == 2 {
-			return queryResult, errors.New("async API failed for job " + jobID)
+	spinner := r.Config.StartSpinner("polling for async API result")
+	defer r.Config.StopSpinner(spinner)
+
+	for {
+		select {
+		case <-timeout.C:
+			return nil, errors.New("async API job query timed out")
+
+		case <-ticker.C:
+			queryResult, queryError := NewAPIRequest(r, "queryAsyncJobResult", []string{"jobid=" + jobID}, false)
+			if queryError != nil {
+				return queryResult, queryError
+			}
+			jobStatus := queryResult["jobstatus"].(float64)
+
+			switch jobStatus {
+			case 0:
+				continue
+
+			case 1:
+				return queryResult["jobresult"].(map[string]interface{}), nil
+
+			case 2:
+				return queryResult, errors.New("async API failed for job " + jobID)
+			}
 		}
 	}
-	return nil, errors.New("async API job query timed out")
 }
 
 // NewAPIRequest makes an API request to configured management server
