@@ -85,7 +85,22 @@ func (c Config) CacheFile() string {
 	return path.Join(cacheDir, cacheFileName)
 }
 
+func hasAccess(path string) bool {
+	status := true
+	file, err := os.Open(path)
+	if (err != nil) {
+		status = false
+	}
+	file.Close()
+	return status
+}
+
 func checkAndCreateDir(path string) string {
+	isAccsessible := hasAccess(path)
+	if !isAccsessible {
+		fmt.Println("User isn't authorized to access the config file")
+		os.Exit(1)
+	}
 	if fileInfo, err := os.Stat(path); os.IsNotExist(err) || !fileInfo.IsDir() {
 		err := os.Mkdir(path, 0700)
 		if err != nil {
