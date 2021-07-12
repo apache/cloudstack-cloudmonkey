@@ -24,7 +24,7 @@ import (
 	"runtime"
 	"strings"
 
-	cmd "github.com/apache/cloudstack-cloudmonkey/internal/app"
+	"github.com/apache/cloudstack-cloudmonkey/internal/app"
 	"github.com/apache/cloudstack-cloudmonkey/internal/config"
 	"github.com/google/shlex"
 )
@@ -57,11 +57,11 @@ func ExecCmd(args []string) error {
 		return nil
 	}
 
-	command := cmd.FindCommand(args[0])
+	command := app.FindCommand(args[0])
 	if command != nil {
-		return command.Handle(cmd.NewRequest(command, cfg, args[1:]))
+		return command.Handle(app.NewRequest(command, cfg, args[1:]))
 	}
 
-	catchAllHandler := cmd.GetAPIHandler()
-	return catchAllHandler.Handle(cmd.NewRequest(catchAllHandler, cfg, args))
+	catchAllHandler := app.GetAPIHandler()
+	return catchAllHandler.Handle(app.NewRequest(catchAllHandler, cfg, args))
 }

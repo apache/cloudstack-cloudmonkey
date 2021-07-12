@@ -23,12 +23,12 @@ import (
 	"strings"
 	"unicode"
 
-	cmd "github.com/apache/cloudstack-cloudmonkey/internal/app"
+	"github.com/apache/cloudstack-cloudmonkey/internal/app"
 	"github.com/apache/cloudstack-cloudmonkey/internal/config"
 )
 
 func buildAPICacheMap(apiMap map[string][]*config.API) map[string][]*config.API {
-	for _, cmd := range cmd.AllCommands() {
+	for _, cmd := range app.AllCommands() {
 		verb := cmd.Name
 		if cmd.SubCommands != nil && len(cmd.SubCommands) > 0 {
 			for command, opts := range cmd.SubCommands {
@@ -365,8 +365,8 @@ func (t *autoCompleter) Do(line []rune, pos int) (options [][]rune, offset int) 
 			}
 
 			spinner := t.Config.StartSpinner("fetching options, please wait...")
-			request := cmd.NewRequest(nil, completer.Config, nil)
-			response, _ := cmd.NewAPIRequest(request, autocompleteAPI.Name, autocompleteAPIArgs, false)
+			request := app.NewRequest(nil, completer.Config, nil)
+			response, _ := app.NewAPIRequest(request, autocompleteAPI.Name, autocompleteAPIArgs, false)
 			t.Config.StopSpinner(spinner)
 
 			hasID := strings.HasSuffix(arg.Name, "id=") || strings.HasSuffix(arg.Name, "ids=")
