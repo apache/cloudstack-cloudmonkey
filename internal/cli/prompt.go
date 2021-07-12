@@ -22,7 +22,7 @@ import (
 	"io"
 	"strings"
 
-	"github.com/apache/cloudstack-cloudmonkey/config"
+	"github.com/apache/cloudstack-cloudmonkey/internal/config"
 	"github.com/chzyer/readline"
 )
 

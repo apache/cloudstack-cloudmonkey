@@ -15,7 +15,7 @@
 // specific language governing permissions and limitations
 // under the License.
 
-package cmd
+package app
 
 import (
 	"encoding/json"
@@ -26,7 +26,7 @@ import (
 	"strings"
 	"text/tabwriter"
 
-	"github.com/apache/cloudstack-cloudmonkey/config"
+	"github.com/apache/cloudstack-cloudmonkey/internal/config"
 	"github.com/olekukonko/tablewriter"
 )
 

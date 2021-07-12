@@ -24,8 +24,8 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/apache/cloudstack-cloudmonkey/cmd"
-	"github.com/apache/cloudstack-cloudmonkey/config"
+	cmd "github.com/apache/cloudstack-cloudmonkey/internal/app"
+	"github.com/apache/cloudstack-cloudmonkey/internal/config"
 	"github.com/google/shlex"
 )
 

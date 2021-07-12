@@ -15,14 +15,14 @@
 // specific language governing permissions and limitations
 // under the License.
 
-package cmd
+package app
 
 import (
 	"fmt"
 	"reflect"
 	"strings"
 
-	"github.com/apache/cloudstack-cloudmonkey/config"
+	"github.com/apache/cloudstack-cloudmonkey/internal/config"
 )
 
 func init() {

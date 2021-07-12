@@ -39,7 +39,7 @@ all: fmt ; $(info $(M) Building executable… $(GIT_SHA)) @ ## Build program bin
 	$Q $(GO) build -mod=vendor \
 		-tags release \
 		-ldflags '-s -w -X main.GitSHA=$(GIT_SHA) -X main.BuildDate=$(DATE)' \
-		-o bin/$(PACKAGE) cmk.go
+		-o bin/$(PACKAGE) cmd/main.go
 	$(info $(M) Done!) @
 
 run: all
@@ -53,16 +53,16 @@ dist-mkdir: all
 	mkdir -p dist
 
 dist-linux: dist-mkdir
-	GOOS=linux   GOARCH=amd64 $(GO) build -mod=vendor -ldflags='-s -w -X main.GitSHA=$(GIT_SHA) -X main.BuildDate=$(DATE)' -o dist/cmk.linux.x86-64 cmk.go
-	GOOS=linux   GOARCH=386 $(GO) build -mod=vendor -ldflags='-s -w -X main.GitSHA=$(GIT_SHA) -X main.BuildDate=$(DATE)' -o dist/cmk.linux.x86 cmk.go
-	GOOS=linux   GOARCH=arm $(GO) build -mod=vendor -ldflags='-s -w -X main.GitSHA=$(GIT_SHA) -X main.BuildDate=$(DATE)' -o dist/cmk.linux.arm32 cmk.go
-	GOOS=linux   GOARCH=arm64 $(GO) build -mod=vendor -ldflags='-s -w -X main.GitSHA=$(GIT_SHA) -X main.BuildDate=$(DATE)' -o dist/cmk.linux.arm64 cmk.go
+	GOOS=linux   GOARCH=amd64 $(GO) build -mod=vendor -ldflags='-s -w -X main.GitSHA=$(GIT_SHA) -X main.BuildDate=$(DATE)' -o dist/cmk.linux.x86-64 cmd/main.go
+	GOOS=linux   GOARCH=386 $(GO) build -mod=vendor -ldflags='-s -w -X main.GitSHA=$(GIT_SHA) -X main.BuildDate=$(DATE)' -o dist/cmk.linux.x86 cmd/main.go
+	GOOS=linux   GOARCH=arm $(GO) build -mod=vendor -ldflags='-s -w -X main.GitSHA=$(GIT_SHA) -X main.BuildDate=$(DATE)' -o dist/cmk.linux.arm32 cmd/main.go
+	GOOS=linux   GOARCH=arm64 $(GO) build -mod=vendor -ldflags='-s -w -X main.GitSHA=$(GIT_SHA) -X main.BuildDate=$(DATE)' -o dist/cmk.linux.arm64 cmd/main.go
 
 
 dist: dist-linux
-	GOOS=windows GOARCH=386 $(GO) build -mod=vendor -ldflags='-s -w -X main.GitSHA=$(GIT_SHA) -X main.BuildDate=$(DATE)' -o dist/cmk.windows.x86.exe cmk.go
-	GOOS=windows GOARCH=amd64 $(GO) build -mod=vendor -ldflags='-s -w -X main.GitSHA=$(GIT_SHA) -X main.BuildDate=$(DATE)' -o dist/cmk.windows.x86-64.exe cmk.go
-	GOOS=darwin  GOARCH=amd64 $(GO) build -mod=vendor -ldflags='-s -w -X main.GitSHA=$(GIT_SHA) -X main.BuildDate=$(DATE)' -o dist/cmk.darwin.x86-64 cmk.go
+	GOOS=windows GOARCH=386 $(GO) build -mod=vendor -ldflags='-s -w -X main.GitSHA=$(GIT_SHA) -X main.BuildDate=$(DATE)' -o dist/cmk.windows.x86.exe cmd/main.go
+	GOOS=windows GOARCH=amd64 $(GO) build -mod=vendor -ldflags='-s -w -X main.GitSHA=$(GIT_SHA) -X main.BuildDate=$(DATE)' -o dist/cmk.windows.x86-64.exe cmd/main.go
+	GOOS=darwin  GOARCH=amd64 $(GO) build -mod=vendor -ldflags='-s -w -X main.GitSHA=$(GIT_SHA) -X main.BuildDate=$(DATE)' -o dist/cmk.darwin.x86-64 cmd/main.go
 
 # Tools
 

@@ -36,7 +36,7 @@ parts:
       git checkout -- .
       git status
       git rev-parse HEAD
-      go build -mod=vendor -ldflags="-s -w -X main.GitSHA=$(git rev-parse --short HEAD) -X main.BuildDate=$(date +%FT%T%z)" -o cmk cmk.go
+      go build -mod=vendor -ldflags="-s -w -X main.GitSHA=$(git rev-parse --short HEAD) -X main.BuildDate=$(date +%FT%T%z)" -o cmk cmd/main.go
       file cmk
       chmod +x cmk
       ./cmk -v

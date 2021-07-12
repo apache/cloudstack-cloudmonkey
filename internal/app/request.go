@@ -15,19 +15,31 @@
 // specific language governing permissions and limitations
 // under the License.
 
-package cmd
+package app
 
 import (
-	"os"
+	"net/http"
+
+	"github.com/apache/cloudstack-cloudmonkey/internal/config"
 )
 
-func init() {
-	AddCommand(&Command{
-		Name: "exit",
-		Help: "Exits",
-		Handle: func(r *Request) error {
-			os.Exit(0)
-			return nil
-		},
-	})
+// Request describes a command request
+type Request struct {
+	Command *Command
+	Config  *config.Config
+	Args    []string
+}
+
+// Client method returns the http Client for the current server profile
+func (r *Request) Client() *http.Client {
+	return r.Config.ActiveProfile.Client
+}
+
+// NewRequest creates a new request from a command
+func NewRequest(cmd *Command, cfg *config.Config, args []string) *Request {
+	return &Request{
+		Command: cmd,
+		Config:  cfg,
+		Args:    args,
+	}
 }

@@ -23,8 +23,8 @@ import (
 	"strings"
 	"unicode"
 
-	"github.com/apache/cloudstack-cloudmonkey/cmd"
-	"github.com/apache/cloudstack-cloudmonkey/config"
+	cmd "github.com/apache/cloudstack-cloudmonkey/internal/app"
+	"github.com/apache/cloudstack-cloudmonkey/internal/config"
 )
 
 func buildAPICacheMap(apiMap map[string][]*config.API) map[string][]*config.API {

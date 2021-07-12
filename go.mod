@@ -17,6 +17,8 @@
 
 module github.com/apache/cloudstack-cloudmonkey
 
+go 1.15
+
 require (
 	github.com/briandowns/spinner v0.0.0-20181029155426-195c31b675a7
 	github.com/chzyer/logex v1.1.10 // indirect

@@ -15,14 +15,14 @@
 // specific language governing permissions and limitations
 // under the License.
 
-package cmd
+package app
 
 import (
 	"errors"
 	"fmt"
 	"strings"
 
-	"github.com/apache/cloudstack-cloudmonkey/config"
+	"github.com/apache/cloudstack-cloudmonkey/internal/config"
 )
 
 var helpCommand *Command

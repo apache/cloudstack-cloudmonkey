@@ -15,7 +15,7 @@
 // specific language governing permissions and limitations
 // under the License.
 
-package cmd
+package app
 
 import (
 	"bytes"
@@ -34,7 +34,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/apache/cloudstack-cloudmonkey/config"
+	"github.com/apache/cloudstack-cloudmonkey/internal/config"
 )
 
 func findSessionCookie(cookies []*http.Cookie) *http.Cookie {
@@ -140,15 +140,17 @@ func pollAsyncJob(r *Request, jobID string) (map[string]interface{}, error) {
 	defer ticker.Stop()
 	defer timeout.Stop()
 
-	spinner := r.Config.StartSpinner("polling for async API result")
-	defer r.Config.StopSpinner(spinner)
+	// spinner := r.Config.StartSpinner("polling for async API result")
+	// defer r.Config.StopSpinner(spinner)
 
 	for {
 		select {
 		case <-timeout.C:
+			fmt.Println("Timedout")
 			return nil, errors.New("async API job query timed out")
 
 		case <-ticker.C:
+			fmt.Println("Ticker")
 			queryResult, queryError := NewAPIRequest(r, "queryAsyncJobResult", []string{"jobid=" + jobID}, false)
 			if queryError != nil {
 				return queryResult, queryError

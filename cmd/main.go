@@ -23,9 +23,9 @@ import (
 	"os"
 	"strings"
 
-	"github.com/apache/cloudstack-cloudmonkey/cli"
-	"github.com/apache/cloudstack-cloudmonkey/cmd"
-	"github.com/apache/cloudstack-cloudmonkey/config"
+	"github.com/apache/cloudstack-cloudmonkey/internal/app"
+	"github.com/apache/cloudstack-cloudmonkey/internal/cli"
+	"github.com/apache/cloudstack-cloudmonkey/internal/config"
 )
 
 // GitSHA holds the git SHA
@@ -36,7 +36,7 @@ var BuildDate string
 
 func init() {
 	flag.Usage = func() {
-		cmd.PrintUsage()
+		app.PrintUsage()
 	}
 }
 
@@ -70,7 +70,7 @@ func main() {
 
 	cli.SetConfig(cfg)
 	args := flag.Args()
-	config.Debug("cmdline args:", strings.Join(os.Args, ", "))
+	config.Debug("appline args:", strings.Join(os.Args, ", "))
 	if len(args) > 0 {
 		if err := cli.ExecCmd(args); err != nil {
 			fmt.Println("🙈 Error:", err)
