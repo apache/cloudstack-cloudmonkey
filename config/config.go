@@ -42,6 +42,11 @@ const (
 	TEXT   = "text"
 )
 
+const (
+	LOCALCLOUD = "localcloud"
+	LOCAL = "local"
+)
+
 // ServerProfile describes a management server
 type ServerProfile struct {
 	URL       string       `ini:"url"`
@@ -105,6 +110,25 @@ func getDefaultConfigDir() string {
 	return checkAndCreateDir(path.Join(home, ".cmk"))
 }
 
+func getProfileName () string {
+	_,err := os.Stat(path.Join(getDefaultConfigDir(), "config"))
+	if err != nil {
+		return LOCALCLOUD
+	}
+	conf, err := ini.Load(path.Join(getDefaultConfigDir(), "config"))
+	if err != nil {
+		return LOCALCLOUD
+	}
+	section, err := conf.GetSection(LOCAL)
+	if section == nil || err != nil {
+		return LOCALCLOUD
+	}
+	if section != nil {
+		return LOCAL
+	}
+	return LOCALCLOUD
+}
+
 func defaultCoreConfig() Core {
 	return Core{
 		Prompt:      "🐱",
@@ -112,7 +136,7 @@ func defaultCoreConfig() Core {
 		Timeout:     1800,
 		Output:      JSON,
 		VerifyCert:  true,
-		ProfileName: "localcloud",
+		ProfileName: getProfileName(),
 	}
 }
 
