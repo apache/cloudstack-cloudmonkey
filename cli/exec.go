@@ -58,7 +58,7 @@ func ExecCmd(args []string) error {
 	}
 
 	command := cmd.FindCommand(args[0])
-	if command != nil {
+	if command != nil && !(args[0] == "sync" && len(args) > 1) {
 		return command.Handle(cmd.NewRequest(command, cfg, args[1:]))
 	}
 
