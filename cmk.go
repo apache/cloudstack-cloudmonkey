@@ -41,7 +41,8 @@ func init() {
 }
 
 func main() {
-	outputFormat := flag.String("o", "", "output format: json, text, table, column, csv")
+	validFormats := strings.Join(config.GetOutputFormats(), ",")
+	outputFormat := flag.String("o", "", "output format: " + validFormats)
 	showVersion := flag.Bool("v", false, "show version")
 	debug := flag.Bool("d", false, "enable debug mode")
 	profile := flag.String("p", "", "server profile")
@@ -61,6 +62,10 @@ func main() {
 	}
 
 	if *outputFormat != "" {
+		if !config.CheckIfValuePresent(config.GetOutputFormats(), *outputFormat) {
+			fmt.Println("Invalid value set for output format. Supported values: " + validFormats)
+			os.Exit(1)
+		}
 		cfg.UpdateConfig("output", *outputFormat, false)
 	}
 

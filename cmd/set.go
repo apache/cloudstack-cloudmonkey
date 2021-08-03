@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"reflect"
 	"strings"
+	"errors"
 
 	"github.com/apache/cloudstack-cloudmonkey/config"
 )
@@ -33,7 +34,7 @@ func init() {
 			"prompt":     {"🐵", "🐱", "random"},
 			"asyncblock": {"true", "false"},
 			"timeout":    {"600", "1800", "3600"},
-			"output":     {"json", "text", "table", "column", "csv"},
+			"output":     config.GetOutputFormats(),
 			"profile":    {},
 			"url":        {},
 			"username":   {},
@@ -55,6 +56,15 @@ func init() {
 			if r.Args[len(r.Args)-1] == "-h" {
 				fmt.Println("Usage: set <subcommand> <option>. Press tab-tab to see available subcommands and options.")
 				return nil
+			}
+			if subCommand == "display" {
+				subCommand = "output"
+			}
+			validArgs := r.Command.SubCommands[subCommand]
+			if len(validArgs) != 0 && subCommand != "timeout" {
+				if !config.CheckIfValuePresent(validArgs, value) {
+					return errors.New("Invalid value set for " + subCommand +". Supported values: " + strings.Join(validArgs, ", ") )
+				}
 			}
 			r.Config.UpdateConfig(subCommand, value, true)
 

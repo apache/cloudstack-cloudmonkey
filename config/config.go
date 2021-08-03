@@ -74,6 +74,18 @@ type Config struct {
 	ActiveProfile *ServerProfile
 }
 
+func GetOutputFormats() []string {
+ return []string {"column", "csv", "json", "table", "text"}
+}
+
+func CheckIfValuePresent(dataset []string, element string) bool {
+	for _, arg := range dataset {
+		if arg == element {
+			return true
+		}
+	}
+	return false
+}
 // CacheFile returns the path to the cache file for a server profile
 func (c Config) CacheFile() string {
 	cacheDir := path.Join(c.Dir, "profiles")
