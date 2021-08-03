@@ -108,17 +108,17 @@ func hasAccess(path string) bool {
 }
 
 func checkAndCreateDir(path string) string {
-	isAccsessible := hasAccess(path)
-	if !isAccsessible {
-		fmt.Println("User isn't authorized to access the config file")
-		os.Exit(1)
-	}
 	if fileInfo, err := os.Stat(path); os.IsNotExist(err) || !fileInfo.IsDir() {
 		err := os.Mkdir(path, 0700)
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
 		}
+	}
+	isAccsessible := hasAccess(path)
+	if !isAccsessible {
+		fmt.Println("User isn't authorized to access the config file")
+		os.Exit(1)
 	}
 	return path
 }
