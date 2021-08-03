@@ -30,12 +30,18 @@ import (
 	"github.com/olekukonko/tablewriter"
 )
 
-func jsonify(value interface{}) string {
+func jsonify(value interface{}, format string) string {
 	if value == nil {
 		return ""
 	}
 	if reflect.TypeOf(value).Kind() == reflect.Map || reflect.TypeOf(value).Kind() == reflect.Slice {
-		jsonStr, err := json.MarshalIndent(value, "", "")
+		var jsonStr []byte
+		var err error
+		if (format == "text") {
+			jsonStr, err = json.MarshalIndent(value, "", "")
+		} else {
+			jsonStr, err = json.Marshal(value)
+		}
 		if err == nil {
 			value = string(jsonStr)
 		}
@@ -51,6 +57,7 @@ func printJSON(response map[string]interface{}) {
 }
 
 func printText(response map[string]interface{}) {
+	format := "text"
 	for k, v := range response {
 		valueType := reflect.TypeOf(v)
 		if valueType.Kind() == reflect.Slice {
@@ -62,19 +69,20 @@ func printText(response map[string]interface{}) {
 				row, isMap := item.(map[string]interface{})
 				if isMap {
 					for field, value := range row {
-						fmt.Printf("%s = %v\n", field, jsonify(value))
+						fmt.Printf("%s = %v\n", field, jsonify(value, format))
 					}
 				} else {
 					fmt.Printf("%v\n", item)
 				}
 			}
 		} else {
-			fmt.Printf("%v = %v\n", k, jsonify(v))
+			fmt.Printf("%v = %v\n", k, jsonify(v, format))
 		}
 	}
 }
 
 func printTable(response map[string]interface{}, filter []string) {
+	format := "table"
 	table := tablewriter.NewWriter(os.Stdout)
 	for k, v := range response {
 		valueType := reflect.TypeOf(v)
@@ -103,7 +111,7 @@ func printTable(response map[string]interface{}, filter []string) {
 				}
 				var rowArray []string
 				for _, field := range header {
-					rowArray = append(rowArray, jsonify(row[field]))
+					rowArray = append(rowArray, jsonify(row[field], format))
 				}
 				table.Append(rowArray)
 			}
@@ -115,6 +123,7 @@ func printTable(response map[string]interface{}, filter []string) {
 }
 
 func printColumn(response map[string]interface{}, filter []string) {
+	format := "column"
 	w := tabwriter.NewWriter(os.Stdout, 0, 0, 3, ' ', tabwriter.DiscardEmptyColumns)
 	for _, v := range response {
 		valueType := reflect.TypeOf(v)
@@ -143,7 +152,7 @@ func printColumn(response map[string]interface{}, filter []string) {
 				}
 				var values []string
 				for _, key := range header {
-					values = append(values, jsonify(row[strings.ToLower(key)]))
+					values = append(values, jsonify(row[strings.ToLower(key)], format))
 				}
 				fmt.Fprintln(w, strings.Join(values, "\t"))
 			}
@@ -153,6 +162,7 @@ func printColumn(response map[string]interface{}, filter []string) {
 }
 
 func printCsv(response map[string]interface{}, filter []string) {
+	format := "csv"
 	for _, v := range response {
 		valueType := reflect.TypeOf(v)
 		if valueType.Kind() == reflect.Slice || valueType.Kind() == reflect.Map {
@@ -180,7 +190,7 @@ func printCsv(response map[string]interface{}, filter []string) {
 				}
 				var values []string
 				for _, key := range header {
-					values = append(values, jsonify(row[key]))
+					values = append(values, jsonify(row[key], format))
 				}
 				fmt.Println(strings.Join(values, ","))
 			}
