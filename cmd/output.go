@@ -35,7 +35,7 @@ func jsonify(value interface{}) string {
 		return ""
 	}
 	if reflect.TypeOf(value).Kind() == reflect.Map || reflect.TypeOf(value).Kind() == reflect.Slice {
-		jsonStr, err := json.Marshal(value)
+		jsonStr, err := json.MarshalIndent(value, "", "")
 		if err == nil {
 			value = string(jsonStr)
 		}
