@@ -40,6 +40,7 @@ const (
 	JSON   = "json"
 	TABLE  = "table"
 	TEXT   = "text"
+	DEFAULT= "default"
 )
 
 // ServerProfile describes a management server
@@ -75,7 +76,7 @@ type Config struct {
 }
 
 func GetOutputFormats() []string {
- return []string {"column", "csv", "json", "table", "text"}
+ return []string {"column", "csv", "json", "table", "text", "default"}
 }
 
 func CheckIfValuePresent(dataset []string, element string) bool {
