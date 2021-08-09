@@ -355,22 +355,27 @@ func (t *autoCompleter) Do(line []rune, pos int) (options [][]rune, offset int) 
 				return nil, 0
 			}
 
-			autocompleteAPIArgs := []string{"listall=true"}
-			if autocompleteAPI.Noun == "templates" {
-				autocompleteAPIArgs = append(autocompleteAPIArgs, "templatefilter=executable")
+			completeArgs := t.Config.Core.AutoComplete
+			autocompleteAPIArgs := []string{}
+			argOptions := []argOption{}
+			if completeArgs {
+				autocompleteAPIArgs = []string{"listall=true"}
+				if autocompleteAPI.Noun == "templates" {
+					autocompleteAPIArgs = append(autocompleteAPIArgs, "templatefilter=executable")
+				}
+
+				if apiFound.Name != "provisionCertificate" && autocompleteAPI.Name == "listHosts" {
+					autocompleteAPIArgs = append(autocompleteAPIArgs, "type=Routing")
+				}
+
+				spinner := t.Config.StartSpinner("fetching options, please wait...")
+				request := cmd.NewRequest(nil, completer.Config, nil)
+				response, _ := cmd.NewAPIRequest(request, autocompleteAPI.Name, autocompleteAPIArgs, false)
+				t.Config.StopSpinner(spinner)
+
+				hasID := strings.HasSuffix(arg.Name, "id=") || strings.HasSuffix(arg.Name, "ids=")
+				argOptions = buildArgOptions(response, hasID)
 			}
-
-			if apiFound.Name != "provisionCertificate" && autocompleteAPI.Name == "listHosts" {
-				autocompleteAPIArgs = append(autocompleteAPIArgs, "type=Routing")
-			}
-
-			spinner := t.Config.StartSpinner("fetching options, please wait...")
-			request := cmd.NewRequest(nil, completer.Config, nil)
-			response, _ := cmd.NewAPIRequest(request, autocompleteAPI.Name, autocompleteAPIArgs, false)
-			t.Config.StopSpinner(spinner)
-
-			hasID := strings.HasSuffix(arg.Name, "id=") || strings.HasSuffix(arg.Name, "ids=")
-			argOptions := buildArgOptions(response, hasID)
 
 			filteredOptions := []argOption{}
 			if len(argOptions) > 0 {

@@ -56,12 +56,13 @@ type ServerProfile struct {
 
 // Core block describes common options for the CLI
 type Core struct {
-	Prompt      string `ini:"prompt"`
-	AsyncBlock  bool   `ini:"asyncblock"`
-	Timeout     int    `ini:"timeout"`
-	Output      string `ini:"output"`
-	VerifyCert  bool   `ini:"verifycert"`
-	ProfileName string `ini:"profile"`
+	Prompt       string `ini:"prompt"`
+	AsyncBlock   bool   `ini:"asyncblock"`
+	Timeout      int    `ini:"timeout"`
+	Output       string `ini:"output"`
+	VerifyCert   bool   `ini:"verifycert"`
+	ProfileName  string `ini:"profile"`
+	AutoComplete bool   `ini:"autocomplete"`
 }
 
 // Config describes CLI config file and default options
@@ -141,6 +142,7 @@ func defaultCoreConfig() Core {
 		Output:      JSON,
 		VerifyCert:  true,
 		ProfileName: "localcloud",
+		AutoComplete: true,
 	}
 }
 
@@ -251,6 +253,9 @@ func saveConfig(cfg *Config) *Config {
 		// Update
 		core := new(Core)
 		conf.Section(ini.DEFAULT_SECTION).MapTo(core)
+		if (!conf.Section(ini.DEFAULT_SECTION).HasKey("autocomplete")) {
+			core.AutoComplete = true
+		}
 		cfg.Core = core
 	}
 
@@ -340,6 +345,8 @@ func (c *Config) UpdateConfig(key string, value string, update bool) {
 		} else {
 			DisableDebugging()
 		}
+	case "autocomplete":
+		c.Core.AutoComplete = value == "true"
 	default:
 		fmt.Println("Invalid option provided:", key)
 		return
