@@ -252,6 +252,9 @@ func saveConfig(cfg *Config) *Config {
 		// Update
 		core := new(Core)
 		conf.Section(ini.DEFAULT_SECTION).MapTo(core)
+		if (!conf.Section(ini.DEFAULT_SECTION).HasKey("autocomplete")) {
+			core.AutoComplete = true
+		}
 		cfg.Core = core
 	}
 
