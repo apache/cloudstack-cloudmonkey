@@ -71,6 +71,13 @@ Go-port of the original tool with some backward incompatibilities and reduced
 feature set. It ships as a standalone 64-bit executable binary for several
 platforms such as Linux, Mac and Windows.
 
+**NOTE:**
+
+If cloudmonkey is being upgraded from a version lower than v6.0.0, it must be noted
+that the cloudmonkey configuration path is changed from `~/.cloudmonkey/config` to 
+`~/.cmk/config` and a default `localcloud` profile is created. One would have to hence
+do an initial setup of basic configration such apikey/secretkey/username/password/url for the required profile(s) as required
+
 ### License
 
 Licensed to the Apache Software Foundation (ASF) under one

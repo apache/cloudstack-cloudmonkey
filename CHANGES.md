@@ -1,6 +1,14 @@
 Apache CloudStack CloudMonkey Changelog
 ---------------------------------------
 
+Version 6.2.0
+=============
+This release includes:
+- Validation of arguments while setting cloudmonkey configuration
+- Verify user access to cloudmonkey configuration file
+- Allow sync command to be used as a verb for cloudstack API calls
+- Print response with newlines if output format chosen is "text"
+
 Version 6.1.0
 =============
 This release includes
