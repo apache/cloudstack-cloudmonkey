@@ -254,6 +254,8 @@ func printResult(outputType string, response map[string]interface{}, filter []st
 		printCsv(response, filter)
 	case config.TABLE:
 		printTable(response, filter)
+	case config.DEFAULT:
+		printJSON(response)
 	default:
 		fmt.Println("Invalid output type configured, please fix that!")
 	}
