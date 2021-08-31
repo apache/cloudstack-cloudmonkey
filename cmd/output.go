@@ -46,7 +46,12 @@ func jsonify(value interface{}, format string) string {
 			value = string(jsonStr)
 		}
 	}
-	return fmt.Sprintf("%v", value)
+	switch value.(type) {
+	case float64, float32:
+		return fmt.Sprintf("%.f", value)
+	default:
+		return fmt.Sprintf("%v", value)
+	}
 }
 
 func printJSON(response map[string]interface{}) {
