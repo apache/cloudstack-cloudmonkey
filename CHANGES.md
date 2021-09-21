@@ -8,6 +8,10 @@ This release includes:
 - Verify user access to cloudmonkey configuration file
 - Allow sync command to be used as a verb for cloudstack API calls
 - Print response with newlines if output format chosen is "text"
+- Map "default" output type to "json"
+- Add autocompletion as an optional configuration
+- Display output in human readable format
+- Show meaningful metadata for id autocompletion for some APIs
 
 Version 6.1.0
 =============
