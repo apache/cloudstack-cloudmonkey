@@ -129,6 +129,11 @@ func buildArgOptions(response map[string]interface{}, hasID bool) []argOption {
 					name = resource["name"].(string)
 				} else if resource["username"] != nil {
 					name = resource["username"].(string)
+				} else if resource["hypervisor"] != nil && resource["hypervisorversion"] != nil {
+					name = fmt.Sprintf("%s %s", resource["hypervisor"].(string), resource["hypervisorversion"].(string))
+					if resource["osdisplayname"] != nil {
+						name = fmt.Sprintf("%s; %s", resource["osdisplayname"].(string), name)
+					}
 				}
 				if resource["displaytext"] != nil {
 					detail = resource["displaytext"].(string)
