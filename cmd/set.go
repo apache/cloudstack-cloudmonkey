@@ -18,10 +18,10 @@
 package cmd
 
 import (
+	"errors"
 	"fmt"
 	"reflect"
 	"strings"
-	"errors"
 
 	"github.com/apache/cloudstack-cloudmonkey/config"
 )
@@ -64,7 +64,7 @@ func init() {
 			validArgs := r.Command.SubCommands[subCommand]
 			if len(validArgs) != 0 && subCommand != "timeout" {
 				if !config.CheckIfValuePresent(validArgs, value) {
-					return errors.New("Invalid value set for " + subCommand +". Supported values: " + strings.Join(validArgs, ", ") )
+					return errors.New("Invalid value set for " + subCommand + ". Supported values: " + strings.Join(validArgs, ", "))
 				}
 			}
 			r.Config.UpdateConfig(subCommand, value, true)

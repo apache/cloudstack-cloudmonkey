@@ -42,7 +42,7 @@ func init() {
 
 func main() {
 	validFormats := strings.Join(config.GetOutputFormats(), ",")
-	outputFormat := flag.String("o", "", "output format: " + validFormats)
+	outputFormat := flag.String("o", "", "output format: "+validFormats)
 	showVersion := flag.Bool("v", false, "show version")
 	debug := flag.Bool("d", false, "enable debug mode")
 	profile := flag.String("p", "", "server profile")

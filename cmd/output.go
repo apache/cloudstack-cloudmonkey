@@ -37,7 +37,7 @@ func jsonify(value interface{}, format string) string {
 	if reflect.TypeOf(value).Kind() == reflect.Map || reflect.TypeOf(value).Kind() == reflect.Slice {
 		var jsonStr []byte
 		var err error
-		if (format == "text") {
+		if format == "text" {
 			jsonStr, err = json.MarshalIndent(value, "", "")
 		} else {
 			jsonStr, err = json.Marshal(value)

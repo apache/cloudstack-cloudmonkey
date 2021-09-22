@@ -35,12 +35,12 @@ import (
 
 // Output formats
 const (
-	COLUMN = "column"
-	CSV    = "csv"
-	JSON   = "json"
-	TABLE  = "table"
-	TEXT   = "text"
-	DEFAULT= "default"
+	COLUMN  = "column"
+	CSV     = "csv"
+	JSON    = "json"
+	TABLE   = "table"
+	TEXT    = "text"
+	DEFAULT = "default"
 )
 
 // ServerProfile describes a management server
@@ -77,7 +77,7 @@ type Config struct {
 }
 
 func GetOutputFormats() []string {
- return []string {"column", "csv", "json", "table", "text", "default"}
+	return []string{"column", "csv", "json", "table", "text", "default"}
 }
 
 func CheckIfValuePresent(dataset []string, element string) bool {
@@ -88,6 +88,7 @@ func CheckIfValuePresent(dataset []string, element string) bool {
 	}
 	return false
 }
+
 // CacheFile returns the path to the cache file for a server profile
 func (c Config) CacheFile() string {
 	cacheDir := path.Join(c.Dir, "profiles")
@@ -102,7 +103,7 @@ func (c Config) CacheFile() string {
 func hasAccess(path string) bool {
 	status := true
 	file, err := os.Open(path)
-	if (err != nil) {
+	if err != nil {
 		status = false
 	}
 	file.Close()
@@ -136,12 +137,12 @@ func getDefaultConfigDir() string {
 
 func defaultCoreConfig() Core {
 	return Core{
-		Prompt:      "🐱",
-		AsyncBlock:  true,
-		Timeout:     1800,
-		Output:      JSON,
-		VerifyCert:  true,
-		ProfileName: "localcloud",
+		Prompt:       "🐱",
+		AsyncBlock:   true,
+		Timeout:      1800,
+		Output:       JSON,
+		VerifyCert:   true,
+		ProfileName:  "localcloud",
 		AutoComplete: true,
 	}
 }
@@ -253,7 +254,7 @@ func saveConfig(cfg *Config) *Config {
 		// Update
 		core := new(Core)
 		conf.Section(ini.DEFAULT_SECTION).MapTo(core)
-		if (!conf.Section(ini.DEFAULT_SECTION).HasKey("autocomplete")) {
+		if !conf.Section(ini.DEFAULT_SECTION).HasKey("autocomplete") {
 			core.AutoComplete = true
 		}
 		cfg.Core = core
