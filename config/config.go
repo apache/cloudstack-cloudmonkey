@@ -321,6 +321,7 @@ func (c *Config) UpdateConfig(key string, value string, update bool) {
 		intValue, err := strconv.Atoi(value)
 		if err != nil {
 			fmt.Println("Error caught while setting timeout:", err)
+			return
 		}
 		c.Core.Timeout = intValue
 	case "profile":
