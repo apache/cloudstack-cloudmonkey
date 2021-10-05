@@ -68,7 +68,7 @@ Allowed flags:
   -o        API response output format: json, text, table, column, csv
   -p        Server profile
   -d        Enable debug mode
-  -c        different config file path
+  -c        Different config file path
 
 Default commands:
 %s
