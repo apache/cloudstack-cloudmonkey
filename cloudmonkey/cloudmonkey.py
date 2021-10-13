@@ -81,8 +81,10 @@ logger = logging.getLogger(__name__)
 
 
 class CloudMonkeyShell(cmd.Cmd, object):
-    intro = ("☁ Apache CloudStack 🐵 cloudmonkey " + __version__ +
-             ". Type help or ? to list commands.\n")
+    intro = ("☁ Apache CloudStack 🐵 (legacy) cloudmonkey " + __version__ + ".\n" +
+             "Please switch to latest Go-based version https://github.com/apache/cloudstack-cloudmonkey/releases.\n" +
+             "For usage see https://github.com/apache/cloudstack-cloudmonkey/wiki.\n" +
+             "Type help or ? to list commands.\n")
     ruler = "="
     config_options = []
     profile_names = []

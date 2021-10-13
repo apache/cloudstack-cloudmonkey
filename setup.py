@@ -55,14 +55,14 @@ print "Parameter completion may fail, if the above is not run!"
 
 setup(
     name = 'cloudmonkey',
-    version = __version__,
+    version = '5.3.3.1',
     author = __project__,
     author_email = __projectemail__,
     maintainer = __maintainer__,
     maintainer_email = __maintaineremail__,
     url = __projecturl__,
     description = __description__,
-    long_description = "cloudmonkey is a CLI for Apache CloudStack",
+    long_description = "Legacy cloudmonkey is a CLI for Apache CloudStack. Please use the latest Go-based CLI from https://github.com/apache/cloudstack-cloudmonkey/releases. Refer to wiki for documentation https://github.com/apache/cloudstack-cloudmonkey/wiki",
     platforms = ("Any",),
     license = 'ASL 2.0',
     packages = find_packages(),
