@@ -19,6 +19,7 @@ package cmd
 
 import (
 	"encoding/json"
+	"encoding/csv"
 	"fmt"
 	"os"
 	"reflect"
@@ -168,6 +169,7 @@ func printColumn(response map[string]interface{}, filter []string) {
 
 func printCsv(response map[string]interface{}, filter []string) {
 	format := "csv"
+	enc := csv.NewWriter(os.Stdout)
 	for _, v := range response {
 		valueType := reflect.TypeOf(v)
 		if valueType.Kind() == reflect.Slice || valueType.Kind() == reflect.Map {
@@ -191,16 +193,17 @@ func printCsv(response map[string]interface{}, filter []string) {
 						}
 						sort.Strings(header)
 					}
-					fmt.Println(strings.Join(header, ","))
+					enc.Write(header)
 				}
 				var values []string
 				for _, key := range header {
 					values = append(values, jsonify(row[key], format))
 				}
-				fmt.Println(strings.Join(values, ","))
+				enc.Write(values)
 			}
 		}
 	}
+	enc.Flush()
 }
 
 func filterResponse(response map[string]interface{}, filter []string, outputType string) map[string]interface{} {
