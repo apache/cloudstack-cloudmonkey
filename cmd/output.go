@@ -18,8 +18,8 @@
 package cmd
 
 import (
-	"encoding/json"
 	"encoding/csv"
+	"encoding/json"
 	"fmt"
 	"os"
 	"reflect"

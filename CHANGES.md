@@ -1,6 +1,13 @@
 Apache CloudStack CloudMonkey Changelog
 ---------------------------------------
 
+Version 6.3.0
+=============
+This release includes:
+- Fixes handling of invalid timeout value
+- Fixes csv output
+- Add support for ARM64 Darwin/OSX build in Makefile
+
 Version 6.2.0
 =============
 This release includes:
