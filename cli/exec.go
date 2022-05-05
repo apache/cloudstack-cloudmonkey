@@ -40,7 +40,8 @@ func ExecLine(line string) error {
 	if runtime.GOOS != "windows" {
 		for _, arg := range args {
 			if arg == "|" {
-				result, err := exec.Command("bash", "-c", fmt.Sprintf("%s %v", os.Args[0], line)).Output()
+				fullCommand := fmt.Sprintf("%s %v", strings.Join(os.Args, " "), line)
+				result, err := exec.Command("bash", "-c", fullCommand).Output()
 				fmt.Print(string(result))
 				return err
 			}
