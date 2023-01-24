@@ -15,13 +15,27 @@
 # specific language governing permissions and limitations
 # under the License.
 
-sudo: false
-language: go
-go:
-  - 1.14.x
+name: Github-Actions
 
-script:
-  - make all
+on: [push, pull_request]
 
-env:
-  - GO111MODULE=on
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up Go
+      uses: actions/setup-go@v3
+      with:
+        go-version: 1.19.x
+
+    - name: Run Script
+      run:  make all
+      
+    env:
+       GO111MODULE: on
