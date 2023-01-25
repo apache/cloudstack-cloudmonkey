@@ -15,7 +15,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
-name: Github-Actions
+name: Build
 
 on: [push, pull_request]
 
@@ -24,8 +24,9 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
+  build:  
+    runs-on: ubuntu-22.04
+
     steps:
     - uses: actions/checkout@v3
 
