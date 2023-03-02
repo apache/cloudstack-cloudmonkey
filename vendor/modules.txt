@@ -1,24 +1,52 @@
 # github.com/briandowns/spinner v0.0.0-20181029155426-195c31b675a7
+## explicit
 github.com/briandowns/spinner
+# github.com/chzyer/logex v1.1.10
+## explicit
 # github.com/chzyer/readline v0.0.0-20180603132655-2972be24d48e
+## explicit
 github.com/chzyer/readline
+# github.com/chzyer/test v0.0.0-20180213035817-a1ea475d72b1
+## explicit
 # github.com/fatih/color v1.7.0
+## explicit
 github.com/fatih/color
 # github.com/gofrs/flock v0.7.0
+## explicit
 github.com/gofrs/flock
 # github.com/google/shlex v0.0.0-20150127133951-6f45313302b9
+## explicit
 github.com/google/shlex
+# github.com/gopherjs/gopherjs v0.0.0-20181017120253-0766667cb4d1
+## explicit
+# github.com/jtolds/gls v4.2.1+incompatible
+## explicit
+# github.com/kr/pretty v0.1.0
+## explicit
 # github.com/mattn/go-colorable v0.0.9
+## explicit
 github.com/mattn/go-colorable
 # github.com/mattn/go-isatty v0.0.4
+## explicit
 github.com/mattn/go-isatty
 # github.com/mattn/go-runewidth v0.0.3
+## explicit
 github.com/mattn/go-runewidth
 # github.com/mitchellh/go-homedir v1.0.0
+## explicit
 github.com/mitchellh/go-homedir
 # github.com/olekukonko/tablewriter v0.0.1
+## explicit
 github.com/olekukonko/tablewriter
-# golang.org/x/sys v0.0.0-20181019160139-8e24a49d80f8
+# github.com/smartystreets/assertions v0.0.0-20180927180507-b2de0cb4f26d
+## explicit
+# github.com/smartystreets/goconvey v0.0.0-20180222194500-ef6db91d284a
+## explicit
+# golang.org/x/sys v0.1.0
+## explicit; go 1.17
 golang.org/x/sys/unix
+# gopkg.in/check.v1 v1.0.0-20180628173108-788fd7840127
+## explicit
 # gopkg.in/ini.v1 v1.39.0
+## explicit
 gopkg.in/ini.v1

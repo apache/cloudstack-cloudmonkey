@@ -46,24 +46,9 @@ func newOpCompleter(w io.Writer, op *Operation, width int) *opCompleter {
 	}
 }
 
-func (o *opCompleter) writeRunes(candidate []rune) {
-	detailIndex := len(candidate)
-	spaceFound := false
-	for idx, r := range candidate {
-		if r == ' ' {
-			spaceFound = true
-		}
-		if spaceFound && r == '(' {
-			detailIndex = idx
-			break
-		}
-	}
-	o.op.buf.WriteRunes(candidate[:detailIndex])
-}
-
 func (o *opCompleter) doSelect() {
 	if len(o.candidate) == 1 {
-		o.writeRunes(o.candidate[0])
+		o.op.buf.WriteRunes(o.candidate[0])
 		o.ExitCompleteMode(false)
 		return
 	}
@@ -138,7 +123,7 @@ func (o *opCompleter) HandleCompleteSelect(r rune) bool {
 	switch r {
 	case CharEnter, CharCtrlJ:
 		next = false
-		o.writeRunes(o.op.candidate[o.op.candidateChoise])
+		o.op.buf.WriteRunes(o.op.candidate[o.op.candidateChoise])
 		o.ExitCompleteMode(false)
 	case CharLineStart:
 		num := o.candidateChoise % o.candidateColNum
