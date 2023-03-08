@@ -1,3 +1,6 @@
+//go:build windows && !appengine
+// +build windows,!appengine
+
 package runewidth
 
 import (
