@@ -120,7 +120,12 @@ func encodeRequestParams(params url.Values) string {
 		}
 		buf.WriteString(key)
 		buf.WriteString("=")
-		buf.WriteString(url.QueryEscape(value))
+		escaped := url.QueryEscape(value)
+		// we need to ensure + (representing a space) is encoded as %20
+		escaped = strings.Replace(escaped, "+", "%20", -1)
+		// we need to ensure * is not escaped
+		escaped = strings.Replace(escaped, "%2A", "*", -1)
+		buf.WriteString(escaped)
 	}
 	return buf.String()
 }
@@ -204,7 +209,7 @@ func NewAPIRequest(r *Request, api string, args []string, isAsync bool) (map[str
 		encodedParams = encodeRequestParams(params)
 
 		mac := hmac.New(sha1.New, []byte(secretKey))
-		mac.Write([]byte(strings.Replace(strings.ToLower(encodedParams), "+", "%20", -1)))
+		mac.Write([]byte(strings.ToLower(encodedParams)))
 		signature := base64.StdEncoding.EncodeToString(mac.Sum(nil))
 		encodedParams = encodedParams + fmt.Sprintf("&signature=%s", url.QueryEscape(signature))
 	} else if len(r.Config.ActiveProfile.Username) > 0 && len(r.Config.ActiveProfile.Password) > 0 {
