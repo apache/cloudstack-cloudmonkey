@@ -21,6 +21,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"path"
 	"strings"
 
 	"github.com/apache/cloudstack-cloudmonkey/cli"
@@ -38,6 +39,17 @@ func init() {
 	flag.Usage = func() {
 		cmd.PrintUsage()
 	}
+}
+
+func existsProfileCache(profile string, cfg *config.Config) bool {
+	cacheDir := path.Join(cfg.Dir, "profiles")
+	cacheFileName := profile + ".cache"
+	fileName := path.Join(cacheDir, cacheFileName)
+	info, err := os.Stat(fileName)
+	if os.IsNotExist(err) {
+		return false
+	}
+	return !info.IsDir()
 }
 
 func main() {
@@ -70,6 +82,10 @@ func main() {
 	}
 
 	if *profile != "" {
+		if !existsProfileCache(*profile, cfg) {
+			fmt.Printf("Cannot find a cache file for the profile: %s\n", *profile)
+			os.Exit(1)
+		}
 		cfg.LoadProfile(*profile)
 	}
 
