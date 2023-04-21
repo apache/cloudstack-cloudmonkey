@@ -43,6 +43,8 @@ const (
 	DEFAULT = "default"
 )
 
+const DEFAULT_ACS_API_ENDPOINT = "http://localhost:8080/client/api"
+
 // ServerProfile describes a management server
 type ServerProfile struct {
 	URL       string       `ini:"url"`
@@ -149,7 +151,7 @@ func defaultCoreConfig() Core {
 
 func defaultProfile() ServerProfile {
 	return ServerProfile{
-		URL:       "http://localhost:8080/client/api",
+		URL:       DEFAULT_ACS_API_ENDPOINT,
 		Username:  "admin",
 		Password:  "password",
 		Domain:    "/",
@@ -256,6 +258,7 @@ func saveConfig(cfg *Config) *Config {
 		conf.Section(ini.DEFAULT_SECTION).MapTo(core)
 		if !conf.Section(ini.DEFAULT_SECTION).HasKey("autocomplete") {
 			core.AutoComplete = true
+			core.Output = JSON
 		}
 		cfg.Core = core
 	}

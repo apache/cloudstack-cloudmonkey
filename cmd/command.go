@@ -69,6 +69,9 @@ Allowed flags:
   -p        Server profile
   -d        Enable debug mode
   -c        Different config file path
+  -u	    CloudStack's API endpoint URL
+  -s	    CloudStack user's secret Key
+  -k	    CloudStack user's API Key
 
 Default commands:
 %s
