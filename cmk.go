@@ -48,7 +48,7 @@ func main() {
 	profile := flag.String("p", "", "server profile")
 	configFilePath := flag.String("c", "", "config file path")
 	acsUrl := flag.String("u", config.DEFAULT_ACS_API_ENDPOINT, "cloudStack's API endpoint URL")
-	apiKey := flag.String("a", "", "cloudStack user's API Key")
+	apiKey := flag.String("k", "", "cloudStack user's API Key")
 	secretKey := flag.String("s", "", "cloudStack user's secret Key")
 	flag.Parse()
 
@@ -71,11 +71,6 @@ func main() {
 		cfg.UpdateConfig("output", *outputFormat, false)
 	}
 
-	if *profile != "" {
-		cfg.LoadProfile(*profile)
-	}
-
-	cli.SetConfig(cfg)
 	if *acsUrl != config.DEFAULT_ACS_API_ENDPOINT {
 		cfg.UpdateConfig("url", *acsUrl, false)
 	}
@@ -87,6 +82,20 @@ func main() {
 	if *secretKey != "" {
 		cfg.UpdateConfig("secretkey", *secretKey, false)
 	}
+
+	if *profile != "" {
+		cfg.LoadProfile(*profile)
+	}
+
+	if *apiKey != "" && *secretKey != "" {
+		request := cmd.NewRequest(nil, cfg, nil)
+		syncResponse, err := cmd.NewAPIRequest(request, "listApis", []string{"listall=true"}, false)
+		if err == nil {
+			fmt.Printf("Discovered %v APIs\n", cfg.UpdateCache(syncResponse))
+		}
+	}
+
+	cli.SetConfig(cfg)
 
 	args := flag.Args()
 	config.Debug("cmdline args:", strings.Join(os.Args, ", "))
