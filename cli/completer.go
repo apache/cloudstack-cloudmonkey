@@ -185,6 +185,17 @@ func doInternal(line []rune, pos int, lineLen int, argName []rune) (newLine [][]
 	return
 }
 
+func findAPI(apiMap map[string][]*config.API, relatedNoun string) *config.API {
+	var autocompleteAPI *config.API
+	for _, listAPI := range apiMap["list"] {
+		if relatedNoun == listAPI.Noun {
+			autocompleteAPI = listAPI
+			break
+		}
+	}
+	return autocompleteAPI
+}
+
 func findAutocompleteAPI(arg *config.APIArg, apiFound *config.API, apiMap map[string][]*config.API) *config.API {
 	if arg.Type == "map" {
 		return nil
@@ -193,19 +204,22 @@ func findAutocompleteAPI(arg *config.APIArg, apiFound *config.API, apiMap map[st
 	var autocompleteAPI *config.API
 	argName := strings.Replace(arg.Name, "=", "", -1)
 	relatedNoun := argName
-	if argName == "id" || argName == "ids" {
+	switch {
+	case argName == "id" || argName == "ids":
 		// Heuristic: user is trying to autocomplete for id/ids arg for a list API
 		relatedNoun = apiFound.Noun
 		if apiFound.Verb != "list" {
 			relatedNoun += "s"
 		}
-	} else if argName == "account" {
+	case argName == "account":
 		// Heuristic: user is trying to autocomplete for accounts
 		relatedNoun = "accounts"
-	} else if argName == "ipaddressid" {
+	case argName == "ipaddressid":
 		// Heuristic: user is trying to autocomplete for ip addresses
 		relatedNoun = "publicipaddresses"
-	} else {
+	case argName == "storageid":
+		relatedNoun = "storagepools"
+	default:
 		// Heuristic: autocomplete for the arg for which a list<Arg without id/ids>s API exists
 		// For example, for zoneid arg, listZones API exists
 		cutIdx := len(argName)
@@ -219,10 +233,12 @@ func findAutocompleteAPI(arg *config.APIArg, apiFound *config.API, apiMap map[st
 	}
 
 	config.Debug("Possible related noun for the arg: ", relatedNoun, " and type: ", arg.Type)
-	for _, listAPI := range apiMap["list"] {
-		if relatedNoun == listAPI.Noun {
-			autocompleteAPI = listAPI
-			break
+	autocompleteAPI = findAPI(apiMap, relatedNoun)
+
+	if autocompleteAPI == nil {
+		if strings.Contains(strings.ToLower(relatedNoun), "storage") {
+			relatedNoun = "storagepools"
+			autocompleteAPI = findAPI(apiMap, relatedNoun)
 		}
 	}
 

@@ -45,7 +45,6 @@ func newOpCompleter(w io.Writer, op *Operation, width int) *opCompleter {
 		width: width,
 	}
 }
-
 func (o *opCompleter) writeRunes(candidate []rune) {
 	detailIndex := len(candidate)
 	spaceFound := false
