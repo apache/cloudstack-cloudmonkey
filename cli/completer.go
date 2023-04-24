@@ -387,6 +387,8 @@ func (t *autoCompleter) Do(line []rune, pos int) (options [][]rune, offset int) 
 
 				if apiFound.Name != "provisionCertificate" && autocompleteAPI.Name == "listHosts" {
 					autocompleteAPIArgs = append(autocompleteAPIArgs, "type=Routing")
+				} else if apiFound.Name == "migrateSystemVm" {
+					autocompleteAPI.Name = "listSystemVms"
 				}
 
 				spinner := t.Config.StartSpinner("fetching options, please wait...")
