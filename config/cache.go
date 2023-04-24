@@ -84,9 +84,7 @@ func LoadCache(c *Config) interface{} {
 	Debug("Trying to read API cache from:", cacheFile)
 	cache, err := ioutil.ReadFile(cacheFile)
 	if err != nil {
-		if c.HasShell {
-			fmt.Fprintf(os.Stderr, "Loaded in-built API cache. Failed to read API cache, please run 'sync'.\n")
-		}
+		fmt.Fprintf(os.Stderr, "Loaded in-built API cache. Failed to read API cache, please run 'sync'.\n")
 		cache = []byte(preCache)
 	}
 	var data map[string]interface{}
