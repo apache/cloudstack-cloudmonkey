@@ -59,7 +59,9 @@ func main() {
 	debug := flag.Bool("d", false, "enable debug mode")
 	profile := flag.String("p", "", "server profile")
 	configFilePath := flag.String("c", "", "config file path")
-
+	acsUrl := flag.String("u", config.DEFAULT_ACS_API_ENDPOINT, "cloudStack's API endpoint URL")
+	apiKey := flag.String("k", "", "cloudStack user's API Key")
+	secretKey := flag.String("s", "", "cloudStack user's secret Key")
 	flag.Parse()
 
 	cfg := config.NewConfig(configFilePath)
@@ -81,6 +83,18 @@ func main() {
 		cfg.UpdateConfig("output", *outputFormat, false)
 	}
 
+	if *acsUrl != config.DEFAULT_ACS_API_ENDPOINT {
+		cfg.UpdateConfig("url", *acsUrl, false)
+	}
+
+	if *apiKey != "" {
+		cfg.UpdateConfig("apikey", *apiKey, false)
+	}
+
+	if *secretKey != "" {
+		cfg.UpdateConfig("secretkey", *secretKey, false)
+	}
+
 	if *profile != "" {
 		if !existsProfileCache(*profile, cfg) {
 			fmt.Printf("Cannot find a cache file for the profile: %s\n", *profile)
@@ -89,7 +103,16 @@ func main() {
 		cfg.LoadProfile(*profile)
 	}
 
+	if *apiKey != "" && *secretKey != "" {
+		request := cmd.NewRequest(nil, cfg, nil)
+		syncResponse, err := cmd.NewAPIRequest(request, "listApis", []string{"listall=true"}, false)
+		if err == nil {
+			fmt.Printf("Discovered %v APIs\n", cfg.UpdateCache(syncResponse))
+		}
+	}
+
 	cli.SetConfig(cfg)
+
 	args := flag.Args()
 	config.Debug("cmdline args:", strings.Join(os.Args, ", "))
 	if len(args) > 0 {
