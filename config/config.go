@@ -200,7 +200,7 @@ func setActiveProfile(cfg *Config, profile *ServerProfile) {
 	cfg.ActiveProfile.Client = newHTTPClient(cfg)
 }
 
-func reloadConfig(cfg *Config) *Config {
+func reloadConfig(cfg *Config, loadCache bool) *Config {
 	fileLock := flock.New(path.Join(getDefaultConfigDir(), "lock"))
 	err := fileLock.Lock()
 	if err != nil {
@@ -209,7 +209,9 @@ func reloadConfig(cfg *Config) *Config {
 	}
 	cfg = saveConfig(cfg)
 	fileLock.Unlock()
-	LoadCache(cfg)
+	if loadCache {
+		LoadCache(cfg)
+	}
 	return cfg
 }
 
@@ -360,7 +362,7 @@ func (c *Config) UpdateConfig(key string, value string, update bool) {
 	Debug("UpdateConfig key:", key, " value:", value, " update:", update)
 
 	if update {
-		reloadConfig(c)
+		reloadConfig(c, true)
 	}
 }
 
@@ -376,7 +378,6 @@ func NewConfig(configFilePath *string) *Config {
 			os.Exit(1)
 		}
 	}
-	cfg := reloadConfig(defaultConf)
-	LoadCache(cfg)
+	cfg := reloadConfig(defaultConf, false)
 	return cfg
 }

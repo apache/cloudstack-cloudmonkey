@@ -86,6 +86,7 @@ func main() {
 	if *profile != "" {
 		cfg.LoadProfile(*profile)
 	}
+	config.LoadCache(cfg)
 
 	if *apiKey != "" && *secretKey != "" {
 		request := cmd.NewRequest(nil, cfg, nil)
