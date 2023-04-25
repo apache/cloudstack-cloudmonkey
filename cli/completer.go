@@ -219,6 +219,8 @@ func findAutocompleteAPI(arg *config.APIArg, apiFound *config.API, apiMap map[st
 		relatedNoun = "publicipaddresses"
 	case argName == "storageid":
 		relatedNoun = "storagepools"
+	case argName == "associatednetworkid":
+		relatedNoun = "networks"
 	default:
 		// Heuristic: autocomplete for the arg for which a list<Arg without id/ids>s API exists
 		// For example, for zoneid arg, listZones API exists
@@ -387,6 +389,8 @@ func (t *autoCompleter) Do(line []rune, pos int) (options [][]rune, offset int) 
 
 				if apiFound.Name != "provisionCertificate" && autocompleteAPI.Name == "listHosts" {
 					autocompleteAPIArgs = append(autocompleteAPIArgs, "type=Routing")
+				} else if apiFound.Name == "migrateSystemVm" {
+					autocompleteAPI.Name = "listSystemVms"
 				}
 
 				spinner := t.Config.StartSpinner("fetching options, please wait...")
