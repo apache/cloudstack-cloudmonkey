@@ -10,9 +10,9 @@ This release includes:
 - Autocompletion on storage pool related APIs
 - Enable profile information passing through commandline
 - Profile caching improvements and bugfixes
-- fix: reuse cmk's CLI params to call piped cmd
+- Fix: reuse cmk's CLI params to call piped cmd
 - Maintenance changes - github actions/travis migration, dependencies upgrades,
-- various bug fixes 
+- Various bug fixes 
 
 Version 6.2.0
 =============
