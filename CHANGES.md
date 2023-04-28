@@ -7,6 +7,12 @@ This release includes:
 - Fixes handling of invalid timeout value
 - Fixes csv output
 - Add support for ARM64 Darwin/OSX build in Makefile
+- Autocompletion on storage pool related APIs
+- Enable profile information passing through commandline
+- Profile caching improvements and bugfixes
+- fix: reuse cmk's CLI params to call piped cmd
+- Maintenance changes - github actions/travis migration, dependencies upgrades,
+- various bug fixes 
 
 Version 6.2.0
 =============
