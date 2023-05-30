@@ -94,7 +94,7 @@ This release includes
 - Parameter completion uses list api heuristics and related APIs as fallback
 - Parameter completion options are cached to speed up rendering of options
 - CloudMonkey returns non-zero exit code when run on shell and a error is return
-  from managment server, the error message is written to stderr
+  from management server, the error message is written to stderr
 - Adds new config parameter 'verifysslcert' to enable/disable SSL cert checking
 - New command line arg: -d for display (json, table or default)
 
@@ -110,7 +110,7 @@ This release includes
  - Network requests, json decoding and shell related bugfixes
  - Based on platform, it will install either pyreadline (Windows) or readline (OSX and Linux)
  - Config options `protocol`, `host`, `port`, `path` are deprecated now
- - Backward compatibilty exists for above options but we use `url` for the mgmt server URL
+ - Backward compatibility exists for above options but we use `url` for the mgmt server URL
  - Introduces server profiles so users can use cloudmonkey with different hosts and management server configs
  - A default profile under the section [local] is added with default values
  - Everytime `set` is called, cloudmonkey will write the config and reload config file
