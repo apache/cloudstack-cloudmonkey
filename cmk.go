@@ -51,6 +51,7 @@ func main() {
 	apiKey := flag.String("k", "", "cloudStack user's API Key")
 	secretKey := flag.String("s", "", "cloudStack user's secret Key")
 	flag.Parse()
+	args := flag.Args()
 
 	cfg := config.NewConfig(configFilePath)
 
@@ -91,14 +92,13 @@ func main() {
 	if *apiKey != "" && *secretKey != "" {
 		request := cmd.NewRequest(nil, cfg, nil)
 		syncResponse, err := cmd.NewAPIRequest(request, "listApis", []string{"listall=true"}, false)
-		if err == nil {
+		if err == nil && len(args) == 0 {
 			fmt.Printf("Discovered %v APIs\n", cfg.UpdateCache(syncResponse))
 		}
 	}
 
 	cli.SetConfig(cfg)
 
-	args := flag.Args()
 	config.Debug("cmdline args:", strings.Join(os.Args, ", "))
 	if len(args) > 0 {
 		if err := cli.ExecCmd(args); err != nil {
