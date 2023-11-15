@@ -39,6 +39,10 @@ Build and run manually:
     $ make all
     $ ./bin/cmk
 
+To build for all distros and platforms, run:
+
+    $ make dist
+
 ### Community
 
 You may join the relevant mailing list(s) for cloudmonkey related discussion:
