@@ -30,7 +30,6 @@ import (
 	"net/http/cookiejar"
 	"net/url"
 	"os"
-	"os/signal"
 	"sort"
 	"strings"
 	"time"
@@ -149,19 +148,11 @@ func pollAsyncJob(r *Request, jobID string) (map[string]interface{}, error) {
 	spinner := r.Config.StartSpinner("polling for async API result")
 	defer r.Config.StopSpinner(spinner)
 
-	interrupted := false
-	c := make(chan os.Signal, 1)
-	signal.Notify(c, os.Interrupt)
-	go func() {
-		<-c
-		interrupted = true
-	}()
-
 	for {
-		if interrupted {
-			return nil, errors.New("API job query interrupted")
-		}
 		select {
+		case <-r.Config.C:
+			return nil, errors.New("async API job polling interrupted")
+
 		case <-timeout.C:
 			return nil, errors.New("async API job query timed out")
 
@@ -294,10 +285,12 @@ func NewAPIRequest(r *Request, api string, args []string, isAsync bool) (map[str
 
 // we can implement further conditions to do POST or GET (or other http commands) here
 func executeRequest(r *Request, requestURL string, params url.Values) (*http.Response, error) {
+	config.SetupContext(r.Config)
 	if params.Has("password") || params.Has("userdata") {
 		requestURL = fmt.Sprintf("%s", r.Config.ActiveProfile.URL)
 		return r.Client().PostForm(requestURL, params)
 	} else {
-		return r.Client().Get(requestURL)
+		req, _ := http.NewRequestWithContext(*r.Config.Context, "GET", requestURL, nil)
+		return r.Client().Do(req)
 	}
 }

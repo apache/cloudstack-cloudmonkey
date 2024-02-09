@@ -18,11 +18,13 @@
 package config
 
 import (
+	"context"
 	"crypto/tls"
 	"fmt"
 	"net/http"
 	"net/http/cookiejar"
 	"os"
+	"os/signal"
 	"path"
 	"path/filepath"
 	"strconv"
@@ -76,6 +78,9 @@ type Config struct {
 	HasShell      bool
 	Core          *Core
 	ActiveProfile *ServerProfile
+	Context       *context.Context
+	Cancel        context.CancelFunc
+	C             chan bool
 }
 
 func GetOutputFormats() []string {
@@ -182,7 +187,22 @@ func GetProfiles() []string {
 	return profiles
 }
 
+func SetupContext(cfg *Config) {
+	cfg.C = make(chan bool)
+	signals := make(chan os.Signal, 1)
+	signal.Notify(signals, os.Interrupt)
+	ctx, cancel := context.WithCancel(context.Background())
+	cfg.Context = &ctx
+	cfg.Cancel = cancel
+	go func() {
+		<-signals
+		cfg.Cancel()
+		cfg.C <- true
+	}()
+}
+
 func newHTTPClient(cfg *Config) *http.Client {
+	SetupContext(cfg)
 	jar, _ := cookiejar.New(nil)
 	client := &http.Client{
 		Jar: jar,
