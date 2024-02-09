@@ -30,6 +30,7 @@ import (
 	"net/http/cookiejar"
 	"net/url"
 	"os"
+	"os/signal"
 	"sort"
 	"strings"
 	"time"
@@ -148,7 +149,18 @@ func pollAsyncJob(r *Request, jobID string) (map[string]interface{}, error) {
 	spinner := r.Config.StartSpinner("polling for async API result")
 	defer r.Config.StopSpinner(spinner)
 
+	interrupted := false
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, os.Interrupt)
+	go func() {
+		<-c
+		interrupted = true
+	}()
+
 	for {
+		if interrupted {
+			return nil, errors.New("API job query interrupted")
+		}
 		select {
 		case <-timeout.C:
 			return nil, errors.New("async API job query timed out")
@@ -234,8 +246,8 @@ func NewAPIRequest(r *Request, api string, args []string, isAsync bool) (map[str
 	config.Debug("NewAPIRequest API request URL:", requestURL)
 
 	var response *http.Response
-	response,err = executeRequest(r, requestURL, params)
-	if (err != nil) {
+	response, err = executeRequest(r, requestURL, params)
+	if err != nil {
 		return nil, err
 	}
 	config.Debug("NewAPIRequest response status code:", response.StatusCode)
@@ -251,8 +263,8 @@ func NewAPIRequest(r *Request, api string, args []string, isAsync bool) (map[str
 		requestURL = fmt.Sprintf("%s?%s", r.Config.ActiveProfile.URL, encodeRequestParams(params))
 		config.Debug("NewAPIRequest API request URL:", requestURL)
 
-		response,err = executeRequest(r, requestURL, params)
-		if (err != nil) {
+		response, err = executeRequest(r, requestURL, params)
+		if err != nil {
 			return nil, err
 		}
 	}
@@ -281,7 +293,7 @@ func NewAPIRequest(r *Request, api string, args []string, isAsync bool) (map[str
 }
 
 // we can implement further conditions to do POST or GET (or other http commands) here
-func executeRequest(r *Request, requestURL string, params url.Values) (*http.Response, error){
+func executeRequest(r *Request, requestURL string, params url.Values) (*http.Response, error) {
 	if params.Has("password") || params.Has("userdata") {
 		requestURL = fmt.Sprintf("%s", r.Config.ActiveProfile.URL)
 		return r.Client().PostForm(requestURL, params)
