@@ -67,13 +67,12 @@ Report issue(s) on the `user` mailing list and/or open a Github [issue](https://
 
 The original `cloudmonkey` was written in Python and contributed to Apache
 CloudStack project by [Rohit Yadav](http://rohityadav.cloud) on 31 Oct 2012
-under the Apache License 2.0. The Python-based original CLI is now referred to
-as the legacy cloudmonkey and can be installed using `pip install cloudmonkey`.
+under the Apache License 2.0.
 
 Starting version 6.0.0, the modern cloudmonkey `cmk` is a fast and simplified
 Go-port of the original tool with some backward incompatibilities and reduced
-feature set. It ships as a standalone 64-bit executable binary for several
-platforms such as Linux, Mac and Windows.
+feature set. It ships as a standalone 64-bit [executable binary for several
+platforms such as Linux, Mac and Windows](https://github.com/apache/cloudstack-cloudmonkey/releases).
 
 **NOTE:**
 
