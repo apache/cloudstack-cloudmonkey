@@ -88,15 +88,6 @@ func main() {
 		cfg.LoadProfile(*profile)
 	}
 	config.LoadCache(cfg)
-
-	if *apiKey != "" && *secretKey != "" {
-		request := cmd.NewRequest(nil, cfg, nil)
-		syncResponse, err := cmd.NewAPIRequest(request, "listApis", []string{"listall=true"}, false)
-		if err == nil && len(args) == 0 {
-			fmt.Printf("Discovered %v APIs\n", cfg.UpdateCache(syncResponse))
-		}
-	}
-
 	cli.SetConfig(cfg)
 
 	config.Debug("cmdline args:", strings.Join(os.Args, ", "))
