@@ -1,6 +1,18 @@
 Apache CloudStack CloudMonkey Changelog
 ---------------------------------------
 
+Version 6.4.0
+=============
+This release includes:
+- Improve CLI mode usage and output handling
+- Add support for http POST handling for password and user-data
+- Optimise async API jobs polling
+- Better interrupt handling of Ctrl+C to cancel on-going API request but not
+  crash `cmk`
+- Remove unnecessary call to listApis (sync) when using CLI mode with url,
+  api key, secret key
+- Updates inbuilt API precache to ACS v4.19
+
 Version 6.3.0
 =============
 This release includes:
