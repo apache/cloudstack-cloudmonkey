@@ -221,6 +221,7 @@ func NewAPIRequest(r *Request, api string, args []string, isAsync bool) (map[str
 		mac.Write([]byte(strings.ToLower(encodedParams)))
 		signature := base64.StdEncoding.EncodeToString(mac.Sum(nil))
 		encodedParams = encodedParams + fmt.Sprintf("&signature=%s", url.QueryEscape(signature))
+		params = nil
 	} else if len(r.Config.ActiveProfile.Username) > 0 && len(r.Config.ActiveProfile.Password) > 0 {
 		sessionKey, err := Login(r)
 		if err != nil {
