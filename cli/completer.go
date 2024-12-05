@@ -200,6 +200,7 @@ func findAutocompleteAPI(arg *config.APIArg, apiFound *config.API, apiMap map[st
 	if arg.Type == "map" {
 		return nil
 	}
+	config.Debug("PEARL apiFound: ", apiFound)
 
 	var autocompleteAPI *config.API
 	argName := strings.Replace(arg.Name, "=", "", -1)
@@ -374,6 +375,7 @@ func (t *autoCompleter) Do(line []rune, pos int) (options [][]rune, offset int) 
 			}
 
 			autocompleteAPI := findAutocompleteAPI(arg, apiFound, apiMap)
+			config.Debug("api: ", autocompleteAPI)
 			if autocompleteAPI == nil {
 				return nil, 0
 			}
@@ -391,6 +393,8 @@ func (t *autoCompleter) Do(line []rune, pos int) (options [][]rune, offset int) 
 					autocompleteAPIArgs = append(autocompleteAPIArgs, "type=Routing")
 				} else if apiFound.Name == "migrateSystemVm" {
 					autocompleteAPI.Name = "listSystemVms"
+				} else if apiFound.Name == "associateIpAddress" {
+					autocompleteAPIArgs = append(autocompleteAPIArgs, "state=Free")
 				}
 
 				spinner := t.Config.StartSpinner("fetching options, please wait...")
