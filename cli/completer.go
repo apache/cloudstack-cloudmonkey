@@ -200,7 +200,6 @@ func findAutocompleteAPI(arg *config.APIArg, apiFound *config.API, apiMap map[st
 	if arg.Type == "map" {
 		return nil
 	}
-	config.Debug("PEARL apiFound: ", apiFound)
 
 	var autocompleteAPI *config.API
 	argName := strings.Replace(arg.Name, "=", "", -1)
@@ -375,7 +374,6 @@ func (t *autoCompleter) Do(line []rune, pos int) (options [][]rune, offset int) 
 			}
 
 			autocompleteAPI := findAutocompleteAPI(arg, apiFound, apiMap)
-			config.Debug("api: ", autocompleteAPI)
 			if autocompleteAPI == nil {
 				return nil, 0
 			}
