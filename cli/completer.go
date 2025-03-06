@@ -389,7 +389,7 @@ func (t *autoCompleter) Do(line []rune, pos int) (options [][]rune, offset int) 
 
 				if apiFound.Name != "provisionCertificate" && autocompleteAPI.Name == "listHosts" {
 					autocompleteAPIArgs = append(autocompleteAPIArgs, "type=Routing")
-				} else if apiFound.Name == "migrateSystemVm" {
+				} else if apiFound.Name == "migrateSystemVm" && autocompleteAPI.Name == "listVirtualMachines" {
 					autocompleteAPI.Name = "listSystemVms"
 				}
 
