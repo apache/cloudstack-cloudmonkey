@@ -4,7 +4,7 @@
 [Apache CloudStack](http://cloudstack.apache.org).
 It can be used both as an interactive shell and as a command-line tool, simplifying Apache CloudStack configuration and management.
 
-The modern Cloudmonkey is a rewritten and simplified port in Go, compatible
+The modern CloudMonkey is a rewritten and simplified port in Go, compatible
 with Apache CloudStack 4.9 and above. The legacy cloudmonkey written in Python
 can be used with Apache CloudStack 4.0-incubating and above.
 
