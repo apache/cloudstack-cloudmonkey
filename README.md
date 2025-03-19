@@ -2,10 +2,9 @@
 
 `cloudmonkey` :cloud::monkey_face: is a command line interface (CLI) for
 [Apache CloudStack](http://cloudstack.apache.org).
-CloudMonkey can be used both as an interactive shell and as a command line tool
-which simplifies Apache CloudStack configuration and management.
+It can be used both as an interactive shell and as a command-line tool, simplifying Apache CloudStack configuration and management.
 
-The modern cloudmonkey is a re-written and simplified port in Go and can be used
+The modern CloudMonkey is a rewritten and simplified port in Go, compatible
 with Apache CloudStack 4.9 and above. The legacy cloudmonkey written in Python
 can be used with Apache CloudStack 4.0-incubating and above.
 
@@ -13,7 +12,7 @@ For documentation, kindly see the [wiki](https://github.com/apache/cloudstack-cl
 
 ### Development
 
-For development the pre-requisites are Go 1.11 or latest and a unix-like
+To develop CloudMonkey, you need Go 1.11 or later and a unix-like
 environment. You can use the following targets for building:
 
     $ make help
@@ -78,8 +77,7 @@ platforms such as Linux, Mac and Windows](https://github.com/apache/cloudstack-c
 
 If cloudmonkey is being upgraded from a version lower than v6.0.0, it must be noted
 that the cloudmonkey configuration path is changed from `~/.cloudmonkey/config` to 
-`~/.cmk/config` and a default `localcloud` profile is created. One would have to hence
-do an initial setup of basic configuration such apikey/secretkey/username/password/url for the required profile(s) as required
+`~/.cmk/config` and a default `localcloud` profile is created. One must first set up basic configurations such as apikey/secretkey/username/password/url for the required profile(s) as required
 
 ### License
 
