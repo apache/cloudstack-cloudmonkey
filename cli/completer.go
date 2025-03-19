@@ -391,6 +391,8 @@ func (t *autoCompleter) Do(line []rune, pos int) (options [][]rune, offset int) 
 					autocompleteAPIArgs = append(autocompleteAPIArgs, "type=Routing")
 				} else if apiFound.Name == "migrateSystemVm" {
 					autocompleteAPI.Name = "listSystemVms"
+				} else if apiFound.Name == "associateIpAddress" {
+					autocompleteAPIArgs = append(autocompleteAPIArgs, "state=Free")
 				}
 
 				spinner := t.Config.StartSpinner("fetching options, please wait...")
