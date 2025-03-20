@@ -20,6 +20,7 @@ package cli
 import (
 	"fmt"
 	"sort"
+	"strconv"
 	"strings"
 	"unicode"
 
@@ -123,7 +124,14 @@ func buildArgOptions(response map[string]interface{}, hasID bool) []argOption {
 				}
 				var id, name, detail string
 				if resource["id"] != nil {
-					id = resource["id"].(string)
+					switch rawId := resource["id"].(type) {
+					case string:
+						id = rawId
+					case float64:
+						id = strconv.FormatFloat(rawId, 'f', -1, 64)
+					default:
+						panic(fmt.Errorf("detected an invalid type at path (%v:%T). This should have been caught during validation, indicating a bug in CloudMonkey. Please report this issue", rawId, rawId))
+					}
 				}
 				if resource["name"] != nil {
 					name = resource["name"].(string)
@@ -400,15 +408,23 @@ func (t *autoCompleter) Do(line []rune, pos int) (options [][]rune, offset int) 
 				response, _ := cmd.NewAPIRequest(request, autocompleteAPI.Name, autocompleteAPIArgs, false)
 				t.Config.StopSpinner(spinner)
 
-				hasID := strings.HasSuffix(arg.Name, "id=") || strings.HasSuffix(arg.Name, "ids=")
+				hasID := strings.HasSuffix(arg.Name, "id=") || strings.HasSuffix(arg.Name, "ids=") || autocompleteAPI.Name == "listUsageTypes"
 				argOptions = buildArgOptions(response, hasID)
 			}
 
 			filteredOptions := []argOption{}
 			if len(argOptions) > 0 {
-				sort.Slice(argOptions, func(i, j int) bool {
-					return argOptions[i].Value < argOptions[j].Value
-				})
+				if isNumeric(argOptions[0].Value) {
+					sort.Slice(argOptions, func(i, j int) bool {
+						i, _ = strconv.Atoi(argOptions[i].Value)
+						j, _ = strconv.Atoi(argOptions[j].Value)
+						return i < j
+					})
+				} else {
+					sort.Slice(argOptions, func(i, j int) bool {
+						return argOptions[i].Value < argOptions[j].Value
+					})
+				}
 				for _, item := range argOptions {
 					if strings.HasPrefix(item.Value, argInput) {
 						filteredOptions = append(filteredOptions, item)
@@ -434,4 +450,13 @@ func (t *autoCompleter) Do(line []rune, pos int) (options [][]rune, offset int) 
 	}
 
 	return options, offset
+}
+
+func isNumeric(str string) bool {
+	for _, char := range str {
+		if !unicode.IsDigit(char) {
+			return false
+		}
+	}
+	return true
 }
