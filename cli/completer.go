@@ -357,6 +357,7 @@ func (t *autoCompleter) Do(line []rune, pos int) (options [][]rune, offset int) 
 				}
 				return
 			}
+
 			if arg.Type == config.FAKE && arg.Name == "filter=" {
 				offset = 0
 				filterInputs := strings.Split(strings.Replace(argInput, ",", ",|", -1), "|")
@@ -368,6 +369,22 @@ func (t *autoCompleter) Do(line []rune, pos int) (options [][]rune, offset int) 
 					if strings.HasPrefix(key, lastFilterInput) {
 						options = append(options, []rune(key[len(lastFilterInput):]))
 						offset = len(lastFilterInput)
+					}
+				}
+				return
+			}
+
+			if arg.Type == config.FAKE && arg.Name == "exclude=" {
+				offset = 0
+				excludeFilterInputs := strings.Split(strings.Replace(argInput, ",", ",|", -1), "|")
+				lastExcludeFilterInput := lastString(excludeFilterInputs)
+				for _, key := range apiFound.ResponseKeys {
+					if inArray(key, excludeFilterInputs) {
+						continue
+					}
+					if strings.HasPrefix(key, lastExcludeFilterInput) {
+						options = append(options, []rune(key[len(lastExcludeFilterInput):]))
+						offset = len(lastExcludeFilterInput)
 					}
 				}
 				return

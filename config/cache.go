@@ -151,6 +151,13 @@ func (c *Config) UpdateCache(response map[string]interface{}) interface{} {
 			Description: "cloudmonkey specific response key filtering",
 		})
 
+		// Add exclude arg
+		apiArgs = append(apiArgs, &APIArg{
+			Name:        "exclude=",
+			Type:        FAKE,
+			Description: "cloudmonkey specific response key to exlude when filtering",
+		})
+
 		sort.Slice(apiArgs, func(i, j int) bool {
 			return apiArgs[i].Name < apiArgs[j].Name
 		})

@@ -82,7 +82,7 @@ func init() {
 				if strings.HasSuffix(err.Error(), "context canceled") {
 					return nil
 				} else if response != nil {
-					printResult(r.Config.Core.Output, response, nil)
+					printResult(r.Config.Core.Output, response, nil, nil)
 				}
 				return err
 			}
@@ -98,8 +98,19 @@ func init() {
 				}
 			}
 
+			var excludeKeys []string
+			for _, arg := range apiArgs {
+				if strings.HasPrefix(arg, "exclude=") {
+					for _, excludeKey := range strings.Split(strings.Split(arg, "=")[1], ",") {
+						if len(strings.TrimSpace(excludeKey)) > 0 {
+							excludeKeys = append(excludeKeys, strings.TrimSpace(excludeKey))
+						}
+					}
+				}
+			}
+
 			if len(response) > 0 {
-				printResult(r.Config.Core.Output, response, filterKeys)
+				printResult(r.Config.Core.Output, response, filterKeys, excludeKeys)
 			}
 
 			return nil

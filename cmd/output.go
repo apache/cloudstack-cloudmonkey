@@ -206,51 +206,67 @@ func printCsv(response map[string]interface{}, filter []string) {
 	enc.Flush()
 }
 
-func filterResponse(response map[string]interface{}, filter []string, outputType string) map[string]interface{} {
-	if filter == nil || len(filter) == 0 {
+func filterResponse(response map[string]interface{}, filter []string, excludeFilter []string, outputType string) map[string]interface{} {
+	if (filter == nil || len(filter) == 0) && (excludeFilter == nil || len(excludeFilter) == 0) {
 		return response
 	}
+
+	excludeSet := make(map[string]struct{}, len(excludeFilter))
+	for _, key := range excludeFilter {
+		excludeSet[key] = struct{}{}
+	}
+
+	filterSet := make(map[string]struct{}, len(filter))
+	for _, key := range filter {
+		filterSet[key] = struct{}{}
+	}
+
 	filteredResponse := make(map[string]interface{})
-	for k, v := range response {
-		valueType := reflect.TypeOf(v)
-		if valueType.Kind() == reflect.Slice || valueType.Kind() == reflect.Map {
-			items, ok := v.([]interface{})
-			if !ok {
-				continue
-			}
+
+	for key, value := range response {
+		switch items := value.(type) {
+		case []interface{}:
 			var filteredRows []interface{}
 			for _, item := range items {
 				row, ok := item.(map[string]interface{})
-				if !ok || len(row) < 1 {
+				if !ok || len(row) == 0 {
 					continue
 				}
+
 				filteredRow := make(map[string]interface{})
-				for _, filterKey := range filter {
-					for field := range row {
-						if filterKey == field {
-							filteredRow[field] = row[field]
+
+				if len(filter) > 0 {
+					// Include only keys that exist in filterSet
+					for filterKey := range filterSet {
+						if val, exists := row[filterKey]; exists {
+							filteredRow[filterKey] = val
+						} else if outputType == config.COLUMN || outputType == config.CSV || outputType == config.TABLE {
+							filteredRow[filterKey] = "" // Ensure all filter keys exist in row
 						}
 					}
-					if outputType == config.COLUMN || outputType == config.CSV || outputType == config.TABLE {
-						if _, ok := filteredRow[filterKey]; !ok {
-							filteredRow[filterKey] = ""
+				} else {
+					// Exclude keys from excludeFilter
+					for field, val := range row {
+						if _, excluded := excludeSet[field]; !excluded {
+							filteredRow[field] = val
 						}
 					}
 				}
+
 				filteredRows = append(filteredRows, filteredRow)
 			}
-			filteredResponse[k] = filteredRows
-		} else {
-			filteredResponse[k] = v
-			continue
-		}
+			filteredResponse[key] = filteredRows
 
+		default:
+			filteredResponse[key] = value
+		}
 	}
+
 	return filteredResponse
 }
 
-func printResult(outputType string, response map[string]interface{}, filter []string) {
-	response = filterResponse(response, filter, outputType)
+func printResult(outputType string, response map[string]interface{}, filter []string, excludeFilter []string) {
+	response = filterResponse(response, filter, excludeFilter, outputType)
 	switch outputType {
 	case config.JSON:
 		printJSON(response)
