@@ -203,8 +203,10 @@ func NewAPIRequest(r *Request, api string, args []string, isAsync bool) (map[str
 			params.Add(key, value)
 		}
 	}
+	signatureversion := "3"
+	expiresKey := "expires"
 	params.Add("response", "json")
-	params.Add("signatureversion", "3")
+	params.Add("signatureversion", signatureversion)
 	params.Add(expiresKey, time.Now().UTC().Add(15 * time.Minute).Format(time.RFC3339))
 
 	var encodedParams string
