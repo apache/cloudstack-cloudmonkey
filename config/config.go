@@ -285,7 +285,7 @@ func saveConfig(cfg *Config) *Config {
 			core.Output = JSON
 		}
 		if conf.Section(ini.DEFAULT_SECTION).HasKey("postrequest") {
-			core.PostRequest = true
+			core.PostRequest = false
 		}
 		cfg.Core = core
 	}
