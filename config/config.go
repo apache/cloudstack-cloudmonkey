@@ -284,8 +284,8 @@ func saveConfig(cfg *Config) *Config {
 			core.AutoComplete = true
 			core.Output = JSON
 		}
-		if !conf.Section(ini.DEFAULT_SECTION).HasKey("postrequest") { {
-			core.PostRequest = false
+		if !conf.Section(ini.DEFAULT_SECTION).HasKey("postrequest") {
+			core.PostRequest = true
 		}
 		cfg.Core = core
 	}
