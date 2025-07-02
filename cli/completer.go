@@ -221,6 +221,8 @@ func findAutocompleteAPI(arg *config.APIArg, apiFound *config.API, apiMap map[st
 		relatedNoun = "storagepools"
 	case argName == "associatednetworkid":
 		relatedNoun = "networks"
+	case argName == "instanceid":
+		relatedNoun = "virtualmachines"
 	default:
 		// Heuristic: autocomplete for the arg for which a list<Arg without id/ids>s API exists
 		// For example, for zoneid arg, listZones API exists
