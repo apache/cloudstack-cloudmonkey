@@ -412,7 +412,7 @@ func (t *autoCompleter) Do(line []rune, pos int) (options [][]rune, offset int) 
 
 			filteredOptions := []argOption{}
 			if len(argOptions) > 0 {
-				if isNumeric(argOptions[0].Value) {
+				if autocompleteAPI.Name == "listUsageTypes" {
 					sort.Slice(argOptions, func(i, j int) bool {
 						i, _ = strconv.Atoi(argOptions[i].Value)
 						j, _ = strconv.Atoi(argOptions[j].Value)
@@ -448,13 +448,4 @@ func (t *autoCompleter) Do(line []rune, pos int) (options [][]rune, offset int) 
 	}
 
 	return options, offset
-}
-
-func isNumeric(str string) bool {
-	for _, char := range str {
-		if !unicode.IsDigit(char) {
-			return false
-		}
-	}
-	return true
 }
