@@ -207,7 +207,7 @@ func NewAPIRequest(r *Request, api string, args []string, isAsync bool) (map[str
 	expiresKey := "expires"
 	params.Add("response", "json")
 	params.Add("signatureversion", signatureversion)
-	params.Add(expiresKey, time.Now().UTC().Add(15 * time.Minute).Format(time.RFC3339))
+	params.Add(expiresKey, time.Now().UTC().Add(15*time.Minute).Format(time.RFC3339))
 
 	var encodedParams string
 	var err error
