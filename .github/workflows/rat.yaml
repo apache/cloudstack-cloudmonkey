@@ -1,0 +1,36 @@
+name: RAT Check
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - '**'
+
+jobs:
+  rat:
+    name: Apache RAT Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 11
+
+      - name: Download Apache RAT
+        run: |
+          curl -L -O https://downloads.apache.org/creadur/apache-rat-0.16.1/apache-rat-0.16.1-bin.tar.gz
+          tar -xzf apache-rat-0.16.1-bin.tar.gz
+
+      - name: Run RAT
+        run: |
+          java -jar apache-rat-0.16.1.jar -d . -e vendor > rat-report.txt
+          cat rat-report.txt
+          # Fail if unapproved licenses are found
+          grep -q 'Unknown Licenses' rat-report.txt && exit 1 || exit 0
