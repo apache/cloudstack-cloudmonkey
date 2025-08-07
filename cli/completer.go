@@ -124,13 +124,13 @@ func buildArgOptions(response map[string]interface{}, hasID bool) []argOption {
 				}
 				var id, name, detail string
 				if resource["id"] != nil {
-					switch rawId := resource["id"].(type) {
+					switch rawID := resource["id"].(type) {
 					case string:
-						id = rawId
+						id = rawID
 					case float64:
-						id = strconv.FormatFloat(rawId, 'f', -1, 64)
+						id = strconv.FormatFloat(rawID, 'f', -1, 64)
 					default:
-						panic(fmt.Errorf("detected an invalid type at path (%v:%T). This should have been caught during validation, indicating a bug in CloudMonkey. Please report this issue", rawId, rawId))
+						panic(fmt.Errorf("detected an invalid type at path (%v:%T). This should have been caught during validation, indicating a bug in CloudMonkey. Please report this issue", rawID, rawID))
 					}
 				}
 				if resource["name"] != nil {
