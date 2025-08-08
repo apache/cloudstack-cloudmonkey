@@ -28,9 +28,21 @@ jobs:
           curl -L -O https://downloads.apache.org/creadur/apache-rat-0.16.1/apache-rat-0.16.1-bin.tar.gz
           tar -xzf apache-rat-0.16.1-bin.tar.gz
 
+      - name: Create exception list
+        run: |
+          cat << EOF >exception.lst
+./exception.lst
+./CHANGES.md
+./go.sum
+./rat-report.txt
+./apache-rat-0.16.1/**
+./snap/snapcraft.yaml
+./vedor/**
+EOF
+
       - name: Run RAT
         run: |
-          java -jar apache-rat-0.16.1/apache-rat-0.16.1.jar -d . -e vendor > rat-report.txt
+          java -jar apache-rat-0.16.1/apache-rat-0.16.1.jar -d . -E exception.lst > rat-report.txt
           cat rat-report.txt
           # Fail if unapproved licenses are found
           grep -q 'Unknown Licenses' rat-report.txt && exit 1 || exit 0
