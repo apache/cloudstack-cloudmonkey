@@ -34,9 +34,9 @@ jobs:
           echo ./CHANGES.md >>exception.lst
           echo ./go.sum >>exception.lst
           echo ./rat-report.txt >>exception.lst
-          echo ./apache-rat-0.16.1/** >>exception.lst
+          echo ./apache-rat-0.16.1/* >>exception.lst
           echo ./snap/snapcraft.yaml >>exception.lst
-          echo ./vedor/** >>exception.lst
+          echo ./vedor/* >>exception.lst
 
       - name: Run RAT
         run: |
