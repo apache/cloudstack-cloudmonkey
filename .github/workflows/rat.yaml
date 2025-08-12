@@ -30,7 +30,7 @@ jobs:
 
       - name: Run RAT
         run: |
-          java -jar apache-rat-0.16.1/apache-rat-0.16.1.jar -d . -E .rat-exceptions > rat-report.txt
+          java -jar apache-rat-0.16.1/apache-rat-0.16.1.jar -d . -E .rat-exlcudes > rat-report.txt
           cat rat-report.txt
           # Fail if unapproved licenses are found
           grep -qe '^0 Unknown Licenses' rat-report.txt && exit 0 || exit 1
