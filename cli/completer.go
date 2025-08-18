@@ -411,6 +411,9 @@ func (t *autoCompleter) Do(line []rune, pos int) (options [][]rune, offset int) 
 				if autocompleteAPI.Noun == "templates" {
 					autocompleteAPIArgs = append(autocompleteAPIArgs, "templatefilter=executable")
 				}
+				if autocompleteAPI.Noun == "isos" {
+					autocompleteAPIArgs = append(autocompleteAPIArgs, "isofilter=executable")
+				}
 
 				if apiFound.Name != "provisionCertificate" && autocompleteAPI.Name == "listHosts" {
 					autocompleteAPIArgs = append(autocompleteAPIArgs, "type=Routing")
