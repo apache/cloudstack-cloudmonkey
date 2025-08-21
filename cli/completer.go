@@ -414,6 +414,9 @@ func (t *autoCompleter) Do(line []rune, pos int) (options [][]rune, offset int) 
 				if autocompleteAPI.Noun == "isos" {
 					autocompleteAPIArgs = append(autocompleteAPIArgs, "isofilter=executable")
 				}
+				if autocompleteAPI.Noun == "virtualmachines" {
+					autocompleteAPIArgs = append(autocompleteAPIArgs, "projectid=-1")
+				}
 
 				if apiFound.Name != "provisionCertificate" && autocompleteAPI.Name == "listHosts" {
 					autocompleteAPIArgs = append(autocompleteAPIArgs, "type=Routing")
