@@ -28,6 +28,10 @@ import (
 	"github.com/apache/cloudstack-cloudmonkey/config"
 )
 
+var nameSupportingApis = []string{
+	"configuration",
+}
+
 func buildAPICacheMap(apiMap map[string][]*config.API) map[string][]*config.API {
 	for _, cmd := range cmd.AllCommands() {
 		verb := cmd.Name
@@ -237,8 +241,13 @@ func findAutocompleteAPI(arg *config.APIArg, apiFound *config.API, apiMap map[st
 			base = strings.TrimSuffix(argName, "id")
 		} else if strings.HasSuffix(argName, "ids") {
 			base = strings.TrimSuffix(argName, "ids")
-		} else if argName == "name" && strings.HasPrefix(apiFound.Noun, "configuration") {
-			base = "configuration"
+		} else if argName == "name" {
+			for _, noun := range nameSupportingApis {
+				if strings.HasPrefix(apiFound.Noun, noun) {
+					base = noun
+					break
+				}
+			}
 		}
 		// Handle common cases where base ends with a vowel and needs "es"
 		if strings.HasSuffix(base, "s") || strings.HasSuffix(base, "x") || strings.HasSuffix(base, "z") || strings.HasSuffix(base, "ch") || strings.HasSuffix(base, "sh") {
