@@ -421,6 +421,10 @@ func (t *autoCompleter) Do(line []rune, pos int) (options [][]rune, offset int) 
 					autocompleteAPI.Name = "listSystemVms"
 				} else if apiFound.Name == "associateIpAddress" {
 					autocompleteAPIArgs = append(autocompleteAPIArgs, "state=Free")
+				} else if apiFound.Name == "listServiceOfferings" {
+					if arg.Name == "id=" && strings.Contains(strings.Join(splitLine, " "), "issystem=true") {
+						autocompleteAPIArgs = append(autocompleteAPIArgs, "issystem=true")
+					}
 				}
 
 				spinner := t.Config.StartSpinner("fetching options, please wait...")
