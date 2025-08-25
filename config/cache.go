@@ -18,6 +18,7 @@
 package config
 
 import (
+	_ "embed"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -32,6 +33,9 @@ const (
 	FAKE        = "fake"
 	FilePathArg = "filepath="
 )
+
+//go:embed apis.json
+var bundledAPICache []byte
 
 // APIArg are the args passable to an API
 type APIArg struct {
@@ -89,7 +93,7 @@ func LoadCache(c *Config) interface{} {
 	cache, err := ioutil.ReadFile(cacheFile)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Loaded in-built API cache. Failed to read API cache, please run 'sync'.\n")
-		cache = []byte(preCache)
+		cache = bundledAPICache
 	}
 	var data map[string]interface{}
 	_ = json.Unmarshal(cache, &data)
