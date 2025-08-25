@@ -18,7 +18,7 @@
 package config
 
 import (
-	_ "embed"
+	"embed"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
