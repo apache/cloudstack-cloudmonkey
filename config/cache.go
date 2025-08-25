@@ -18,7 +18,7 @@
 package config
 
 import (
-	"embed"
+	_ "embed" // for embedding apis.json
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
