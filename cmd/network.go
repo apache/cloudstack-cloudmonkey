@@ -411,9 +411,11 @@ func NewAPIRequest(r *Request, api string, args []string, isAsync bool) (map[str
 func executeRequest(r *Request, requestURL string, params url.Values) (*http.Response, error) {
 	config.SetupContext(r.Config)
 	if params.Has("password") || params.Has("userdata") || r.Config.Core.PostRequest {
-		requestURL = fmt.Sprintf("%s", r.Config.ActiveProfile.URL)
+		requestURL = r.Config.ActiveProfile.URL
+		config.Debug("Using HTTP POST for the request: ", requestURL)
 		return r.Client().PostForm(requestURL, params)
 	}
+	config.Debug("Using HTTP GET for the request: ", requestURL)
 	req, _ := http.NewRequestWithContext(*r.Config.Context, "GET", requestURL, nil)
 	return r.Client().Do(req)
 }

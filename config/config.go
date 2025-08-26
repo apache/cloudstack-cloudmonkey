@@ -76,7 +76,7 @@ type Core struct {
 	VerifyCert   bool   `ini:"verifycert"`
 	ProfileName  string `ini:"profile"`
 	AutoComplete bool   `ini:"autocomplete"`
-	PostRequest  bool   `ini:postrequest`
+	PostRequest  bool   `ini:"postrequest"`
 }
 
 // Config describes CLI config file and default options
@@ -401,6 +401,8 @@ func (c *Config) UpdateConfig(key string, value string, update bool) {
 		}
 	case "autocomplete":
 		c.Core.AutoComplete = value == "true"
+	case "postrequest":
+		c.Core.PostRequest = value == "true"
 	default:
 		fmt.Println("Invalid option provided:", key)
 		return

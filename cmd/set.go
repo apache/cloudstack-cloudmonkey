@@ -45,6 +45,7 @@ func init() {
 			"verifycert":   {"true", "false"},
 			"debug":        {"true", "false"},
 			"autocomplete": {"true", "false"},
+			"postrequest":  {"true", "false"},
 		},
 		Handle: func(r *Request) error {
 			if len(r.Args) < 1 {
