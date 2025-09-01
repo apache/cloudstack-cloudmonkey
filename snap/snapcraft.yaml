@@ -1,6 +1,6 @@
 name: cloudmonkey
 # define the tag anchor on the allowed 'version' field
-version: &release_tag 6.4.0
+version: &release_tag 6.5.0
 summary: Apache CloudStack CLI
 description: |
   A CLI and interactive shell that simplifies configuration and management of
