@@ -1,4 +1,4 @@
-## CloudMonkey [![Build Status](https://travis-ci.com/apache/cloudstack-cloudmonkey.svg?branch=main)](https://travis-ci.com/apache/cloudstack-cloudmonkey)[![](https://images.microbadger.com/badges/version/apache/cloudstack-cloudmonkey.svg)](https://hub.docker.com/r/apache/cloudstack-cloudmonkey)[![cloudmonkey](https://snapcraft.io/cloudmonkey/badge.svg)](https://snapcraft.io/cloudmonkey)
+## CloudMonkey [![Build Status](https://github.com/apache/cloudstack/actions/workflows/build.yml/badge.svg?branch=main)](https://github.com/apache/cloudstack/actions/workflows/build.yml) [![RAT Check](https://github.com/apache/cloudstack-cloudmonkey/actions/workflows/rat.yaml/badge.svg?branch=main)](https://github.com/apache/cloudstack-cloudmonkey/actions/workflows/rat.yamll) [![Lint Check](https://github.com/apache/cloudstack-cloudmonkey/actions/workflows/lint.yml/badge.svg?branch=main)](https://github.com/apache/cloudstack-cloudmonkey/actions/workflows/lint.yml) [![](https://images.microbadger.com/badges/version/apache/cloudstack-cloudmonkey.svg)](https://hub.docker.com/r/apache/cloudstack-cloudmonkey) [![cloudmonkey](https://snapcraft.io/cloudmonkey/badge.svg)](https://snapcraft.io/cloudmonkey)
 
 `cloudmonkey` :cloud::monkey_face: is a command line interface (CLI) for
 [Apache CloudStack](http://cloudstack.apache.org).
@@ -9,8 +9,6 @@ with Apache CloudStack 4.9 and above. The legacy cloudmonkey written in Python
 can be used with Apache CloudStack 4.0-incubating and above.
 
 For documentation, kindly see the [wiki](https://github.com/apache/cloudstack-cloudmonkey/wiki).
-
-[![Get it from the Snap Store](https://snapcraft.io/static/images/badges/en/snap-store-black.svg)](https://snapcraft.io/cloudmonkey)
 
 ### Development
 
