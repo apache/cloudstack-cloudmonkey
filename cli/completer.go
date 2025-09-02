@@ -221,7 +221,13 @@ func findAutocompleteAPI(arg *config.APIArg, apiFound *config.API, apiMap map[st
 		// Heuristic: user is trying to autocomplete for id/ids arg for a list API
 		relatedNoun = apiFound.Noun
 		if apiFound.Verb != "list" {
-			relatedNoun += "s"
+			config.Debug("relatedNoun before suffix check: ", relatedNoun)
+			if strings.HasSuffix(relatedNoun, "y") && len(relatedNoun) > 1 && !strings.ContainsAny(string(relatedNoun[len(relatedNoun)-2]), "aeiou") {
+				// Handle words ending in consonant + y (e.g., policy -> policies)
+				relatedNoun = relatedNoun[:len(relatedNoun)-1] + "ies"
+			} else if !strings.HasSuffix(relatedNoun, "ies") {
+				relatedNoun += "s"
+			}
 		}
 	case argName == "account":
 		// Heuristic: user is trying to autocomplete for accounts
