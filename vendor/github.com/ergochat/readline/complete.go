@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
+	"strings"
 	"sync/atomic"
 
 	"github.com/ergochat/readline/internal/platform"
@@ -51,7 +52,7 @@ func (o *opCompleter) truncateBufferAfterLastEqual(completion []rune) {
 	for i := len(bufRunes) - 1; i >= 0; i-- {
 		if bufRunes[i] == '=' {
 			prefix := bufRunes[i+1:] // part after '=' in buffer
-			if len(prefix) > 0 && len(completion) > 0 && string(completion[:len(prefix)]) == string(prefix) {
+			if len(prefix) > 0 && len(completion) >= len(prefix) && string(completion[:len(prefix)]) == string(prefix) {
 				o.op.buf.Set(bufRunes[:i+1]) // Keep content till '='
 			}
 			break
@@ -488,6 +489,33 @@ func (o *opCompleter) CompleteRefresh() {
 
 	// wrote out choices over "lines", move back to cursor (positioned at index)
 	fmt.Fprintf(buf, "\033[%dA", lines)
+
+	// Redraw the prompt and buffer since \033[J may have cleared them
+	// Calculate which line the cursor is on (0-indexed, where 0 is the prompt line)
+	cursorLine := o.op.buf.IdxLine(tWidth)
+
+	// Move to the beginning of the prompt line (line 0)
+	if cursorLine > 0 {
+		fmt.Fprintf(buf, "\033[%dA", cursorLine)
+	}
+	// Move to column 1 to redraw from the start
+	buf.WriteString("\033[1G")
+	// Redraw prompt and buffer content
+	cfg := o.op.GetConfig()
+	buf.WriteString(cfg.Prompt)
+	buf.WriteString("\x1b[0K") // Clear line from cursor right
+	rs := o.op.buf.Runes()
+	for _, e := range cfg.Painter(rs, o.op.buf.Pos()) {
+		if e == '\t' {
+			buf.WriteString(strings.Repeat(" ", runes.TabWidth))
+		} else {
+			buf.WriteRune(e)
+		}
+	}
+	// Now position cursor correctly - move back down to the cursor line
+	if cursorLine > 0 {
+		fmt.Fprintf(buf, "\033[%dB", cursorLine)
+	}
 	buf.Write(o.op.buf.getBackspaceSequence())
 	buf.Flush()
 }
