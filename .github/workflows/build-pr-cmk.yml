@@ -36,10 +36,10 @@ jobs:
       outcome: ${{ steps.meta.outputs.outcome }}
       artifact_url: ${{ steps.meta.outputs.artifact_url }}
     steps:
-      - name: Checkout PR HEAD
+      - name: Checkout PR base branch
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.pull_request.head.sha }}
+          ref: ${{ github.event.pull_request.base.sha }}
           persist-credentials: false
 
       - name: Set up Go
