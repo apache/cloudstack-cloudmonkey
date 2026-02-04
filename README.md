@@ -1,6 +1,6 @@
 ## CloudMonkey [![Build Status](https://github.com/apache/cloudstack/actions/workflows/build.yml/badge.svg?branch=main)](https://github.com/apache/cloudstack/actions/workflows/build.yml) [![RAT Check](https://github.com/apache/cloudstack-cloudmonkey/actions/workflows/rat.yaml/badge.svg?branch=main)](https://github.com/apache/cloudstack-cloudmonkey/actions/workflows/rat.yamll) [![Lint Check](https://github.com/apache/cloudstack-cloudmonkey/actions/workflows/lint.yml/badge.svg?branch=main)](https://github.com/apache/cloudstack-cloudmonkey/actions/workflows/lint.yml) [![](https://images.microbadger.com/badges/version/apache/cloudstack-cloudmonkey.svg)](https://hub.docker.com/r/apache/cloudstack-cloudmonkey) [![cloudmonkey](https://snapcraft.io/cloudmonkey/badge.svg)](https://snapcraft.io/cloudmonkey)
 
-`cloudmonkey` :cloud::monkey_face: is a command line interface (CLI) for
+`cloudmonkey` :cloud::monkey_face:  is a command line interface (CLI) for
 [Apache CloudStack](http://cloudstack.apache.org).
 It can be used both as an interactive shell and as a command-line tool, simplifying Apache CloudStack configuration and management.
 
