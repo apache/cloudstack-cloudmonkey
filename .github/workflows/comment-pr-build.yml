@@ -125,7 +125,8 @@ jobs:
               const expiryDate = execSync("date -d '+10 days' '+%B %d, %Y'").toString().trim();
               body += `✅ Build complete for PR #${prNumber}.\n\n`;
               body += `📦 Binary artifacts are available in the [workflow run](${runUrl}) (expires on ${expiryDate}).\n\n`;
-              body += `> **Note:** Download artifacts by clicking on the workflow run link above, then scroll to the "Artifacts" section.`;
+              body += `> **Note:** Download artifacts by clicking on the workflow run link above, then scroll to the "Artifacts" section.\n`;
+              body += `> _Artifacts from PR builds are for testing only and may contain unreviewed code._`;
             } else if (conclusion === 'failure') {
               body += `❌ Build failed for PR #${prNumber}.\n\n`;
               body += `See the [workflow run](${runUrl}) for details.`;
