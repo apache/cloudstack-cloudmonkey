@@ -27,6 +27,7 @@ permissions:
   contents: read
   issues: write
   pull-requests: write
+  actions: read
 
 jobs:
   comment:
@@ -64,26 +65,36 @@ jobs:
       - name: Get PR number from workflow run
         id: get-pr
         uses: actions/github-script@v7
+        env:
+          METADATA: ${{ steps.artifact-metadata.outputs.result }}
         with:
           script: |
-            const metadata = ${{ steps.artifact-metadata.outputs.result }};
-            
+            // Primary source: PRs attached to the workflow_run (for pull_request-triggered runs)
+            const runPRs = context.payload.workflow_run.pull_requests;
+            if (runPRs && runPRs.length > 0) {
+              return runPRs[0].number;
+            }
+            // Fallback 1: PR number discovered from artifact metadata
+            let metadata = {};
+            if (process.env.METADATA) {
+              try {
+                metadata = JSON.parse(process.env.METADATA);
+              } catch (e) {
+                core.warning(`Failed to parse artifact metadata: ${e.message}`);
+              }
+            }
             if (metadata.pr_number) {
               return metadata.pr_number;
             }
-            
-            // Fallback: get PR from workflow run
-            const pulls = await github.rest.pulls.list({
+            // Fallback 2: look up PRs associated with the workflow run head SHA
+            const associated = await github.rest.repos.listPullRequestsAssociatedWithCommit({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              state: 'open',
-              head: `${context.repo.owner}:${context.payload.workflow_run.head_branch}`
+              commit_sha: context.payload.workflow_run.head_sha,
             });
-            
-            if (pulls.data.length > 0) {
-              return pulls.data[0].number;
+            if (associated.data.length > 0) {
+              return associated.data[0].number;
             }
-            
             return null;
 
       - name: Comment or update build result on PR
