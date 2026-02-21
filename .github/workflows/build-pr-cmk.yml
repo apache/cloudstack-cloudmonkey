@@ -18,7 +18,7 @@
 name: Build cmk binaries on PR
 
 on:
-  pull_request_target:
+  pull_request:
     types: [opened, synchronize, reopened]
 
 concurrency:
@@ -36,10 +36,9 @@ jobs:
       outcome: ${{ steps.meta.outputs.outcome }}
       artifact_url: ${{ steps.meta.outputs.artifact_url }}
     steps:
-      - name: Checkout PR HEAD
+      - name: Checkout PR code
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.pull_request.head.sha }}
           persist-credentials: false
 
       - name: Set up Go
@@ -68,53 +67,3 @@ jobs:
         run: |
           echo "outcome=${{ steps.build.outcome }}" >> $GITHUB_OUTPUT
           echo "artifact_url=${{ steps.upload_artifact.outputs.artifact-url }}" >> $GITHUB_OUTPUT
-
-  comment:
-    if: always()
-    needs: build
-    permissions:
-      contents: read
-      issues: write
-      pull-requests: write
-    runs-on: ubuntu-24.04
-    steps:
-      - name: Comment or update cmk build artifact on PR
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const { execSync } = require('child_process');
-
-            const issue_number = context.payload.pull_request.number;
-            const identifier = "cmk-build-artifact-comment";
-
-            const owner = context.payload.repository.owner.login; // base repo (pull_request_target)
-            const repo  = context.payload.repository.name;
-
-            const buildOutcome = "${{ needs.build.outputs.outcome }}";
-            const artifactUrl  = "${{ needs.build.outputs.artifact_url }}";
-            const runId        = "${{ github.run_id }}";
-
-            core.info(`Will comment on ${owner}/${repo}#${issue_number}`);
-            core.info(`Outcome=${buildOutcome || '(empty)'} Artifact=${artifactUrl || '(none)'}`);
-
-            let body = `<!-- ${identifier} -->\n`;
-            if (buildOutcome === 'success' && artifactUrl) {
-              const expiryDate = execSync("date -d '+10 days' '+%B %d, %Y'").toString().trim();
-              body += `✅ Build complete for PR #${issue_number}.\n\n`;
-              body += `🔗 Download the [cmk binaries](${artifactUrl}) (expires on ${expiryDate})`;
-            } else {
-              body += `❌ Build failed for PR #${issue_number}.\n\n`;
-              body += `See the run: https://github.com/${owner}/${repo}/actions/runs/${runId}`;
-            }
-
-            const { data: comments } = await github.rest.issues.listComments({ owner, repo, issue_number });
-            const existing = comments.find(c => c.user.login === 'github-actions[bot]' && c.body.includes(identifier));
-
-            if (existing) {
-              core.info(`Updating comment id ${existing.id}`);
-              await github.rest.issues.updateComment({ owner, repo, comment_id: existing.id, body });
-            } else {
-              core.info(`Creating new comment`);
-              await github.rest.issues.createComment({ owner, repo, issue_number, body });
-            }
-

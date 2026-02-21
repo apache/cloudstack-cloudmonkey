@@ -51,7 +51,7 @@ func (o *opCompleter) truncateBufferAfterLastEqual(completion []rune) {
 	for i := len(bufRunes) - 1; i >= 0; i-- {
 		if bufRunes[i] == '=' {
 			prefix := bufRunes[i+1:] // part after '=' in buffer
-			if len(prefix) > 0 && len(completion) > 0 && string(completion[:len(prefix)]) == string(prefix) {
+			if len(prefix) > 0 && len(completion) > len(prefix) && string(completion[:len(prefix)]) == string(prefix) {
 				o.op.buf.Set(bufRunes[:i+1]) // Keep content till '='
 			}
 			break

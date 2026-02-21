@@ -1,7 +1,7 @@
+.rat-excludes
 CHANGES.md
+apache-rat-0.17
 go.sum
 rat-report.txt
-apache-rat-0.16.1
-snapcraft.yaml
+/snap/snapcraft.yaml
 vendor
-.rat-excludes

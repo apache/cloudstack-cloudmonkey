@@ -42,12 +42,12 @@ jobs:
 
       - name: Download Apache RAT
         run: |
-          curl -L -O https://downloads.apache.org/creadur/apache-rat-0.16.1/apache-rat-0.16.1-bin.tar.gz
-          tar -xzf apache-rat-0.16.1-bin.tar.gz
+          curl -L -O https://downloads.apache.org/creadur/apache-rat-0.17/apache-rat-0.17-bin.tar.gz
+          tar -xzf apache-rat-0.17-bin.tar.gz
 
       - name: Run RAT
         run: |
-          java -jar apache-rat-0.16.1/apache-rat-0.16.1.jar -d . -E .rat-excludes > rat-report.txt
+          java -jar apache-rat-0.17/apache-rat-0.17.jar -d . -E .rat-excludes > rat-report.txt
           cat rat-report.txt
           # Fail if unapproved licenses are found
-          grep -qe '^0 Unknown Licenses' rat-report.txt && exit 0 || exit 1
+          grep -qe '^\s*Unapproved:\s*0\s*A count of unapproved licenses.$' rat-report.txt && exit 0 || exit 1
