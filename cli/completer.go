@@ -107,6 +107,13 @@ func inArray(s string, array []string) bool {
 func lastString(array []string) string {
 	return array[len(array)-1]
 }
+func enumAutocomplete(argName string) []string {
+	switch argName {
+	case "internetprotocol":
+		return []string{"ipv4", "dualstack"}
+	}
+	return nil
+}
 
 type argOption struct {
 	Value  string
@@ -412,7 +419,18 @@ func (t *autoCompleter) Do(line []rune, pos int) (options [][]rune, offset int) 
 				}
 				return
 			}
-
+			argName := strings.Replace(arg.Name, "=", "", -1)
+			enumValues := enumAutocomplete(argName)
+			if enumValues != nil {
+				offset = 0
+				for _, val := range enumValues {
+					if strings.HasPrefix(val, argInput) {
+						options = append(options, []rune(val[len(argInput):]+" "))
+						offset = len(argInput)
+					}
+				}
+				return
+			}
 			autocompleteAPI := findAutocompleteAPI(arg, apiFound, apiMap)
 			if autocompleteAPI == nil {
 				return nil, 0
