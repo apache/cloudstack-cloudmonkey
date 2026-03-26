@@ -278,8 +278,19 @@ func filterResponse(response map[string]interface{}, filter []string, excludeFil
 					}
 				}
 
+				// Skip completely empty rows after filtering
+				if len(filteredRow) == 0 {
+					continue
+				}
+
 				filteredRows = append(filteredRows, filteredRow)
 			}
+
+			// If no non-empty rows remain for this key, omit the key entirely
+			if len(filteredRows) == 0 {
+				continue
+			}
+
 			if originalKind == reflect.Map && len(filteredRows) > 0 {
 				filteredResponse[key] = filteredRows[0]
 			} else {
