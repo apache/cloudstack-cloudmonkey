@@ -65,7 +65,7 @@ Report issue(s) on the `user` mailing list and/or open a Github [issue](https://
 ### History
 
 The original `cloudmonkey` was written in Python and contributed to Apache
-CloudStack project by [Rohit Yadav](http://rohityadav.cloud) on 31 Oct 2012
+CloudStack project by [Rohit Yadav](https://yadv.in) on 31 Oct 2012
 under the Apache License 2.0.
 
 Starting version 6.0.0, the modern cloudmonkey `cmk` is a fast and simplified
