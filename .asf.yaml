@@ -30,6 +30,20 @@ github:
   protected_branches:
     main: {}
 
+  rulesets:
+    - name: "Default Branch Protection"
+      type: branch
+      branches:
+        includes:
+          - "~DEFAULT_BRANCH"
+          - "release/*"
+          - "rel/*"
+        excludes: []
+      bypass_teams:
+        - root
+      restrict_deletion: true
+      restrict_force_push: true
+
   copilot_code_review:
     enabled: true
     review_drafts: true
