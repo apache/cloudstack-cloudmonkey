@@ -269,6 +269,33 @@ func findAutocompleteAPI(arg *config.APIArg, apiFound *config.API, apiMap map[st
 		relatedNoun = pluralizeNoun(base)
 	}
 
+	// Prefer authoritative Related metadata: a list API whose noun matches
+	// the related noun derived above.
+	for _, relatedAPI := range arg.Related {
+		if !strings.HasPrefix(strings.ToLower(relatedAPI), "list") {
+			continue
+		}
+		for _, listAPI := range apiMap["list"] {
+			if strings.EqualFold(listAPI.Name, relatedAPI) && strings.EqualFold(listAPI.Noun, relatedNoun) {
+				config.Debug("Autocomplete: API found using Related metadata: ", listAPI.Name)
+				return listAPI
+			}
+		}
+	}
+
+	// Fall back to any list API named in the Related metadata.
+	for _, relatedAPI := range arg.Related {
+		if !strings.HasPrefix(strings.ToLower(relatedAPI), "list") {
+			continue
+		}
+		for _, listAPI := range apiMap["list"] {
+			if strings.EqualFold(listAPI.Name, relatedAPI) {
+				config.Debug("Autocomplete: API found using Related metadata fallback: ", listAPI.Name)
+				return listAPI
+			}
+		}
+	}
+
 	config.Debug("Possible related noun for the arg: ", relatedNoun, " and type: ", arg.Type)
 	autocompleteAPI = findAPI(apiMap, relatedNoun)
 
