@@ -112,6 +112,10 @@ func (c *Config) UpdateCache(response map[string]interface{}) interface{} {
 	apiVerbMap = nil
 
 	count := response["count"]
+	if response["api"] == nil {
+		fmt.Println("Error: empty API list received, sync failed")
+		return nil
+	}
 	apiList := response["api"].([]interface{})
 
 	for _, node := range apiList {
