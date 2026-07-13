@@ -31,5 +31,5 @@ disclaims, the adversary model, and how findings are triaged are documented in t
 model: <https://github.com/apache/cloudstack/blob/main/THREAT_MODEL.md>.
 
 (That link resolves once the project-wide model lands on `apache/cloudstack`'s
-`main` branch — see apache/cloudstack#13293. A thin `cloudstack-cloudstack-cloudmonkey`-specific
+`main` branch — see apache/cloudstack#13293. A thin `cloudstack-cloudmonkey`-specific
 addendum can be added here later if this component needs one.)
