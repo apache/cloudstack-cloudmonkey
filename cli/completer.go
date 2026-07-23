@@ -413,6 +413,18 @@ func (t *autoCompleter) Do(line []rune, pos int) (options [][]rune, offset int) 
 				return
 			}
 
+			if len(arg.AllowedValues) > 0 {
+				offset = 0
+				for _, value := range arg.AllowedValues {
+					option := value + " "
+					if strings.HasPrefix(value, argInput) {
+						options = append(options, []rune(option[len(argInput):]))
+						offset = len(argInput)
+					}
+				}
+				return
+			}
+
 			autocompleteAPI := findAutocompleteAPI(arg, apiFound, apiMap)
 			if autocompleteAPI == nil {
 				return nil, 0

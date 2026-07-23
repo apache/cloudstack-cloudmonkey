@@ -39,12 +39,13 @@ var bundledAPICache []byte
 
 // APIArg are the args passable to an API
 type APIArg struct {
-	Name        string
-	Type        string
-	Related     []string
-	Description string
-	Required    bool
-	Length      int
+	Name          string
+	Type          string
+	Related       []string
+	AllowedValues []string
+	Description   string
+	Required      bool
+	Length        int
 }
 
 // API describes a CloudStack API
@@ -143,12 +144,23 @@ func (c *Config) UpdateCache(response map[string]interface{}) interface{} {
 				related = strings.Split(apiArg["related"].(string), ",")
 				sort.Strings(related)
 			}
+			allowedValues := []string{}
+			if apiArg["allowedvalues"] != nil {
+				if rawValues, ok := apiArg["allowedvalues"].([]interface{}); ok {
+					for _, value := range rawValues {
+						if str, ok := value.(string); ok {
+							allowedValues = append(allowedValues, str)
+						}
+					}
+				}
+			}
 			apiArgs = append(apiArgs, &APIArg{
-				Name:        apiArg["name"].(string) + "=",
-				Type:        apiArg["type"].(string),
-				Required:    apiArg["required"].(bool),
-				Related:     related,
-				Description: apiArg["description"].(string),
+				Name:          apiArg["name"].(string) + "=",
+				Type:          apiArg["type"].(string),
+				Required:      apiArg["required"].(bool),
+				Related:       related,
+				Description:   apiArg["description"].(string),
+				AllowedValues: allowedValues,
 			})
 		}
 
