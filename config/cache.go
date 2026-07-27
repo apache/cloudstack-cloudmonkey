@@ -42,10 +42,10 @@ type APIArg struct {
 	Name          string
 	Type          string
 	Related       []string
-	AllowedValues []string
 	Description   string
 	Required      bool
 	Length        int
+	AllowedValues []string
 }
 
 // API describes a CloudStack API
