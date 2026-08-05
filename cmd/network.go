@@ -392,6 +392,7 @@ func detectSignatureAlgorithm(r *Request) (string, error) {
 				config.Debug("API signature algorithm probe failed authentication for ", algorithm, ": ", err)
 			} else {
 				config.Debug("API signature algorithm probe failed with non-authentication error for ", algorithm, ": ", err)
+				return "", err
 			}
 		}
 	}
