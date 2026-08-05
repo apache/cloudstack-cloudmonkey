@@ -540,7 +540,12 @@ func NewAPIRequest(r *Request, api string, args []string, isAsync bool) (map[str
 }
 
 func processAPIResponse(r *Request, response *http.Response, isAsync bool) (map[string]interface{}, error) {
-	body, _ := ioutil.ReadAll(response.Body)
+	defer response.Body.Close()
+
+	body, readErr := ioutil.ReadAll(response.Body)
+	if readErr != nil {
+		return nil, readErr
+	}
 	config.Debug("NewAPIRequest response body:", string(body))
 
 	apiResponse, err := parseAPIResponse(body)
