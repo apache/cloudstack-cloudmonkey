@@ -374,7 +374,13 @@ func detectSignatureAlgorithm(r *Request) (string, error) {
 			continue
 		}
 
-		body, _ := ioutil.ReadAll(response.Body)
+		defer response.Body.Close()
+		body, readErr := ioutil.ReadAll(response.Body)
+		if readErr != nil {
+			config.Debug("API signature algorithm probe failed reading response body for ", algorithm, ": ", readErr)
+			lastErr = readErr
+			continue
+		}
 		config.Debug("Signature algorithm probe response body:", string(body))
 		if _, err := parseAPIResponse(body); err == nil {
 			config.Debug("Selected API signature algorithm:", algorithm)
