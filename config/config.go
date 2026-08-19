@@ -340,18 +340,22 @@ func saveConfig(cfg *Config) *Config {
 }
 
 // LoadProfile loads an existing profile
-func (c *Config) LoadProfile(name string) {
+func (c *Config) LoadProfile(name string, isExit bool) error {
 	Debug("Trying to load profile: " + name)
 	conf := readConfig(c)
 	section, err := conf.GetSection(name)
 	if err != nil || section == nil {
-		fmt.Printf("Unable to load profile '%s': %v", name, err)
-		os.Exit(1)
+		if isExit {
+			fmt.Printf("Unable to load profile '%s': %v", name, err)
+			os.Exit(1)
+		}
+		return err
 	}
 	profile := new(ServerProfile)
 	conf.Section(name).MapTo(profile)
 	setActiveProfile(c, profile)
 	c.Core.ProfileName = name
+	return nil
 }
 
 // UpdateConfig updates and saves config

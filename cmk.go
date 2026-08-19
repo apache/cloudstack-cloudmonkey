@@ -85,7 +85,7 @@ func main() {
 	}
 
 	if *profile != "" {
-		cfg.LoadProfile(*profile)
+		cfg.LoadProfile(*profile, true)
 	}
 	config.LoadCache(cfg)
 	cli.SetConfig(cfg)
