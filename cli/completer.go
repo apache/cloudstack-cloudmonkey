@@ -236,7 +236,8 @@ func findAutocompleteAPI(arg *config.APIArg, apiFound *config.API, apiMap map[st
 	case argName == "id" || argName == "ids":
 		// Heuristic: user is trying to autocomplete for id/ids arg for a list API
 		relatedNoun = apiFound.Noun
-		if apiFound.Verb != "list" {
+		if apiFound.Verb != "list" && findAPI(apiMap, relatedNoun) == nil {
+			// Noun may already be plural (e.g. bulk ops like deleteAlerts)
 			relatedNoun = pluralizeNoun(relatedNoun)
 		}
 	case argName == "account":
