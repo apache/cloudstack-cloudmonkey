@@ -5,6 +5,7 @@ import (
 	"io"
 	"sync"
 	"sync/atomic"
+	"time"
 
 	"github.com/ergochat/readline/internal/platform"
 	"github.com/ergochat/readline/internal/runes"
@@ -22,6 +23,12 @@ type operation struct {
 	wrapErr atomic.Pointer[wrapWriter]
 
 	isPrompting bool // true when prompt written and waiting for input
+
+	// dsrUnsupported is set once a cursor position query has timed out. The
+	// terminal is then assumed not to implement DSR and no further queries
+	// are made, so the timeout is paid at most once per session rather than
+	// before every prompt. Read and written under m, via getAndSetOffset.
+	dsrUnsupported bool
 
 	history   *opHistory
 	search    *opSearch
@@ -419,7 +426,10 @@ func (o *operation) Runes() ([]rune, error) {
 	// Query cursor position before printing the prompt as there
 	// may be existing text on the same line that ideally we don't
 	// want to overwrite and cause prompt to jump left.
-	o.getAndSetOffset(nil)
+	// Bound the query: a pty that never answers the DSR request (expect,
+	// pexpect, Ansible with a pty, some CI runners) would otherwise block
+	// here forever and no prompt would ever be printed.
+	o.getAndSetOffset(newDSRDeadline())
 	o.buf.Print() // print prompt & buffer contents
 	// Prompt written safely, unlock until read completes and then
 	// lock again to unset.
@@ -440,7 +450,7 @@ func (o *operation) Runes() ([]rune, error) {
 }
 
 func (o *operation) getAndSetOffset(deadline chan struct{}) {
-	if !o.GetConfig().isInteractive {
+	if !o.GetConfig().isInteractive || o.dsrUnsupported {
 		return
 	}
 
@@ -451,9 +461,25 @@ func (o *operation) getAndSetOffset(deadline chan struct{}) {
 	// TODO ???
 	o.t.Write([]byte(" \b"))
 
-	if offset, err := o.t.GetCursorPosition(deadline); err == nil {
+	offset, err := o.t.GetCursorPosition(deadline)
+	switch {
+	case err == nil:
 		o.buf.SetOffset(offset)
+	case errors.Is(err, deadlineExceeded):
+		// The terminal did not answer in time; assume it never will and
+		// stop querying, so the timeout is not paid before every prompt.
+		o.dsrUnsupported = true
 	}
+}
+
+// newDSRDeadline returns a channel that closes once dsrTimeout has elapsed,
+// bounding how long a cursor position query will wait for the terminal to
+// answer. On expiry GetCursorPosition returns an error, the offset is left
+// unchanged and the prompt is printed anyway.
+func newDSRDeadline() chan struct{} {
+	deadline := make(chan struct{})
+	time.AfterFunc(dsrTimeout, func() { close(deadline) })
+	return deadline
 }
 
 func (o *operation) GenPasswordConfig() *Config {

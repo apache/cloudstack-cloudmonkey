@@ -107,7 +107,7 @@ jobs:
         run: |
           mvn -q -Pdeveloper -pl developer -Ddeploydb
           mvn -q -Pdeveloper -pl developer -Ddeploydb-simulator
-          python3 -m pip install --user --upgrade tools/marvin/dist/marvin-*.tar.gz
+          python3 -m pip install --user --upgrade tools/marvin/dist/[mM]arvin-*.tar.gz
 
       - name: Start CloudStack mgmt (Jetty) in background
         id: start_ms
