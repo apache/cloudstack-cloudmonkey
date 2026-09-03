@@ -5,3 +5,4 @@ go.sum
 rat-report.txt
 /snap/snapcraft.yaml
 vendor
+**/*.patch

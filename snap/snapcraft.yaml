@@ -53,8 +53,9 @@ parts:
       cd "$CRAFT_PART_SRC"
       SHORT_SHA="$(cat .remote-sha 2>/dev/null || echo unknown)"
       BUILD_DATE="$(date +%FT%T%z)"
-      go mod vendor || true
-      go build -trimpath \
+      # Do not run "go mod vendor" here: vendor/ is committed and carries local
+      # patches that regenerating it would silently revert. See patches/README.md.
+      go build -trimpath -mod=vendor \
         -ldflags "-s -w -X main.GitSHA=${SHORT_SHA} -X main.BuildDate=${BUILD_DATE}" \
         -o cmk cmk.go
       install -Dm0755 cmk "$CRAFT_PART_INSTALL/bin/cmk"

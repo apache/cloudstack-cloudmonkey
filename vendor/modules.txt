@@ -1,9 +1,14 @@
 # github.com/briandowns/spinner v1.22.0
 ## explicit; go 1.17
 github.com/briandowns/spinner
-# github.com/chzyer/readline v1.5.1
-## explicit; go 1.15
-github.com/chzyer/readline
+# github.com/ergochat/readline v0.1.3
+## explicit; go 1.19
+github.com/ergochat/readline
+github.com/ergochat/readline/internal/ansi
+github.com/ergochat/readline/internal/platform
+github.com/ergochat/readline/internal/ringbuf
+github.com/ergochat/readline/internal/runes
+github.com/ergochat/readline/internal/term
 # github.com/fatih/color v1.14.1
 ## explicit; go 1.17
 github.com/fatih/color
@@ -35,15 +40,18 @@ github.com/olekukonko/tablewriter
 github.com/rivo/uniseg
 # github.com/stretchr/testify v1.8.2
 ## explicit; go 1.13
-# golang.org/x/sys v0.5.0
-## explicit; go 1.17
-golang.org/x/sys/internal/unsafeheader
+# golang.org/x/sys v0.15.0
+## explicit; go 1.18
 golang.org/x/sys/plan9
 golang.org/x/sys/unix
 golang.org/x/sys/windows
 # golang.org/x/term v0.5.0
 ## explicit; go 1.17
 golang.org/x/term
+# golang.org/x/text v0.9.0
+## explicit; go 1.17
+golang.org/x/text/transform
+golang.org/x/text/width
 # gopkg.in/check.v1 v1.0.0-20180628173108-788fd7840127
 ## explicit
 # gopkg.in/ini.v1 v1.67.0
