@@ -65,13 +65,15 @@ CloudMonkey (cmk) 🐵 is a command line interface for Apache CloudStack.
 Allowed flags:
   -h        Show this help message or API doc when specified after an API
   -v        Print version
-  -o        API response output format: json, text, table, column, csv
-  -p        Server profile
-  -d        Enable debug mode
-  -c        Different config file path
-  -u	    CloudStack's API endpoint URL
-  -s	    CloudStack user's secret Key
-  -k	    CloudStack user's API Key
+  -o        API response output format: json, text, table, column, csv (env: CMK_OUTPUT)
+  -p        Server profile (env: CMK_PROFILE)
+  -d        Enable debug mode (env: CMK_DEBUG)
+  -c        Different config file path (env: CMK_CONFIG)
+  -u        CloudStack's API endpoint URL (env: CMK_URL)
+  -s        CloudStack user's secret key (env: CMK_SECRET_KEY)
+  -k        CloudStack user's API key (env: CMK_API_KEY)
+
+CLI flags take precedence over their environment variables.
 
 Default commands:
 %s

@@ -56,6 +56,25 @@ var nonEmptyConfigKeys = map[string]bool{
 // DefaultACSAPIEndpoint is the default API endpoint for CloudStack.
 const DefaultACSAPIEndpoint = "http://localhost:8080/client/api"
 
+// Environment variables that mirror CLI flags; flags take precedence.
+const (
+	// ConfigFileEnvVar sets the config file path when -c is not passed
+	ConfigFileEnvVar = "CMK_CONFIG"
+	// ProfileEnvVar sets the server profile when -p is not passed
+	ProfileEnvVar = "CMK_PROFILE"
+	// URLEnvVar sets CloudStack's API endpoint URL when -u is not passed
+	URLEnvVar = "CMK_URL"
+	// APIKeyEnvVar sets CloudStack user's API key when -k is not passed
+	APIKeyEnvVar = "CMK_API_KEY"
+	// SecretKeyEnvVar sets CloudStack user's secret key when -s is not passed
+	SecretKeyEnvVar = "CMK_SECRET_KEY"
+	// OutputEnvVar sets the API response output format when -o is not passed
+	OutputEnvVar = "CMK_OUTPUT"
+	// DebugEnvVar enables debug mode when set to a boolean true value
+	// (e.g. true or 1) and -d is not passed
+	DebugEnvVar = "CMK_DEBUG"
+)
+
 // ServerProfile describes a management server
 type ServerProfile struct {
 	URL       string       `ini:"url"`
@@ -435,7 +454,7 @@ func NewConfig(configFilePath *string) *Config {
 	if *configFilePath != "" {
 		defaultConf.ConfigFile, _ = filepath.Abs(*configFilePath)
 		if _, err := os.Stat(defaultConf.ConfigFile); os.IsNotExist(err) {
-			fmt.Println("Config file doesn't exist.")
+			fmt.Printf("Config file '%s' doesn't exist.\n", defaultConf.ConfigFile)
 			os.Exit(1)
 		}
 	}
