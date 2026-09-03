@@ -208,6 +208,22 @@ func findAPI(apiMap map[string][]*config.API, relatedNoun string) *config.API {
 	return autocompleteAPI
 }
 
+// pluralizeNoun applies simple English pluralization rules used by the
+// autocomplete heuristics below (e.g., policy -> policies, disk -> disks).
+func pluralizeNoun(noun string) string {
+	switch {
+	case strings.HasSuffix(noun, "ies"):
+		return noun
+	case strings.HasSuffix(noun, "y") && len(noun) > 1 && !strings.ContainsAny(string(noun[len(noun)-2]), "aeiou"):
+		// Handle words ending in consonant + y (e.g., policy -> policies)
+		return noun[:len(noun)-1] + "ies"
+	case strings.HasSuffix(noun, "s") || strings.HasSuffix(noun, "x") || strings.HasSuffix(noun, "z") || strings.HasSuffix(noun, "ch") || strings.HasSuffix(noun, "sh"):
+		return noun + "es"
+	default:
+		return noun + "s"
+	}
+}
+
 func findAutocompleteAPI(arg *config.APIArg, apiFound *config.API, apiMap map[string][]*config.API) *config.API {
 	if arg.Type == "map" {
 		return nil
@@ -220,8 +236,9 @@ func findAutocompleteAPI(arg *config.APIArg, apiFound *config.API, apiMap map[st
 	case argName == "id" || argName == "ids":
 		// Heuristic: user is trying to autocomplete for id/ids arg for a list API
 		relatedNoun = apiFound.Noun
-		if apiFound.Verb != "list" {
-			relatedNoun += "s"
+		if apiFound.Verb != "list" && findAPI(apiMap, relatedNoun) == nil {
+			// Noun may already be plural (e.g. bulk ops like deleteAlerts)
+			relatedNoun = pluralizeNoun(relatedNoun)
 		}
 	case argName == "account":
 		// Heuristic: user is trying to autocomplete for accounts
@@ -249,12 +266,7 @@ func findAutocompleteAPI(arg *config.APIArg, apiFound *config.API, apiMap map[st
 				}
 			}
 		}
-		// Handle common cases where base ends with a vowel and needs "es"
-		if strings.HasSuffix(base, "s") || strings.HasSuffix(base, "x") || strings.HasSuffix(base, "z") || strings.HasSuffix(base, "ch") || strings.HasSuffix(base, "sh") {
-			relatedNoun = base + "es"
-		} else {
-			relatedNoun = base + "s"
-		}
+		relatedNoun = pluralizeNoun(base)
 	}
 
 	config.Debug("Possible related noun for the arg: ", relatedNoun, " and type: ", arg.Type)
