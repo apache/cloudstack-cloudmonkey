@@ -214,29 +214,33 @@ func findAutocompleteAPI(arg *config.APIArg, apiFound *config.API, apiMap map[st
 	}
 
 	var autocompleteAPI *config.API
+
 	argName := strings.Replace(arg.Name, "=", "", -1)
-	relatedNoun := argName
+
+	// Build the noun we expect from the existing heuristic rules.
+	expectedNoun := argName
 	switch {
 	case argName == "id" || argName == "ids":
-		// Heuristic: user is trying to autocomplete for id/ids arg for a list API
-		relatedNoun = apiFound.Noun
+		expectedNoun = apiFound.Noun
 		if apiFound.Verb != "list" {
-			relatedNoun += "s"
+			expectedNoun += "s"
 		}
+
 	case argName == "account":
-		// Heuristic: user is trying to autocomplete for accounts
-		relatedNoun = "accounts"
+		expectedNoun = "accounts"
+
 	case argName == "ipaddressid":
-		// Heuristic: user is trying to autocomplete for ip addresses
-		relatedNoun = "publicipaddresses"
+		expectedNoun = "publicipaddresses"
+
 	case argName == "storageid":
-		relatedNoun = "storagepools"
+		expectedNoun = "storagepools"
+
 	case argName == "associatednetworkid":
-		relatedNoun = "networks"
+		expectedNoun = "networks"
+
 	default:
-		// Heuristic: autocomplete for the arg for which a list<Arg without id/ids>s API exists
-		// For example, for zoneid arg, listZones API exists
 		base := argName
+
 		if strings.HasSuffix(argName, "id") {
 			base = strings.TrimSuffix(argName, "id")
 		} else if strings.HasSuffix(argName, "ids") {
@@ -249,15 +253,61 @@ func findAutocompleteAPI(arg *config.APIArg, apiFound *config.API, apiMap map[st
 				}
 			}
 		}
-		// Handle common cases where base ends with a vowel and needs "es"
-		if strings.HasSuffix(base, "s") || strings.HasSuffix(base, "x") || strings.HasSuffix(base, "z") || strings.HasSuffix(base, "ch") || strings.HasSuffix(base, "sh") {
-			relatedNoun = base + "es"
+
+		if strings.HasSuffix(base, "s") ||
+			strings.HasSuffix(base, "x") ||
+			strings.HasSuffix(base, "z") ||
+			strings.HasSuffix(base, "ch") ||
+			strings.HasSuffix(base, "sh") {
+			expectedNoun = base + "es"
 		} else {
-			relatedNoun = base + "s"
+			expectedNoun = base + "s"
 		}
 	}
 
+	// FIRST: prefer Related APIs whose noun matches the expected noun.
+	for _, relatedAPI := range arg.Related {
+		if !strings.HasPrefix(strings.ToLower(relatedAPI), "list") {
+			continue
+		}
+
+		for _, listAPI := range apiMap["list"] {
+			if strings.EqualFold(listAPI.Name, relatedAPI) &&
+				strings.EqualFold(listAPI.Noun, expectedNoun) {
+
+				config.Debug(
+					"Autocomplete: API found using Related metadata: ",
+					listAPI.Name,
+				)
+
+				return listAPI
+			}
+		}
+	}
+
+	// SECOND: fallback to any list API from Related.
+	for _, relatedAPI := range arg.Related {
+		if !strings.HasPrefix(strings.ToLower(relatedAPI), "list") {
+			continue
+		}
+
+		for _, listAPI := range apiMap["list"] {
+			if strings.EqualFold(listAPI.Name, relatedAPI) {
+
+				config.Debug(
+					"Autocomplete: API found using Related metadata fallback: ",
+					listAPI.Name,
+				)
+
+				return listAPI
+			}
+		}
+	}
+
+	relatedNoun := expectedNoun
+
 	config.Debug("Possible related noun for the arg: ", relatedNoun, " and type: ", arg.Type)
+
 	autocompleteAPI = findAPI(apiMap, relatedNoun)
 
 	if autocompleteAPI == nil {
@@ -278,13 +328,16 @@ func findAutocompleteAPI(arg *config.APIArg, apiFound *config.API, apiMap map[st
 	// Heuristic: find any list API that contains the arg name
 	if autocompleteAPI == nil {
 		config.Debug("Finding possible API that have: ", argName, " related APIs: ", arg.Related)
+
 		possibleAPIs := []*config.API{}
+
 		for _, listAPI := range apiMap["list"] {
 			if strings.Contains(listAPI.Noun, argName) {
 				config.Debug("Found possible API: ", listAPI.Name)
 				possibleAPIs = append(possibleAPIs, listAPI)
 			}
 		}
+
 		if len(possibleAPIs) == 1 {
 			autocompleteAPI = possibleAPIs[0]
 		}
@@ -408,6 +461,18 @@ func (t *autoCompleter) Do(line []rune, pos int) (options [][]rune, offset int) 
 					if strings.HasPrefix(key, lastExcludeFilterInput) {
 						options = append(options, []rune(key[len(lastExcludeFilterInput):]))
 						offset = len(lastExcludeFilterInput)
+					}
+				}
+				return
+			}
+
+			if len(arg.AllowedValues) > 0 {
+				offset = 0
+				for _, value := range arg.AllowedValues {
+					option := value + " "
+					if strings.HasPrefix(value, argInput) {
+						options = append(options, []rune(option[len(argInput):]))
+						offset = len(argInput)
 					}
 				}
 				return
