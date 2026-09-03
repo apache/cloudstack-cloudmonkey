@@ -20,6 +20,7 @@ package config
 import (
 	"context"
 	"crypto/tls"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/http/cookiejar"
@@ -28,6 +29,7 @@ import (
 	"path"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/briandowns/spinner"
@@ -56,15 +58,23 @@ var nonEmptyConfigKeys = map[string]bool{
 // DefaultACSAPIEndpoint is the default API endpoint for CloudStack.
 const DefaultACSAPIEndpoint = "http://localhost:8080/client/api"
 
+// Supported API request signature algorithms.
+const (
+	SignatureAlgorithmAuto       = "auto"
+	SignatureAlgorithmHmacSHA1   = "HmacSHA1"
+	SignatureAlgorithmHmacSHA512 = "HmacSHA512"
+)
+
 // ServerProfile describes a management server
 type ServerProfile struct {
-	URL       string       `ini:"url"`
-	Username  string       `ini:"username"`
-	Password  string       `ini:"password"`
-	Domain    string       `ini:"domain"`
-	APIKey    string       `ini:"apikey"`
-	SecretKey string       `ini:"secretkey"`
-	Client    *http.Client `ini:"-"`
+	URL                string       `ini:"url"`
+	Username           string       `ini:"username"`
+	Password           string       `ini:"password"`
+	Domain             string       `ini:"domain"`
+	APIKey             string       `ini:"apikey"`
+	SecretKey          string       `ini:"secretkey"`
+	SignatureAlgorithm string       `ini:"signaturealgorithm"`
+	Client             *http.Client `ini:"-"`
 }
 
 // Core block describes common options for the CLI
@@ -97,6 +107,36 @@ type Config struct {
 // GetOutputFormats returns the supported output formats.
 func GetOutputFormats() []string {
 	return []string{"column", "csv", "json", "table", "text", "default"}
+}
+
+// GetSignatureAlgorithms returns the supported API request signature algorithms.
+func GetSignatureAlgorithms() []string {
+	return []string{SignatureAlgorithmAuto, SignatureAlgorithmHmacSHA1, SignatureAlgorithmHmacSHA512}
+}
+
+// NormalizeSignatureAlgorithm returns a canonical signature algorithm name.
+func NormalizeSignatureAlgorithm(value string) (string, error) {
+	switch strings.ToLower(strings.TrimSpace(value)) {
+	case "", SignatureAlgorithmAuto:
+		return SignatureAlgorithmAuto, nil
+	case strings.ToLower(SignatureAlgorithmHmacSHA1):
+		return SignatureAlgorithmHmacSHA1, nil
+	case strings.ToLower(SignatureAlgorithmHmacSHA512):
+		return SignatureAlgorithmHmacSHA512, nil
+	default:
+		return "", errors.New("unsupported signature algorithm")
+	}
+}
+
+func normalizeProfile(profile *ServerProfile) {
+	if profile == nil {
+		return
+	}
+	signatureAlgorithm, err := NormalizeSignatureAlgorithm(profile.SignatureAlgorithm)
+	if err != nil {
+		signatureAlgorithm = SignatureAlgorithmAuto
+	}
+	profile.SignatureAlgorithm = signatureAlgorithm
 }
 
 // CheckIfValuePresent checks if an element is present in the dataset.
@@ -170,12 +210,13 @@ func defaultCoreConfig() Core {
 
 func defaultProfile() ServerProfile {
 	return ServerProfile{
-		URL:       DefaultACSAPIEndpoint,
-		Username:  "admin",
-		Password:  "password",
-		Domain:    "/",
-		APIKey:    "",
-		SecretKey: "",
+		URL:                DefaultACSAPIEndpoint,
+		Username:           "admin",
+		Password:           "password",
+		Domain:             "/",
+		APIKey:             "",
+		SecretKey:          "",
+		SignatureAlgorithm: SignatureAlgorithmAuto,
 	}
 }
 
@@ -231,6 +272,7 @@ func newHTTPClient(cfg *Config) *http.Client {
 }
 
 func setActiveProfile(cfg *Config, profile *ServerProfile) {
+	normalizeProfile(profile)
 	cfg.ActiveProfile = profile
 	cfg.ActiveProfile.Client = newHTTPClient(cfg)
 }
@@ -320,6 +362,19 @@ func saveConfig(cfg *Config) *Config {
 		conf.Section(cfg.Core.ProfileName).MapTo(profile)
 		setActiveProfile(cfg, profile)
 	}
+	for _, section := range conf.Sections() {
+		if section.Name() == ini.DEFAULT_SECTION {
+			continue
+		}
+		signatureAlgorithm, err := NormalizeSignatureAlgorithm(section.Key("signaturealgorithm").String())
+		if err != nil {
+			signatureAlgorithm = SignatureAlgorithmAuto
+		}
+		section.Key("signaturealgorithm").SetValue(signatureAlgorithm)
+		if section.Name() == cfg.Core.ProfileName && cfg.ActiveProfile != nil {
+			cfg.ActiveProfile.SignatureAlgorithm = signatureAlgorithm
+		}
+	}
 	// Save
 	conf.SaveTo(cfg.ConfigFile)
 
@@ -395,6 +450,13 @@ func (c *Config) UpdateConfig(key string, value string, update bool) {
 		c.ActiveProfile.APIKey = value
 	case "secretkey":
 		c.ActiveProfile.SecretKey = value
+	case "signaturealgorithm":
+		signatureAlgorithm, err := NormalizeSignatureAlgorithm(value)
+		if err != nil {
+			fmt.Println("Invalid value set for signaturealgorithm. Supported values: " + strings.Join(GetSignatureAlgorithms(), ", "))
+			return
+		}
+		c.ActiveProfile.SignatureAlgorithm = signatureAlgorithm
 	case "verifycert":
 		c.Core.VerifyCert = value == "true"
 	case "debug":

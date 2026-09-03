@@ -48,5 +48,9 @@ func renderPrompt(prompt string) string {
 
 // GetPrompt returns prompt that the CLI should use
 func (c *Config) GetPrompt() string {
-	return fmt.Sprintf("(%s) %s > ", c.Core.ProfileName, renderPrompt(c.Core.Prompt))
+	profileName := c.Core.ProfileName
+	if c.ActiveProfile != nil && c.ActiveProfile.SignatureAlgorithm == SignatureAlgorithmHmacSHA512 {
+		profileName += "-fips"
+	}
+	return fmt.Sprintf("(%s) %s > ", profileName, renderPrompt(c.Core.Prompt))
 }
