@@ -108,14 +108,15 @@ func (c *Config) SaveCache(response map[string]interface{}) {
 
 // UpdateCache uses auto-discovery data to update internal API cache
 func (c *Config) UpdateCache(response map[string]interface{}) interface{} {
+	if response["api"] == nil {
+		fmt.Fprintf(os.Stderr, "Error: empty API list received, sync failed. Existing API cache is kept.\n")
+		return 0
+	}
+
 	apiCache = make(map[string]*API)
 	apiVerbMap = nil
 
 	count := response["count"]
-	if response["api"] == nil {
-		fmt.Println("Error: empty API list received, sync failed")
-		return nil
-	}
 	apiList := response["api"].([]interface{})
 
 	for _, node := range apiList {
