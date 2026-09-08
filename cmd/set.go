@@ -31,21 +31,22 @@ func init() {
 		Name: "set",
 		Help: "Configures options for cmk",
 		SubCommands: map[string][]string{
-			"prompt":       {"🐵", "🐱", "random"},
-			"asyncblock":   {"true", "false"},
-			"timeout":      {"600", "1800", "3600"},
-			"output":       config.GetOutputFormats(),
-			"profile":      {},
-			"url":          {},
-			"username":     {},
-			"password":     {},
-			"domain":       {},
-			"apikey":       {},
-			"secretkey":    {},
-			"verifycert":   {"true", "false"},
-			"debug":        {"true", "false"},
-			"autocomplete": {"true", "false"},
-			"postrequest":  {"true", "false"},
+			"prompt":             {"🐵", "🐱", "random"},
+			"asyncblock":         {"true", "false"},
+			"timeout":            {"600", "1800", "3600"},
+			"output":             config.GetOutputFormats(),
+			"profile":            {},
+			"url":                {},
+			"username":           {},
+			"password":           {},
+			"domain":             {},
+			"apikey":             {},
+			"secretkey":          {},
+			"signaturealgorithm": config.GetSignatureAlgorithms(),
+			"verifycert":         {"true", "false"},
+			"debug":              {"true", "false"},
+			"autocomplete":       {"true", "false"},
+			"postrequest":        {"true", "false"},
 		},
 		Handle: func(r *Request) error {
 			if len(r.Args) < 1 {
@@ -63,7 +64,7 @@ func init() {
 				subCommand = "output"
 			}
 			validArgs := r.Command.SubCommands[subCommand]
-			if len(validArgs) != 0 && subCommand != "timeout" {
+			if len(validArgs) != 0 && subCommand != "timeout" && subCommand != "signaturealgorithm" {
 				if !config.CheckIfValuePresent(validArgs, value) {
 					return errors.New("Invalid value set for " + subCommand + ". Supported values: " + strings.Join(validArgs, ", "))
 				}
