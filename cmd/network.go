@@ -386,14 +386,13 @@ func detectSignatureAlgorithm(r *Request) (string, error) {
 			config.Debug("Selected API signature algorithm:", algorithm)
 			persistDetectedSignatureAlgorithm(r, algorithm)
 			return algorithm, nil
+		}
+		lastErr = err
+		if isAuthenticationFailure(response.StatusCode, err) {
+			config.Debug("API signature algorithm probe failed authentication for ", algorithm, ": ", err)
 		} else {
-			lastErr = err
-			if isAuthenticationFailure(response.StatusCode, err) {
-				config.Debug("API signature algorithm probe failed authentication for ", algorithm, ": ", err)
-			} else {
-				config.Debug("API signature algorithm probe failed with non-authentication error for ", algorithm, ": ", err)
-				return "", err
-			}
+			config.Debug("API signature algorithm probe failed with non-authentication error for ", algorithm, ": ", err)
+			return "", err
 		}
 	}
 
