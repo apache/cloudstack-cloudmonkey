@@ -21,6 +21,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
 
 	"github.com/apache/cloudstack-cloudmonkey/cli"
@@ -48,10 +49,35 @@ func main() {
 	profile := flag.String("p", "", "server profile")
 	configFilePath := flag.String("c", "", "config file path")
 	acsURL := flag.String("u", config.DefaultACSAPIEndpoint, "cloudStack's API endpoint URL")
-	apiKey := flag.String("k", "", "cloudStack user's API Key")
-	secretKey := flag.String("s", "", "cloudStack user's secret Key")
+	apiKey := flag.String("k", "", "cloudStack user's API key")
+	secretKey := flag.String("s", "", "cloudStack user's secret key")
 	flag.Parse()
 	args := flag.Args()
+
+	// Fall back to environment variables for flags not passed on the
+	// command line; CLI flags take precedence over environment variables.
+	passedFlags := make(map[string]bool)
+	flag.Visit(func(f *flag.Flag) {
+		passedFlags[f.Name] = true
+	})
+	fallbackToEnvVar := func(flagName string, flagValue *string, envVar string) {
+		if !passedFlags[flagName] {
+			if value := os.Getenv(envVar); value != "" {
+				*flagValue = value
+			}
+		}
+	}
+	fallbackToEnvVar("c", configFilePath, config.ConfigFileEnvVar)
+	fallbackToEnvVar("p", profile, config.ProfileEnvVar)
+	fallbackToEnvVar("u", acsURL, config.URLEnvVar)
+	fallbackToEnvVar("k", apiKey, config.APIKeyEnvVar)
+	fallbackToEnvVar("s", secretKey, config.SecretKeyEnvVar)
+	fallbackToEnvVar("o", outputFormat, config.OutputEnvVar)
+	if !passedFlags["d"] {
+		if value, err := strconv.ParseBool(strings.TrimSpace(os.Getenv(config.DebugEnvVar))); err == nil {
+			*debug = value
+		}
+	}
 
 	cfg := config.NewConfig(configFilePath)
 
