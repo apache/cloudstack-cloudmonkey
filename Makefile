@@ -48,6 +48,22 @@ run: all
 debug:
 	$(GO) build -mod=vendor -gcflags='-N -l' -o cmk &&  dlv --listen=:2345 --headless=true --api-version=2 exec ./cmk
 
+.PHONY: vendor-patch
+vendor-patch: ## Refresh vendor/ and re-apply the local patches in patches/
+	$(info $(M) Refreshing vendor/ and re-applying local patches…)
+	$Q $(GO) mod vendor
+	$Q for p in patches/*.patch; do git apply "$$p" || exit 1; done
+	$Q echo "$(M) Done! See patches/README.md"
+
+.PHONY: vendor-check
+vendor-check: ## Verify vendor/ still carries the local patches in patches/
+	$(info $(M) Checking local patches are present in vendor/…)
+	$Q for p in patches/*.patch; do \
+		git apply --reverse --check "$$p" || { \
+			echo "ERROR: $$p is not applied to vendor/; run 'make vendor-patch'"; exit 1; }; \
+	done
+	$Q echo "$(M) All local patches present"
+
 dist-mkdir: all
 	rm -fr dist
 	mkdir -p dist

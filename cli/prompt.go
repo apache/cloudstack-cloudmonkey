@@ -23,7 +23,7 @@ import (
 	"strings"
 
 	"github.com/apache/cloudstack-cloudmonkey/config"
-	"github.com/chzyer/readline"
+	"github.com/ergochat/readline"
 )
 
 // CLI config instance

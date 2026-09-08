@@ -79,6 +79,27 @@ If cloudmonkey is being upgraded from a version lower than v6.0.0, it must be no
 that the cloudmonkey configuration path is changed from `~/.cloudmonkey/config` to 
 `~/.cmk/config` and a default `localcloud` profile is created. One must first set up basic configurations such as apikey/secretkey/username/password/url for the required profile(s) as required
 
+### Environment Variables
+
+`cmk` supports environment variables that mirror its CLI flags. CLI flags take
+precedence over environment variables, which take precedence over values in the
+config file.
+
+| Environment variable | Flag | Description |
+|----------------------|------|-------------|
+| `CMK_CONFIG` | `-c` | Config file path |
+| `CMK_PROFILE` | `-p` | Server profile |
+| `CMK_URL` | `-u` | CloudStack's API endpoint URL |
+| `CMK_API_KEY` | `-k` | CloudStack user's API key |
+| `CMK_SECRET_KEY` | `-s` | CloudStack user's secret key |
+| `CMK_OUTPUT` | `-o` | API response output format |
+| `CMK_DEBUG` | `-d` | Enable debug mode when set to a boolean true value (e.g. `true` or `1`) |
+
+`CMK_CONFIG` must point to an existing config file, and `CMK_PROFILE` must name
+an existing profile in the config; otherwise `cmk` exits with an error. A profile
+selected via `CMK_PROFILE` applies only to that invocation and is not persisted
+to the config file.
+
 ### License
 
 Licensed to the Apache Software Foundation (ASF) under one
