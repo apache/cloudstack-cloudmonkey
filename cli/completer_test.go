@@ -163,3 +163,44 @@ func TestFindAutocompleteAPIMapTypeReturnsNil(t *testing.T) {
 		t.Fatalf("expected nil, got %v", result)
 	}
 }
+
+func TestFindAutocompleteAPIHeuristicWinsOverRelated(t *testing.T) {
+	// registerIso's projectid arg lists many related APIs; the noun heuristic
+	// must keep winning so the completion stays listProjects.
+	arg := &config.APIArg{
+		Name: "projectid=",
+		Related: []string{
+			"listProjectAccounts",
+			"listProjects",
+		},
+	}
+
+	apiFound := &config.API{
+		Name: "registerIso",
+		Verb: "register",
+		Noun: "iso",
+	}
+
+	apiMap := map[string][]*config.API{
+		"list": {
+			{
+				Name: "listProjectAccounts",
+				Noun: "projectaccounts",
+			},
+			{
+				Name: "listProjects",
+				Noun: "projects",
+			},
+		},
+	}
+
+	result := findAutocompleteAPI(arg, apiFound, apiMap)
+
+	if result == nil {
+		t.Fatal("expected API, got nil")
+	}
+
+	if result.Name != "listProjects" {
+		t.Fatalf("expected listProjects, got %s", result.Name)
+	}
+}
