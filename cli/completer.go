@@ -287,6 +287,22 @@ func findAutocompleteAPI(arg *config.APIArg, apiFound *config.API, apiMap map[st
 		relatedNoun = relatedNoun[:len(relatedNoun)-1]
 	}
 
+	// Prefer the API's own Related metadata when the noun heuristics found
+	// nothing, so entity-reference args still get completions.
+	if autocompleteAPI == nil {
+		for _, relatedAPI := range arg.Related {
+			if !strings.HasPrefix(strings.ToLower(relatedAPI), "list") {
+				continue
+			}
+			for _, listAPI := range apiMap["list"] {
+				if strings.EqualFold(listAPI.Name, relatedAPI) {
+					config.Debug("Autocomplete: API found using Related metadata: ", listAPI.Name)
+					return listAPI
+				}
+			}
+		}
+	}
+
 	// Heuristic: find any list API that contains the arg name
 	if autocompleteAPI == nil {
 		config.Debug("Finding possible API that have: ", argName, " related APIs: ", arg.Related)
