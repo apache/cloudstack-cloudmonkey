@@ -30,7 +30,15 @@ github:
   protected_branches:
     main: {}
 
+  rulesets:
+    - name: "Default Branch Protection"
+      type: branch
+      bypass_teams:
+        - root
+      restrict_deletion: true
+      restrict_force_push: true
+
   copilot_code_review:
     enabled: true
-    review_drafts: true
-    review_on_push: true
+    review_drafts: false
+    review_on_push: false
