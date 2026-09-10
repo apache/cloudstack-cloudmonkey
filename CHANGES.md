@@ -1,6 +1,21 @@
 Apache CloudStack CloudMonkey Changelog
 ---------------------------------------
 
+Version 6.6.0
+=============
+This release includes:
+- Adds support for API request signing with HmacSHA512
+- Adds a switch command to change the active server profile from the shell
+- Adds support for configuring cmk through environment variables in addition to arguments
+- Adds autocompletion for virtual machines that belong to projects
+- Uses the Related metadata exposed by API discovery to pick the right list API for autocompletion
+- Fixes autocompletion for APIs whose noun ends in 'y', such as snapshot policies
+- Fixes a slice bounds panic in autocompletion
+- Fixes a nil pointer panic on sync when the management server returns an empty API list
+- Fixes filter=count output to avoid emitting empty objects
+- Switches to the maintained ergochat/readline library for the interactive shell
+- Improves repository automation, licence auditing and security documentation
+
 Version 6.5.0
 =============
 This release includes:

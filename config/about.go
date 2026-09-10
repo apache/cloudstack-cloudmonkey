@@ -26,7 +26,7 @@ func (c *Config) Name() string {
 
 // Version CLI
 func (c *Config) Version() string {
-	return "6.6.0-SNAPSHOT"
+	return "6.6.0"
 }
 
 // PrintHeader prints startup message in CLI mode
