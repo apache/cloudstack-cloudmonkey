@@ -234,9 +234,9 @@ func TestFindAutocompleteAPIVersionUsesCurrentListAPI(t *testing.T) {
 				Verb: "list",
 				Noun: "hosts",
 				ResponseKeys: []string{
-					"id",
-					"name",
-					"version",
+					"id,",
+					"name,",
+					"version,",
 				},
 			},
 		},
@@ -247,8 +247,8 @@ func TestFindAutocompleteAPIVersionUsesCurrentListAPI(t *testing.T) {
 				Verb: "list",
 				Noun: "routers",
 				ResponseKeys: []string{
-					"name",
-					"version",
+					"name,",
+					"version,",
 				},
 			},
 		},
@@ -280,22 +280,39 @@ func TestFindAutocompleteAPIVersionUsesCurrentListAPI(t *testing.T) {
 
 func TestBuildArgOptionsUsesValueField(t *testing.T) {
 	response := map[string]interface{}{
-		"host": []interface{}{
+		"router": []interface{}{
 			map[string]interface{}{
-				"id":      "host-id",
-				"name":    "nvs-kvm01",
-				"version": "4.22.1.0",
+				"id":        "router-1",
+				"name":      "router-1",
+				"version":   "4.22.1.0",
+				"ipaddress": "10.0.0.1",
+			},
+			map[string]interface{}{
+				"id":        "router-2",
+				"name":      "router-2",
+				"version":   "4.22.1.0",
+				"ipaddress": "10.0.0.2",
+			},
+			map[string]interface{}{
+				"id":        "router-3",
+				"name":      "router-3",
+				"version":   "4.21.0.0",
+				"ipaddress": "10.0.0.3",
 			},
 		},
 	}
 
 	options := buildArgOptions(response, false, "version")
 
-	if len(options) != 1 {
-		t.Fatalf("expected 1 option, got %d", len(options))
+	if len(options) != 2 {
+		t.Fatalf("expected 2 options, got %d", len(options))
 	}
 
 	if options[0].Value != "4.22.1.0" {
 		t.Fatalf("expected 4.22.1.0, got %s", options[0].Value)
+	}
+
+	if options[1].Value != "4.21.0.0" {
+		t.Fatalf("expected 4.21.0.0, got %s", options[1].Value)
 	}
 }

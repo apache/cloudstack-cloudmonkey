@@ -115,6 +115,7 @@ type argOption struct {
 
 func buildArgOptions(response map[string]interface{}, hasID bool, valueField string) []argOption {
 	argOptions := []argOption{}
+	seenValues := make(map[string]struct{})
 	for _, v := range response {
 		switch obj := v.(type) {
 		case []interface{}:
@@ -179,6 +180,13 @@ func buildArgOptions(response map[string]interface{}, hasID bool, valueField str
 						opt.Value = detail
 					}
 				}
+				if valueField != "" {
+					if _, seen := seenValues[opt.Value]; seen {
+						continue
+					}
+					seenValues[opt.Value] = struct{}{}
+				}
+
 				argOptions = append(argOptions, opt)
 			}
 			break
@@ -240,7 +248,7 @@ func findAutocompleteAPI(arg *config.APIArg, apiFound *config.API, apiMap map[st
 
 	if apiFound.Verb == "list" && strings.TrimSuffix(arg.Name, "=") == "version" {
 		for _, responseKey := range apiFound.ResponseKeys {
-			if responseKey == "version" {
+			if strings.TrimSuffix(responseKey, ",") == "version" {
 				return apiFound
 			}
 		}
