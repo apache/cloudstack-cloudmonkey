@@ -113,8 +113,9 @@ type argOption struct {
 	Detail string
 }
 
-func buildArgOptions(response map[string]interface{}, hasID bool) []argOption {
+func buildArgOptions(response map[string]interface{}, hasID bool, valueField string) []argOption {
 	argOptions := []argOption{}
+	seenValues := make(map[string]struct{})
 	for _, v := range response {
 		switch obj := v.(type) {
 		case []interface{}:
@@ -164,12 +165,28 @@ func buildArgOptions(response map[string]interface{}, hasID bool) []argOption {
 						opt.Detail = detail
 					}
 				} else {
-					opt.Value = name
+					if valueField != "" {
+						if value, ok := resource[valueField].(string); ok {
+							opt.Value = value
+						}
+					}
+
+					if len(opt.Value) == 0 {
+						opt.Value = name
+					}
+
 					opt.Detail = detail
-					if len(name) == 0 {
+					if len(opt.Value) == 0 {
 						opt.Value = detail
 					}
 				}
+				if valueField != "" {
+					if _, seen := seenValues[opt.Value]; seen {
+						continue
+					}
+					seenValues[opt.Value] = struct{}{}
+				}
+
 				argOptions = append(argOptions, opt)
 			}
 			break
@@ -227,6 +244,14 @@ func pluralizeNoun(noun string) string {
 func findAutocompleteAPI(arg *config.APIArg, apiFound *config.API, apiMap map[string][]*config.API) *config.API {
 	if arg.Type == "map" {
 		return nil
+	}
+
+	if apiFound.Verb == "list" && strings.TrimSuffix(arg.Name, "=") == "version" {
+		for _, responseKey := range apiFound.ResponseKeys {
+			if strings.TrimSuffix(responseKey, ",") == "version" {
+				return apiFound
+			}
+		}
 	}
 
 	var autocompleteAPI *config.API
@@ -479,7 +504,12 @@ func (t *autoCompleter) Do(line []rune, pos int) (options [][]rune, offset int) 
 				t.Config.StopSpinner(spinner)
 
 				hasID := strings.HasSuffix(arg.Name, "id=") || strings.HasSuffix(arg.Name, "ids=") || autocompleteAPI.Name == "listUsageTypes"
-				argOptions = buildArgOptions(response, hasID)
+				valueField := ""
+				if apiFound == autocompleteAPI {
+					valueField = strings.TrimSuffix(arg.Name, "=")
+				}
+
+				argOptions = buildArgOptions(response, hasID, valueField)
 			}
 
 			filteredOptions := []argOption{}
