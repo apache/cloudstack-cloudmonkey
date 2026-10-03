@@ -110,18 +110,33 @@ func UploadFiles(r *Request, api string, response map[string]interface{}, validF
 	metadata, _ := params["metadata"].(string)
 
 	fmt.Println("Uploading files for", api, ":", validFiles)
-	spinner := r.Config.StartSpinner(uploadingMessage)
+
+	var spinner *spinner.Spinner
+	if r.Config.HasShell {
+		spinner = r.Config.StartSpinner(uploadingMessage)
+	}
+
 	errored := 0
 	for i, filePath := range validFiles {
-		spinner.Suffix = fmt.Sprintf(" uploading %d/%d %s...", i+1, len(validFiles), filepath.Base(filePath))
+		if spinner != nil {
+			spinner.Suffix = fmt.Sprintf(" uploading %d/%d %s...", i+1, len(validFiles), filepath.Base(filePath))
+		}
+
 		if err := uploadFile(i, len(validFiles), postURL, filePath, signature, expires, metadata, spinner); err != nil {
-			spinner.Stop()
+			if spinner != nil {
+				spinner.Stop()
+			}
+
 			fmt.Println("Error uploading", filePath, ":", err)
 			errored++
-			spinner.Suffix = fmt.Sprintf(" %s", uploadingMessage)
-			spinner.Start()
+
+			if spinner != nil {
+				spinner.Suffix = fmt.Sprintf(" %s", uploadingMessage)
+				spinner.Start()
+			}
 		}
 	}
+
 	r.Config.StopSpinner(spinner)
 	if errored > 0 {
 		fmt.Printf("🙈 %d out of %d files failed to upload.\n", errored, len(validFiles))
@@ -220,7 +235,9 @@ func uploadFile(index, count int, postURL, filePath, signature, expires, metadat
 		f:     tmp,
 		total: size,
 		update: func(pct int) {
-			spn.Suffix = fmt.Sprintf(" [%d/%d] %s\t%s %d%%", index+1, count, fileName, barArrow(pct), pct)
+			if spn != nil {
+				spn.Suffix = fmt.Sprintf(" [%d/%d] %s\t%s %d%%", index+1, count, fileName, barArrow(pct), pct)
+			}
 		},
 	}
 	req.Body = pb
@@ -247,9 +264,13 @@ func uploadFile(index, count int, postURL, filePath, signature, expires, metadat
 		return fmt.Errorf("[%d/%d] %s\tupload failed: %s", index+1, count, fileName, string(b))
 	}
 
-	spn.Stop()
+	if spn != nil {
+		spn.Stop()
+	}
 	fmt.Printf("[%d/%d] %s\t%s ✅\n", index+1, count, fileName, barArrow(100))
-	spn.Suffix = fmt.Sprintf(" %s", uploadingMessage)
-	spn.Start()
+	if spn != nil {
+		spn.Suffix = fmt.Sprintf(" %s", uploadingMessage)
+		spn.Start()
+	}
 	return nil
 }
