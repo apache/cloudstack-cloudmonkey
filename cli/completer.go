@@ -19,6 +19,7 @@ package cli
 
 import (
 	"fmt"
+	"regexp"
 	"sort"
 	"strconv"
 	"strings"
@@ -224,6 +225,53 @@ func pluralizeNoun(noun string) string {
 	}
 }
 
+func mapFieldsFromDescription(description string) []string {
+	fields := []string{}
+	seen := make(map[string]bool)
+
+	re := regexp.MustCompile(`([A-Za-z0-9_-]+\[\d+\]\.[A-Za-z0-9_.:-]+)=`)
+
+	matches := re.FindAllStringSubmatch(description, -1)
+	for _, match := range matches {
+		if len(match) < 2 {
+			continue
+		}
+
+		field := match[1] + "="
+		if seen[field] {
+			continue
+		}
+
+		seen[field] = true
+		fields = append(fields, field)
+	}
+
+	return fields
+}
+
+func mapFieldSuggestions(arg *config.APIArg) []string {
+	if arg == nil || arg.Type != "map" {
+		return nil
+	}
+
+	fields := mapFieldsFromDescription(arg.Description)
+	if len(fields) > 0 {
+		return fields
+	}
+
+	description := strings.ToLower(arg.Description)
+	if strings.Contains(description, "key/value") ||
+		strings.Contains(description, "key-value") {
+		mapName := strings.TrimSuffix(arg.Name, "=")
+		return []string{
+			mapName + "[0].key=",
+			mapName + "[0].value=",
+		}
+	}
+
+	return nil
+}
+
 func findAutocompleteAPI(arg *config.APIArg, apiFound *config.API, apiMap map[string][]*config.API) *config.API {
 	if arg.Type == "map" {
 		return nil
@@ -406,6 +454,19 @@ func (t *autoCompleter) Do(line []rune, pos int) (options [][]rune, offset int) 
 						offset = len(argInput)
 					}
 				}
+				return
+			}
+
+			if arg.Type == "map" {
+				suggestions := mapFieldSuggestions(arg)
+
+				for _, suggestion := range suggestions {
+					if strings.HasPrefix(suggestion, string(line)) {
+						options = append(options, []rune(suggestion[len(line):]))
+					}
+				}
+
+				offset = len(line)
 				return
 			}
 
