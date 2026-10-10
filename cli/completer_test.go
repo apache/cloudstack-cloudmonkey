@@ -389,3 +389,53 @@ func TestMapFieldSuggestionsWithNonKeyValueMap(t *testing.T) {
 		t.Fatalf("expected no suggestions, got %v", got)
 	}
 }
+
+func TestMapAutocompleteThroughDo(t *testing.T) {
+	cfg := &config.Config{}
+
+	// Restore the normal API cache after this test.
+	defer config.LoadCache(cfg)
+
+	cfg.UpdateCache(map[string]interface{}{
+		"count": 1,
+		"api": []interface{}{
+			map[string]interface{}{
+				"name":        "listVirtualMachines",
+				"isasync":     false,
+				"description": "List virtual machines",
+				"params": []interface{}{
+					map[string]interface{}{
+						"name":        "tags",
+						"type":        "map",
+						"required":    false,
+						"description": "List resources by tags (key/value pairs)",
+					},
+				},
+				"response": []interface{}{},
+			},
+		},
+	})
+
+	completer := &autoCompleter{Config: cfg}
+	line := []rune("list virtualmachines tags=")
+
+	options, offset := completer.Do(line, len(line))
+
+	var got []string
+	for _, option := range options {
+		got = append(got, string(option))
+	}
+
+	expected := []string{
+		"[0].key=",
+		"[0].value=",
+	}
+
+	if !reflect.DeepEqual(got, expected) {
+		t.Fatalf("expected suggestions %v, got %v", expected, got)
+	}
+
+	if offset != len("tags=")-1 {
+		t.Fatalf("expected offset %d, got %d", len("tags=")-1, offset)
+	}
+}

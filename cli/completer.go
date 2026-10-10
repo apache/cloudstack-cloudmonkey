@@ -437,7 +437,45 @@ func (t *autoCompleter) Do(line []rune, pos int) (options [][]rune, offset int) 
 	// Auto-complete API arg
 	splitLine := strings.Split(string(line), " ")
 	line = trimSpaceLeft([]rune(splitLine[len(splitLine)-1]))
+
 	for _, arg := range apiFound.Args {
+
+		if arg.Type == "map" {
+			suggestions := mapFieldSuggestions(arg)
+			input := string(line)
+			mapName := strings.TrimSuffix(arg.Name, "=")
+
+			matchInput := input
+			matchOffset := len(line)
+
+			// Replace the trailing '=' in tags= with the indexed field.
+			if strings.HasSuffix(input, "=") &&
+				strings.TrimSuffix(input, "=") == mapName {
+				matchInput = mapName
+				matchOffset--
+			}
+
+			if matchInput == mapName ||
+				strings.HasPrefix(matchInput, mapName+"[") {
+				var mapOptions [][]rune
+
+				for _, suggestion := range suggestions {
+					if strings.HasPrefix(suggestion, matchInput) {
+						mapOptions = append(
+							mapOptions,
+							[]rune(suggestion[len(matchInput):]),
+						)
+					}
+				}
+
+				if len(mapOptions) > 0 {
+					options = append(options, mapOptions...)
+					offset = matchOffset
+					return
+				}
+			}
+		}
+
 		search := arg.Name
 		if !hasPrefix(line, []rune(search)) {
 			sLine, sOffset := doInternal(line, pos, len(line), []rune(search))
@@ -454,19 +492,6 @@ func (t *autoCompleter) Do(line []rune, pos int) (options [][]rune, offset int) 
 						offset = len(argInput)
 					}
 				}
-				return
-			}
-
-			if arg.Type == "map" {
-				suggestions := mapFieldSuggestions(arg)
-
-				for _, suggestion := range suggestions {
-					if strings.HasPrefix(suggestion, string(line)) {
-						options = append(options, []rune(suggestion[len(line):]))
-					}
-				}
-
-				offset = len(line)
 				return
 			}
 
