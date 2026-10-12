@@ -47,13 +47,20 @@ func newOpCompleter(w *terminal, op *operation) *opCompleter {
 	}
 }
 
-func (o *opCompleter) truncateBufferAfterLastEqual(completion []rune) {
+func (o *opCompleter) truncateBufferAfterLastEqual(completion []rune, replaceTrailingEqual bool) {
 	bufRunes := o.op.buf.Runes()
 	for i := len(bufRunes) - 1; i >= 0; i-- {
 		if bufRunes[i] == '=' {
-			prefix := bufRunes[i+1:] // part after '=' in buffer
-			if len(prefix) > 0 && len(completion) >= len(prefix) && string(completion[:len(prefix)]) == string(prefix) {
-				o.op.buf.Set(bufRunes[:i+1]) // Keep content till '='
+			if replaceTrailingEqual {
+				if i == len(bufRunes)-1 && len(completion) > 0 && completion[0] == '[' {
+					o.op.buf.Set(bufRunes[:i])
+				}
+			} else {
+				prefix := bufRunes[i+1:]
+				if len(prefix) > 0 && len(completion) >= len(prefix) &&
+					string(completion[:len(prefix)]) == string(prefix) {
+					o.op.buf.Set(bufRunes[:i+1])
+				}
 			}
 			break
 		}
@@ -68,7 +75,7 @@ func (o *opCompleter) writeRunes(candidate []rune) {
 			spaceFound = true
 		}
 		if spaceFound && r == '(' {
-			o.truncateBufferAfterLastEqual(candidate[idx+1:])
+			o.truncateBufferAfterLastEqual(candidate[idx+1:], false)
 			selected = candidate[:idx]
 			break
 		}
@@ -262,6 +269,7 @@ func (o *opCompleter) OnComplete() (ringBell bool) {
 	if !o.IsInCompleteMode() {
 		if len(newLines) == 1 {
 			// not yet in complete mode but only 1 candidate so complete it
+			o.truncateBufferAfterLastEqual(newLines[0], true)
 			o.writeRunes(newLines[0])
 			o.ExitCompleteMode(false)
 			return true
@@ -270,6 +278,7 @@ func (o *opCompleter) OnComplete() (ringBell bool) {
 		// check if all candidates have common prefix and return it and its size
 		same, size := runes.Aggregate(newLines)
 		if size > 0 {
+			o.truncateBufferAfterLastEqual(same, true)
 			buf.WriteRunes(same)
 			o.ExitCompleteMode(false)
 			return false // partial completion so ring the bell
