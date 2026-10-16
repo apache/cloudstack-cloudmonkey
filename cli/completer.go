@@ -225,24 +225,24 @@ func pluralizeNoun(noun string) string {
 	}
 }
 
+var mapFieldDescriptionPattern = regexp.MustCompile(`([A-Za-z0-9_-]+\[\d+\]\.[A-Za-z0-9_.:-]+)=`)
+
 func mapFieldsFromDescription(description string) []string {
 	fields := []string{}
-	seen := make(map[string]bool)
+	seen := make(map[string]struct{})
 
-	re := regexp.MustCompile(`([A-Za-z0-9_-]+\[\d+\]\.[A-Za-z0-9_.:-]+)=`)
-
-	matches := re.FindAllStringSubmatch(description, -1)
+	matches := mapFieldDescriptionPattern.FindAllStringSubmatch(description, -1)
 	for _, match := range matches {
 		if len(match) < 2 {
 			continue
 		}
 
 		field := match[1] + "="
-		if seen[field] {
+		if _, exists := seen[field]; exists {
 			continue
 		}
 
-		seen[field] = true
+		seen[field] = struct{}{}
 		fields = append(fields, field)
 	}
 
