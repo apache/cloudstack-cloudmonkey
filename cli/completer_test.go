@@ -18,6 +18,8 @@
 package cli
 
 import (
+	"reflect"
+	"strings"
 	"testing"
 
 	"github.com/apache/cloudstack-cloudmonkey/config"
@@ -219,5 +221,221 @@ func TestFindAutocompleteAPIHeuristicWinsOverRelated(t *testing.T) {
 
 	if result.Name != "listProjects" {
 		t.Fatalf("expected listProjects, got %s", result.Name)
+	}
+}
+
+func TestMapFieldsFromDescription(t *testing.T) {
+	description := "Example: tags[0].key=value&tags[0].value=value"
+
+	fields := mapFieldsFromDescription(description)
+
+	expected := []string{
+		"tags[0].key=",
+		"tags[0].value=",
+	}
+
+	if len(fields) != len(expected) {
+		t.Fatalf("expected %d fields, got %d: %v", len(expected), len(fields), fields)
+	}
+
+	for i := range expected {
+		if fields[i] != expected[i] {
+			t.Errorf("expected %q, got %q", expected[i], fields[i])
+		}
+	}
+}
+
+func TestMapFieldsFromDescriptionWithRealMap(t *testing.T) {
+	description := "VMware only: used to specify network mapping of a vApp VMware template registered \"as-is\". Example nicnetworklist[0].ip=Nic-101&nicnetworklist[0].network=uuid"
+
+	fields := mapFieldsFromDescription(description)
+
+	expected := []string{
+		"nicnetworklist[0].ip=",
+		"nicnetworklist[0].network=",
+	}
+
+	if len(fields) != len(expected) {
+		t.Fatalf("expected %d fields, got %d: %v", len(expected), len(fields), fields)
+	}
+
+	for i := range expected {
+		if fields[i] != expected[i] {
+			t.Errorf("expected %q, got %q", expected[i], fields[i])
+		}
+	}
+}
+
+func TestMapFieldsFromDescriptionWithMultipleFields(t *testing.T) {
+	description := "Disk offering details. Example: datadisksdetails[0].diskofferingid=id&datadisksdetails[0].size=10&datadisksdetails[0].miniops=100&datadisksdetails[0].maxiops=200"
+
+	fields := mapFieldsFromDescription(description)
+
+	expected := []string{
+		"datadisksdetails[0].diskofferingid=",
+		"datadisksdetails[0].size=",
+		"datadisksdetails[0].miniops=",
+		"datadisksdetails[0].maxiops=",
+	}
+
+	if len(fields) != len(expected) {
+		t.Fatalf("expected %d fields, got %d: %v", len(expected), len(fields), fields)
+	}
+
+	for i := range expected {
+		if fields[i] != expected[i] {
+			t.Errorf("expected %q, got %q", expected[i], fields[i])
+		}
+	}
+}
+
+func TestMapFieldSuggestions(t *testing.T) {
+	arg := &config.APIArg{
+		Name:        "tags=",
+		Type:        "map",
+		Description: "Example: tags[0].key=value&tags[0].value=value",
+	}
+
+	suggestions := mapFieldSuggestions(arg)
+
+	expected := []string{
+		"tags[0].key=",
+		"tags[0].value=",
+	}
+
+	if len(suggestions) != len(expected) {
+		t.Fatalf("expected %d suggestions, got %d: %v", len(expected), len(suggestions), suggestions)
+	}
+
+	for i := range expected {
+		if suggestions[i] != expected[i] {
+			t.Errorf("expected %q, got %q", expected[i], suggestions[i])
+		}
+	}
+}
+
+func TestMapFieldSuggestionsWithGenericMap(t *testing.T) {
+	arg := &config.APIArg{
+		Name:        "tags",
+		Type:        "map",
+		Description: "List resources by tags (key/value pairs)",
+	}
+
+	expected := []string{
+		"tags[0].key=",
+		"tags[0].value=",
+	}
+
+	got := mapFieldSuggestions(arg)
+
+	if !reflect.DeepEqual(got, expected) {
+		t.Fatalf("expected %v, got %v", expected, got)
+	}
+}
+
+func TestMapAutocompleteOptions(t *testing.T) {
+	arg := &config.APIArg{
+		Name:        "tags",
+		Type:        "map",
+		Description: "List resources by tags (key/value pairs)",
+	}
+
+	line := "tags"
+
+	suggestions := mapFieldSuggestions(arg)
+	var options [][]rune
+
+	for _, suggestion := range suggestions {
+		if strings.HasPrefix(suggestion, line) {
+			options = append(options, []rune(suggestion[len(line):]))
+		}
+	}
+
+	expected := [][]rune{
+		[]rune("[0].key="),
+		[]rune("[0].value="),
+	}
+
+	if !reflect.DeepEqual(options, expected) {
+		t.Fatalf("expected %v, got %v", expected, options)
+	}
+}
+
+func TestMapFieldsFromDescriptionWithMultipleIndexes(t *testing.T) {
+	description := "Example: details[0].key=accesskey&details[0].value=value&details[1].key=secretkey&details[1].value=value"
+
+	expected := []string{
+		"details[0].key=",
+		"details[0].value=",
+		"details[1].key=",
+		"details[1].value=",
+	}
+
+	fields := mapFieldsFromDescription(description)
+
+	if !reflect.DeepEqual(fields, expected) {
+		t.Fatalf("expected %v, got %v", expected, fields)
+	}
+}
+
+func TestMapFieldSuggestionsWithNonKeyValueMap(t *testing.T) {
+	arg := &config.APIArg{
+		Name:        "storagecapabilities",
+		Type:        "map",
+		Description: "the storage pool capabilities",
+	}
+
+	if got := mapFieldSuggestions(arg); got != nil {
+		t.Fatalf("expected no suggestions, got %v", got)
+	}
+}
+
+func TestMapAutocompleteThroughDo(t *testing.T) {
+	cfg := &config.Config{}
+
+	// Restore the normal API cache after this test.
+	defer config.LoadCache(cfg)
+
+	cfg.UpdateCache(map[string]interface{}{
+		"count": 1,
+		"api": []interface{}{
+			map[string]interface{}{
+				"name":        "listVirtualMachines",
+				"isasync":     false,
+				"description": "List virtual machines",
+				"params": []interface{}{
+					map[string]interface{}{
+						"name":        "tags",
+						"type":        "map",
+						"required":    false,
+						"description": "List resources by tags (key/value pairs)",
+					},
+				},
+				"response": []interface{}{},
+			},
+		},
+	})
+
+	completer := &autoCompleter{Config: cfg}
+	line := []rune("list virtualmachines tags=")
+
+	options, offset := completer.Do(line, len(line))
+
+	var got []string
+	for _, option := range options {
+		got = append(got, string(option))
+	}
+
+	expected := []string{
+		"[0].key=",
+		"[0].value=",
+	}
+
+	if !reflect.DeepEqual(got, expected) {
+		t.Fatalf("expected suggestions %v, got %v", expected, got)
+	}
+
+	if offset != len("tags=")-1 {
+		t.Fatalf("expected offset %d, got %d", len("tags=")-1, offset)
 	}
 }

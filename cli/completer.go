@@ -19,6 +19,7 @@ package cli
 
 import (
 	"fmt"
+	"regexp"
 	"sort"
 	"strconv"
 	"strings"
@@ -224,6 +225,53 @@ func pluralizeNoun(noun string) string {
 	}
 }
 
+var mapFieldDescriptionPattern = regexp.MustCompile(`([A-Za-z0-9_-]+\[\d+\]\.[A-Za-z0-9_.:-]+)=`)
+
+func mapFieldsFromDescription(description string) []string {
+	fields := []string{}
+	seen := make(map[string]struct{})
+
+	matches := mapFieldDescriptionPattern.FindAllStringSubmatch(description, -1)
+	for _, match := range matches {
+		if len(match) < 2 {
+			continue
+		}
+
+		field := match[1] + "="
+		if _, exists := seen[field]; exists {
+			continue
+		}
+
+		seen[field] = struct{}{}
+		fields = append(fields, field)
+	}
+
+	return fields
+}
+
+func mapFieldSuggestions(arg *config.APIArg) []string {
+	if arg == nil || arg.Type != "map" {
+		return nil
+	}
+
+	fields := mapFieldsFromDescription(arg.Description)
+	if len(fields) > 0 {
+		return fields
+	}
+
+	description := strings.ToLower(arg.Description)
+	if strings.Contains(description, "key/value") ||
+		strings.Contains(description, "key-value") {
+		mapName := strings.TrimSuffix(arg.Name, "=")
+		return []string{
+			mapName + "[0].key=",
+			mapName + "[0].value=",
+		}
+	}
+
+	return nil
+}
+
 func findAutocompleteAPI(arg *config.APIArg, apiFound *config.API, apiMap map[string][]*config.API) *config.API {
 	if arg.Type == "map" {
 		return nil
@@ -389,7 +437,45 @@ func (t *autoCompleter) Do(line []rune, pos int) (options [][]rune, offset int) 
 	// Auto-complete API arg
 	splitLine := strings.Split(string(line), " ")
 	line = trimSpaceLeft([]rune(splitLine[len(splitLine)-1]))
+
 	for _, arg := range apiFound.Args {
+
+		if arg.Type == "map" {
+			suggestions := mapFieldSuggestions(arg)
+			input := string(line)
+			mapName := strings.TrimSuffix(arg.Name, "=")
+
+			matchInput := input
+			matchOffset := len(line)
+
+			// Replace the trailing '=' in tags= with the indexed field.
+			if strings.HasSuffix(input, "=") &&
+				strings.TrimSuffix(input, "=") == mapName {
+				matchInput = mapName
+				matchOffset--
+			}
+
+			if matchInput == mapName ||
+				strings.HasPrefix(matchInput, mapName+"[") {
+				var mapOptions [][]rune
+
+				for _, suggestion := range suggestions {
+					if strings.HasPrefix(suggestion, matchInput) {
+						mapOptions = append(
+							mapOptions,
+							[]rune(suggestion[len(matchInput):]),
+						)
+					}
+				}
+
+				if len(mapOptions) > 0 {
+					options = append(options, mapOptions...)
+					offset = matchOffset
+					return
+				}
+			}
+		}
+
 		search := arg.Name
 		if !hasPrefix(line, []rune(search)) {
 			sLine, sOffset := doInternal(line, pos, len(line), []rune(search))
