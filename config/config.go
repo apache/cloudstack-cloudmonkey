@@ -110,17 +110,18 @@ type Core struct {
 
 // Config describes CLI config file and default options
 type Config struct {
-	Dir            string
-	ConfigFile     string
-	HistoryFile    string
-	LogFile        string
-	HasShell       bool
-	Core           *Core
-	ActiveProfile  *ServerProfile
-	Context        *context.Context
-	Cancel         context.CancelFunc
-	C              chan bool
-	activeSpinners []*spinner.Spinner
+	Dir                 string
+	ConfigFile          string
+	HistoryFile         string
+	LogFile             string
+	HasShell            bool
+	CredentialsSupplied bool
+	Core                *Core
+	ActiveProfile       *ServerProfile
+	Context             *context.Context
+	Cancel              context.CancelFunc
+	C                   chan bool
+	activeSpinners      []*spinner.Spinner
 }
 
 // GetOutputFormats returns the supported output formats.
@@ -457,12 +458,15 @@ func (c *Config) UpdateConfig(key string, value string, update bool) {
 	case "profile":
 		c.Core.ProfileName = value
 		c.ActiveProfile = nil
+		c.CredentialsSupplied = false
 	case "url":
 		c.ActiveProfile.URL = value
 	case "username":
 		c.ActiveProfile.Username = value
+		c.CredentialsSupplied = false
 	case "password":
 		c.ActiveProfile.Password = value
+		c.CredentialsSupplied = false
 	case "domain":
 		c.ActiveProfile.Domain = value
 	case "apikey":

@@ -253,3 +253,26 @@ func TestAutoDoesNotRetryUserCommandDirectly(t *testing.T) {
 		t.Fatalf("deployVirtualMachine attempt count = %d, want 1", userCommandAttempts)
 	}
 }
+
+func TestPartialCLICredentialsFailWithoutFallingBackToProfileLogin(t *testing.T) {
+	server := newSignatureTestServer(t, map[string]bool{
+		config.SignatureAlgorithmHmacSHA512: true,
+	})
+	request := newTestRequest(t, server.server.URL, config.SignatureAlgorithmAuto)
+	request.Config.ActiveProfile.APIKey = testAPIKey
+	request.Config.ActiveProfile.SecretKey = ""
+	request.Config.ActiveProfile.Username = "admin"
+	request.Config.ActiveProfile.Password = "password"
+	request.CredentialsSupplied = true
+
+	_, err := NewAPIRequest(request, "listZones", nil, false)
+	if err == nil {
+		t.Fatal("expected partial CLI credentials (apikey without secretkey) to fail")
+	}
+	if !strings.Contains(err.Error(), "both apikey and secretkey must be provided") {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(server.snapshotAttempts()) != 0 {
+		t.Fatalf("expected 0 server requests, got %+v", server.snapshotAttempts())
+	}
+}
