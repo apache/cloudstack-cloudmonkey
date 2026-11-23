@@ -474,7 +474,7 @@ func (t *autoCompleter) Do(line []rune, pos int) (options [][]rune, offset int) 
 				}
 
 				spinner := t.Config.StartSpinner("fetching options, please wait...")
-				request := cmd.NewRequest(nil, completer.Config, nil, false)
+				request := cmd.NewRequest(nil, completer.Config, nil, completer.Config.CredentialsSupplied)
 				response, _ := cmd.NewAPIRequest(request, autocompleteAPI.Name, autocompleteAPIArgs, false)
 				t.Config.StopSpinner(spinner)
 

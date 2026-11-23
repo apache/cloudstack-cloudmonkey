@@ -98,27 +98,27 @@ func main() {
 		cfg.UpdateConfig("output", *outputFormat, false)
 	}
 
+	if *profile != "" {
+		cfg.LoadProfile(*profile, true)
+	}
+
 	if *acsURL != config.DefaultACSAPIEndpoint {
 		cfg.UpdateConfig("url", *acsURL, false)
 	}
 
-	if *apiKey != "" {
-		cfg.UpdateConfig("apikey", *apiKey, false)
-	}
-
-	if *secretKey != "" {
-		cfg.UpdateConfig("secretkey", *secretKey, false)
-	}
-
-	if *profile != "" {
-		cfg.LoadProfile(*profile, true)
+	if *apiKey != "" || *secretKey != "" {
+		cfg.CredentialsSupplied = true
+		cfg.ActiveProfile.Username = ""
+		cfg.ActiveProfile.Password = ""
+		cfg.ActiveProfile.APIKey = *apiKey
+		cfg.ActiveProfile.SecretKey = *secretKey
 	}
 	config.LoadCache(cfg)
 	cli.SetConfig(cfg)
 
 	config.Debug("cmdline args:", strings.Join(os.Args, ", "))
 	if len(args) > 0 {
-		if err := cli.ExecCmd(args, (*apiKey != "" || *secretKey != "")); err != nil {
+		if err := cli.ExecCmd(args, cfg.CredentialsSupplied); err != nil {
 			fmt.Println("🙈 Error:", err)
 			os.Exit(1)
 		}

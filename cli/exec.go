@@ -48,7 +48,7 @@ func ExecLine(line string) error {
 		}
 	}
 
-	return ExecCmd(args, false)
+	return ExecCmd(args, cfg != nil && cfg.CredentialsSupplied)
 }
 
 // ExecCmd executes a single provided command

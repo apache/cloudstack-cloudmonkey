@@ -492,7 +492,13 @@ func NewAPIRequest(r *Request, api string, args []string, isAsync bool) (map[str
 			return nil, err
 		}
 		return processAPIResponse(r, response, isAsync)
-	} else if len(r.Config.ActiveProfile.Username) > 0 && len(r.Config.ActiveProfile.Password) > 0 {
+	} else if len(r.Config.ActiveProfile.APIKey) > 0 || len(r.Config.ActiveProfile.SecretKey) > 0 {
+		if r.CredentialsSupplied {
+			return nil, errors.New("both apikey and secretkey must be provided when authenticating with keys")
+		}
+	}
+
+	if len(r.Config.ActiveProfile.Username) > 0 && len(r.Config.ActiveProfile.Password) > 0 && !r.CredentialsSupplied {
 		usingSessionAuth = true
 		sessionKey, err := Login(r)
 		if err != nil {
