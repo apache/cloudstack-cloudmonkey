@@ -374,25 +374,26 @@ func detectSignatureAlgorithm(r *Request) (string, error) {
 			continue
 		}
 
-		defer response.Body.Close()
 		body, readErr := ioutil.ReadAll(response.Body)
+		response.Body.Close()
 		if readErr != nil {
 			config.Debug("API signature algorithm probe failed reading response body for ", algorithm, ": ", readErr)
 			lastErr = readErr
 			continue
 		}
 		config.Debug("Signature algorithm probe response body:", string(body))
-		if _, err := parseAPIResponse(body); err == nil {
+		_, parseErr := parseAPIResponse(body)
+		if parseErr == nil {
 			config.Debug("Selected API signature algorithm:", algorithm)
 			persistDetectedSignatureAlgorithm(r, algorithm)
 			return algorithm, nil
 		}
-		lastErr = err
-		if isAuthenticationFailure(response.StatusCode, err) {
-			config.Debug("API signature algorithm probe failed authentication for ", algorithm, ": ", err)
+		lastErr = parseErr
+		if isAuthenticationFailure(response.StatusCode, parseErr) {
+			config.Debug("API signature algorithm probe failed authentication for ", algorithm, ": ", parseErr)
 		} else {
-			config.Debug("API signature algorithm probe failed with non-authentication error for ", algorithm, ": ", err)
-			return "", err
+			config.Debug("API signature algorithm probe failed with non-authentication error for ", algorithm, ": ", parseErr)
+			return "", parseErr
 		}
 	}
 
@@ -478,21 +479,34 @@ func NewAPIRequest(r *Request, api string, args []string, isAsync bool) (map[str
 	var err error
 	usingSessionAuth := false
 
-	if len(r.Config.ActiveProfile.APIKey) > 0 && len(r.Config.ActiveProfile.SecretKey) > 0 {
-		apiKey := r.Config.ActiveProfile.APIKey
-		if len(apiKey) > 0 {
-			params.Add("apiKey", apiKey)
-		}
+	hasAPIKeyAuth := len(r.Config.ActiveProfile.APIKey) > 0 && len(r.Config.ActiveProfile.SecretKey) > 0
+	hasPasswordAuth := len(r.Config.ActiveProfile.Username) > 0 && len(r.Config.ActiveProfile.Password) > 0
+
+	if hasAPIKeyAuth {
+		signedParams := cloneRequestParams(params)
+		signedParams.Add("apiKey", r.Config.ActiveProfile.APIKey)
 		signatureAlgorithm, err := activeSignatureAlgorithm(r)
 		if err != nil {
-			return nil, err
+			if !r.CredentialsSupplied && hasPasswordAuth && isAuthenticationFailure(0, err) {
+				config.Debug("API key signature algorithm detection failed authentication, falling back to login: ", err)
+			} else {
+				return nil, err
+			}
+		} else {
+			response, err := executeSignedAPIRequest(r, signedParams, signatureAlgorithm)
+			if err != nil {
+				return nil, err
+			}
+			if response.StatusCode == http.StatusUnauthorized && !r.CredentialsSupplied && hasPasswordAuth {
+				response.Body.Close()
+				config.Debug("API key request returned HTTP 401, falling back to login")
+			} else {
+				return processAPIResponse(r, response, isAsync)
+			}
 		}
-		response, err := executeSignedAPIRequest(r, params, signatureAlgorithm)
-		if err != nil {
-			return nil, err
-		}
-		return processAPIResponse(r, response, isAsync)
-	} else if len(r.Config.ActiveProfile.Username) > 0 && len(r.Config.ActiveProfile.Password) > 0 {
+	}
+
+	if hasPasswordAuth {
 		usingSessionAuth = true
 		sessionKey, err := Login(r)
 		if err != nil {
