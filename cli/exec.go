@@ -32,9 +32,26 @@ import (
 // ExecLine executes a line of command
 func ExecLine(line string) error {
 	config.Debug("ExecLine line:", line)
+	trimmed := strings.TrimSpace(line)
+	if strings.HasPrefix(trimmed, "!") {
+		shellCommand := strings.TrimSpace(trimmed[1:])
+		if len(shellCommand) == 0 {
+			return nil
+		}
+		return cmd.RunShellCommand(shellCommand)
+	}
+
 	args, err := shlex.Split(line)
 	if err != nil {
 		return err
+	}
+
+	if len(args) > 0 && args[0] == "shell" {
+		shellCommand := strings.TrimSpace(strings.TrimPrefix(trimmed, "shell"))
+		if len(shellCommand) == 0 {
+			return cmd.FindCommand("shell").Handle(cmd.NewRequest(cmd.FindCommand("shell"), cfg, nil, false))
+		}
+		return cmd.RunShellCommand(shellCommand)
 	}
 
 	if runtime.GOOS != "windows" {
